@@ -1,0 +1,365 @@
+var imageContainerArray = ["image_containerImg"];
+var dcomethealth = dcomethealth || {};
+dcomethealth.user_profile = (function () {
+    var id = "user_profile";
+    var lightboxSettings = {
+        imageLoading: '/health_web/css/images/close_icon.png',
+        imageBtnPrev: '/health_web/css/images/backIcon.gif',
+        imageBtnNext: '/health_web/css/images/nextIcon.gif',
+        imageBtnClose: '/health_web/css/images/cancelIcon.gif',
+        imageBlank: '/health_web/css/images/close_icon.png'
+    };
+
+    function init() {
+        $("#main_navigation_bar").append('<div id="' + id + '" class="main_container">');
+        $("#" + id).load("pages/html/" + id + ".html", function () {
+            /*$("#up-header-name").html('<h3><strong>' + dcomethealth.util.ucword(dcomethealth.loginuser.userFullName) + '</strong></h3>');
+             $("#up-user-email").html('<a href="mailto:' + dcomethealth.loginuser.userEmail + '">' + dcomethealth.loginuser.userEmail + '</a>');
+             $("#up-user-gender").text(dcomethealth.loginuser.userGender);
+             $("#up-user-dob").text(dcomethealth.loginuser.userDOB);
+             $("#up-user-address").text(dcomethealth.util.ucword(dcomethealth.loginuser.userStreetAddress));
+             $("#up-user-city").text(dcomethealth.util.ucword(dcomethealth.loginuser.userCity));
+             $("#up-user-country").text(dcomethealth.util.ucword(dcomethealth.loginuser.userCountry));
+             $("#up-user-pincode").text(dcomethealth.loginuser.userPincode);
+             $("#up-user-phone").text(dcomethealth.loginuser.userPhone);
+             $("#up-user-mobile").text(dcomethealth.loginuser.userMobile);*/
+            dcomethealth.FileResource.getFileInfo(dcomethealth.loginuser.id, function (data) {
+                if (!!data) {
+                    loadImage(data, "image_containerImg");
+                }
+            });
+
+            //Loading of previously added images to container
+//            $('.ImgPlaceHolder').each(function () {                
+//                if ($(this).length > 0) {
+//                    var placeHolder = $(this).attr("id");
+//                    if (!placeHolder.match("^recImg_")) {
+//                        var image = placeHolder.replace("_containerImg", "");
+//                        var caption = image + "Caption";
+//                        if (placeHolder === "image_containerImg") {
+//                            caption = "caption";
+//                        }
+//                        loadImage(placeHolder,"image_containerImg");
+//                    }
+//                }
+//            });
+            $(".imageUpload").on('click', function (e) {
+                imageUpload(e);
+            });
+            $(".btn-primary").on('click', function (e) {
+                save(e);
+            });
+            setDragNDropListeners();
+        });
+    }
+    function save() {
+        var imageContext = {};
+        imageContext.id = dcomethealth.loginuser.id;
+        $('.ImgPlaceHolder').each(function () {
+//            var containerId = $(this).attr(id);
+            var containerId = "image_containerImg";
+            if ($(this).length) {
+                var imgandAndCaption = getImgandCpationfromContainer(containerId);
+                var context = {};
+                context["image"] = imgandAndCaption["image"];
+                context["caption"] = imgandAndCaption["caption"];
+                imageContext.context = context;
+            }
+        });
+        console.log(imageContext);
+        dcomethealth.FileResource.saveFileInfo(imageContext, function (data) {
+        });
+    }
+    function getImgandCpationfromContainer(containerId) {
+        var imgandCaption = new Array();
+
+        var img = "";
+        var imgCaption = "";
+
+        var imgCount = $("div[id='" + containerId + "']").children(".imageItem").length;
+        if (imgCount === 1) {
+            img = $("#" + containerId + "  > .imageItem").attr("id");
+            imgCaption = $("#" + containerId).find("input[type='text']").val();
+
+            if (imgCaption === "") {
+                imgCaption = "blank~" + img;
+            }
+        } else if (imgCount > 1) {
+            img = new Array();
+            imgCaption = new Array();
+
+            $("#" + containerId + "  > .imageItem").each(function () {
+                img.push($(this).attr("id"));
+                var caption = $(this).find("input[type='text']").val();
+                if (caption === "") {
+                    caption = "blank~" + $(this).attr("id");
+                }
+                imgCaption.push(caption);
+            });
+        }
+        imgandCaption = $.extend(imgandCaption, {"image": img});
+        imgandCaption = $.extend(imgandCaption, {"caption": imgCaption});
+        return imgandCaption;
+    }
+    function loadImage(contextData, imgContainer) {
+        var pictures = $("#" + imgContainer);
+        if (pictures.length) {
+            pictures.empty();
+            imgArray = contextData.context.image;
+            capArray = contextData.context.caption;
+            if (contextData.context && imgArray) {
+                var captions = capArray || [];
+                captions = $.isArray(captions) ? captions : [captions];
+                var images = imgArray || [];
+                images = $.isArray(images) ? images : [images];
+                $.each(images, function (index, image) {
+                    if (dcomethealth.pictures && dcomethealth.pictures.addImage) {
+                        var caption = captions[index];
+                        if (("blank~" + image) === caption) {
+                            caption = "";
+                        }
+                        if (dcomethealth.FileResource.getContentType(image, function (data) {
+                            dcomethealth.pictures.addImage(image, caption, imgContainer, data.mimeType);
+                        }, function (jqXHR) {
+                            dcomethealth.pictures.addImage(image, caption, imgContainer);
+                        }
+                        ))
+                            ;
+                    }
+                });
+            }
+        }
+    }
+//    function loadImage(imgContainer, imgArray, capArray) {        
+//        var pictures = $("#" + imgContainer); 
+//        if (pictures.length) {
+//            pictures.empty();
+//            if (dcomethealth.user.id && imgArray) {
+//                var captions = capArray || [];
+//                captions = $.isArray(captions) ? captions : [captions];
+//                var images = imgArray || [];
+//                images = $.isArray(images) ? images : [images];
+//                $.each(images, function (index, image) {
+//                    if (dcomethealth.pictures && dcomethealth.pictures.addImage) {
+//                        var caption = captions[index];
+//                        if (("blank~" + image) === caption) {
+//                            caption = "";
+//                        }
+//                        dcomethealth.pictures.addImage(image, caption, imgContainer);
+//                    }
+//                });
+//            }
+//        }
+//    }
+    function setDragNDropListeners() {
+
+        var obj = $("#image_containerImg");
+        obj.on("dragenter",
+                function (event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                });
+        obj.on("dragover",
+                function (event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                });
+
+        obj.on("drop",
+                function (event) {
+                    event = event.originalEvent;
+                    event.stopPropagation();
+                    event.preventDefault();
+                    var files = event.originalEvent.dataTransfer.files;
+                    var imageContainerId = event.target.id;
+                    var fileCtrlName = event.srcElement.name;
+                    if (!imageContainerId.match("_containerImg$")) {
+                        alert("Place holder for image not available.");
+                        return;
+                    }
+                    if (!imageContainerId.match("_containerImg$")) {
+                        alert("Place holder for image not available.");
+                        return;
+                    }
+                    if ((imageContainerId === "") && (fileCtrlName !== "")) {
+                        imageContainerId = (fileCtrlName.replace("FileInputImg", "")) + "_containerImg";
+                    }
+                    var uploadStatus = false;
+                    if ((fileCtrlName === "imageFileInputImg") || (imageContainerId === "image_containerImg")) {
+                        uploadStatus = true;
+                    }
+                    if (!uploadStatus) {
+                        var isAllowedFileLimit = isAllowedImageUploadLimit(imageContainerId, files.length);
+                        if (!isAllowedFileLimit) {
+                            return;
+                        }
+                        var isValidExtension = isAllowedImageExtenstionList(files);
+                        if (isValidExtension && isAllowedFileLimit) {
+                            uploadStatus = true;
+                        }
+                    }
+                    if (uploadStatus) {
+                        uploadFiles(files, imageContainerId);
+                    }
+                });
+    }
+    function isAllowedImageExtenstionList(files) {
+        // image upload restriction check based on IMAGE extension     
+        var status = true;
+        $.each(files, function (index, file) {
+            var fileName = file.name;
+            if (!isAllowedImageExtenstion(fileName)) {
+                status = false;
+            }
+        });
+        return status;
+    }
+    function isAllowedImageExtenstion(filename) {
+        var fileExt = filename.substring(filename.lastIndexOf('.') + 1).toUpperCase();
+        var allowedExt = ["JPEG", "JPG", "PDF", "XLSX"];
+        if (allowedExt.indexOf(fileExt) < 0) {
+            alert("Acceptable file format is JPEG (*.jpg ; *.jpeg)");
+            return false;
+        }
+        return true;
+    }
+    function isAllowedImageUploadLimit(containerId, selectedFileToUploadCount) {
+        // image upload limitation for selective containers
+        var alreadyUploadedCount = $("div[id='" + containerId + "']").children(".imageItem").length;
+        var allowedImages = 4;
+        if ((containerId.match("^recImg_")) && (containerId.match("_containerImg$"))) {
+            allowedImages = 3;
+        }
+        if ((alreadyUploadedCount + selectedFileToUploadCount) > allowedImages) {
+            alert("Cannot upload more than " + allowedImages + " images in this section");
+            return false;
+        }
+        return true;
+    }
+    function imageUpload(e) {
+        var ctrlName = e.currentTarget.name;
+        ctrlName = ctrlName.replace("UploadBtn", "");
+        var uploadImageFormField = $("input[name='" + ctrlName + "FileInputImg']");
+        var uploadStatus = false;
+        if ("image_containerImg" === ctrlName + "_containerImg") {
+            uploadStatus = true;
+        }
+        var filename = uploadImageFormField.val();
+        if (filename === "") {
+            return;
+        }
+        if (!uploadStatus) {
+            var isAllowedFileLimit = isAllowedImageUploadLimit(ctrlName + "_containerImg", 1);
+            if (!isAllowedFileLimit) {
+                uploadImageFormField.val("");
+                return;
+            }
+            var isValidExtension = isAllowedImageExtenstion(filename);
+            if (isValidExtension && isAllowedFileLimit) {
+                uploadStatus = true;
+            }
+        }
+        if (uploadStatus) {
+            uploadFiles(uploadImageFormField[0].files, ctrlName + "_containerImg");
+        }
+        uploadImageFormField.val("");
+    }
+    function uploadFiles(files, containerId) {
+        var imageItems = $("#" + containerId);
+        if (imageItems.length) {
+            var children = imageItems.children();
+            var nextId = children.length;
+            $.each(files, function (index, file) {
+                if (file.size > 5 * 1024 * 1000) {
+                    alert("Cannot accept file(s).  Files must be less than 5 MB in size.");
+                    return;
+                }
+            });
+            // files is a FileList of File objects. List some properties.            
+            $.each(files, function (index, file) {
+                var imageId = "imageItem." + nextId;
+                var imageIdSelector = "#imageItem\\." + nextId;
+                $("<div class='imageItem'>Loading...<br/><progress></progress></div>").attr("id", imageId).appendTo(imageItems);
+                dcomethealth.FileResource.uploadFile(file, function (data) {
+                    var imageItem = $(imageIdSelector);
+                    imageItem.remove();
+                    dcomethealth.FileResource.getContentType(data.imageId, function (content) {
+                        dcomethealth.pictures.addImage(data.imageId, "", containerId, content.mimeType);
+                        $("#" + containerId + " a").lightBox(lightboxSettings);
+                    }, function (jqXHR) {
+                        dcomethealth.pictures.addImage(data.imageId, "", containerId);
+                    });
+
+//                    
+//                    $('#user_photo').attr('src', '/health_web/rest/file/photo?id=' + data.imageId);
+//                    $('#user_photo_dropdown').attr('src', '/health_web/rest/file/photo?id=' + data.imageId);
+//                    scrollTo("#pictures");
+                }, function (jqXHR) {
+
+                }, function (event) {
+                    var progressNode = $(imageIdSelector + " progress").get(0);
+                    if (event.lengthComputable) {
+                        progressNode.max = event.total;
+                        progressNode.value = event.loaded;
+                    }
+                });
+                nextId++;
+            });
+        }
+    }
+//    initialize: function () {
+//        alert("init");
+//        var latlng = new google.maps.LatLng(-7.275920, 112.791871);
+//        var mapOptions = {
+//            zoom: 12,
+//            center: latlng,
+//            mapTypeId: google.maps.MapTypeId.ROADMAP
+//        }
+//        map = new google.maps.Map(document.getElementById('googleMap'), mapOptions);
+//    },
+//    getLocation: function (zipcode) {
+//        var address = zipcode;
+//        alert(zipcode);
+//        var geocoder = new google.maps.Geocoder();
+//        alert("1");
+//        geocoder.geocode({'address': address}, function (results, status) {
+//            alert("2");
+//            if (status === google.maps.GeocoderStatus.OK) {
+//                var mapProp = {
+//                    center: new google.maps.LatLng(results[0].geometry.location.lat(), results[0].geometry.location.lng()),
+//                    zoom: 9,
+//                    mapTypeId: google.maps.MapTypeId.ROADMAP
+//                };
+//                alert("q");
+//                var map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
+//                alert("a");
+//                var marker = new google.maps.Marker({
+//                    position: new google.maps.LatLng(results[0].geometry.location.lat(), results[0].geometry.location.lng()),
+//                });
+//                alert("s");
+//                marker.setMap(map);
+//                google.maps.event.addListener(marker, 'click', function () {
+//                    map.setZoom(13);
+//                    map.setCenter(marker.getPosition());
+//                });
+//                alert(mapProp.length);
+//            } else {
+//                alert("Request failed.")
+//            }
+//        });
+//    },
+    function refreshData() {
+    }
+    return {
+        init: init,
+        setDragNDropListeners: setDragNDropListeners,
+        isAllowedImageExtenstionList: isAllowedImageExtenstionList,
+        isAllowedImageExtenstion: isAllowedImageExtenstion,
+        isAllowedImageUploadLimit: isAllowedImageUploadLimit,
+        uploadFiles: uploadFiles,
+        loadImage: loadImage,
+        refreshData: refreshData,
+        lightboxSettings: lightboxSettings
+    };
+}());
+dcomethealth.user_profile.init();

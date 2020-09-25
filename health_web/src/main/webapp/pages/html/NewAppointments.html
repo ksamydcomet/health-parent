@@ -1,0 +1,142 @@
+<style type="text/css"> 
+    #patMrnNo {
+        position: relative;
+        z-index: 10000;
+    }
+    .ui-autocomplete {
+        z-index: 9999 !important;
+    }
+    .evtBackGround{
+        background-color: yellowgreen;
+        color: white;
+    }
+</style>
+<link rel='stylesheet' type='text/css' href='js/plugins/fullcalendar/fullcalendar.min.css' />
+<!--<link rel="stylesheet" type="text/css" href="js/plugins/fullcalendar/viewmore.css"  />-->
+<link  rel="stylesheet" type="text/css" href="js/plugins/fullcalendar/fullcalendar.print.css"/>
+<div class="panel panel-green">
+    <div class="panel-heading"><h4>New Appointments</h4>
+        <div class="edit-all-button-container pull-right" id="btns_state">
+            <a href="#" class="btn btn-dulab-white"><span id="saveApp" class="">Save</span></a>
+        </div>
+    </div>
+    <div class="panel-body">
+        <div class="row">
+            <div class=" panel col-sm-3">
+                <div class="panel-gray">
+                    <div class="panel list-group">
+                        <div class="input-group"><input placeholder="Search doctor..." id="doctorName" name="doctorName" class="form-control" type="text">
+                            <input type="hidden" id="doctorRid" name="doctorRid" value=""/>
+                            <div class="input-group-btn"><button type="button" class="btn btn-primary"><i class="fa fa-search"></i></button></div>
+                        </div>                        
+                    </div>
+                </div>
+            </div>
+            <div id="calendar" class="col-sm-6"></div>
+            <div id="createEventModal" class="modal fade col-md-6" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+                <div class="modal-dialog center">
+                    <div class="modal-content ui-widget-content">                        
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+                            <h4 id="myModalLabel1"><strong>Create Appointment</strong></h4>
+                        </div>
+                        <div class="modal-body">
+                            <form id="createAppointmentForm" class="form-horizontal">
+                                <div class="control-group">
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="col-md-4 col-sm-12 col-xs-12">
+                                            <div class="controls">
+                                                <input type="text" name="patMrnNo" id="patMrnNo" class="col-md-3 form-control" style="margin: 0 auto;" placeholder="MRN No." data-provide="typeahead" data-items="4" data-source="[&quot;Value 1&quot;,&quot;Value 2&quot;,&quot;Value 3&quot;]">
+                                                <input type="hidden" id="patRid" name="patRid"/>
+                                                <input type="hidden" id="appDate" name="appDate"/>
+                                                <input type="hidden" id="appFromTime" name="appFromTime"/>
+                                                <input type="hidden" id="appToTime" name="appToTime"/>
+                                                <input type="hidden" id="apptStartTime"/>
+                                                <input type="hidden" id="apptEndTime"/>
+                                                <input type="hidden" id="apptAllDay" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5 col-sm-12 col-xs-12">
+                                            <div class="controls">
+                                                <input type="text" name="patientName" id="patientName" class="col-md-4 form-control" placeholder="Patient Name" style="margin: 0 auto;" data-provide="typeahead" data-items="4" data-source="[&quot;Value 1&quot;,&quot;Value 2&quot;,&quot;Value 3&quot;]" onkeypress="return dcomethealth.validation.ValidateAlpha(event)">
+                                            </div>
+                                        </div>
+                                        <!--                                        <div class="col-md-3 col-sm-12 col-xs-12">
+                                                                                    <div class="controls">
+                                                                                        <input type="text" name="patientMobileNo" id="patientMobileNo" class="col-md-2 form-control" placeholder="Patient Mobile No." style="margin: 0 auto;" data-provide="typeahead" data-items="4" data-source="[&quot;Value 1&quot;,&quot;Value 2&quot;,&quot;Value 3&quot;]" onkeypress="return dcomethealth.validation.isNumberKey(event)">
+                                                                                    </div>
+                                                                                </div>-->
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="when">When:</label>
+                                    <div class="controls controls-row text-primary" id="when" style="margin-top:5px;">
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-dulab" id="savePatients">Save</button>
+                            <button class="btn btn-dulab" data-dismiss="modal" aria-hidden="true">Cancel</button>                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!--<div id="calendar-drag" class="col-sm-6"></div> Need-->
+            <!--<div id="calendar-external" class="col-sm-6"></div>-->
+            <div class="panel col-sm-3">
+                <div class="panel-body">
+                    <div class="col-md-3"><span><small><b>Booked</b></small></span><br><span id="bookedId" class="badge badge-primary">0</span></div>
+                    <div class="col-md-3"><span><small><b>Waiting</b></small></span><br><span class="badge badge-danger">0</span></div>
+                    <div class="col-md-3"><span><small><b>Engaged</b></small></span><br><span class="badge badge-info">0</span></div>
+                    <div class="col-md-3"><span><small><b>Completed</b></small></span><br><span class="badge badge-success">0</span></div>
+                    <div class="col-md-12"><hr></div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <td>
+                                    <ul id="visitTable" class="panel-comments">
+                                        <!--<li>-->
+                                        <!--<div class="content">-->
+                                        <!--<span class="actions">-->
+                                        <!--<div class="btn-group">-->
+                                        <!--                                                        <button class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                                                                                                    <i class="fa fa-pencil"></i></button>-->
+                                        <!--                                                        <ul class="dropdown-menu">
+                                                                                                    <li><a href="#"><small>Reached</small></a></li>
+                                                                                                    <li><a href="#"><small>Engaged</small></a></li>
+                                                                                                    <li><a href="#"><small>Completed</small></a></li>
+                                                                                                    <li><a href="#"><small>Cancel</small></a></li>
+                                                                                                </ul>-->
+                                        <!--                                                    </div>-->
+                                        <!--</span>-->
+                                        <!--</div>-->
+                                        <!--</li>-->         
+                                    </ul>
+                                </td>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>               
+            </div>
+            <div class="row table-responsive col-md-12 col-sm-12 col-xs-12 hidden"> <!--- DynTable For Appointment Save & Fetch---> 
+                <table id="dynTable" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                    <thead id="dynThead" class="">
+                        <tr>
+                            <th>Patient MRN No.</th>
+                            <th>Patient Name</th>
+                            <th>Patient Mobile No.</th>
+                            <th>Patient Appoint Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dynTbody"></tbody>  
+                </table>                   
+            </div>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/fullcalendar/fullcalendar.min.js'></script>
+<!--<script type="text/javascript"  src="js/plugins/fullcalendar/fullcalendar.viewmore.js"></script>-->

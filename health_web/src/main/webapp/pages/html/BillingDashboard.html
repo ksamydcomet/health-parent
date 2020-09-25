@@ -1,0 +1,93 @@
+<div id="billDashboard" class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-3 col-xs-12 col-sm-6">
+                    <a class="info-tiles tiles-toyo" href="#" onclick="localStorage.setItem('totalAmount', $('#totalAmount').text());
+                        dcomethealth.util.loadpage('BillView');
+                    dcomethealth.opdVal = 1;">
+                        <div class="tiles-heading">Total Collection</div>
+                        <div class="tiles-body-alt">
+                            <!--i class="fa fa-bar-chart-o"></i-->
+                            <div class="text-center"><span id="totalAmount">0</span></div>
+                            <small><span class="dcomet-c-s_currCode"></span></small>
+                        </div>
+                        <div class="tiles-footer">more info</div>
+                    </a>
+                </div>
+                <div class="col-md-3 col-xs-12 col-sm-6">
+                    <a class="info-tiles tiles-orange" href="#" onclick="localStorage.setItem('totalCash', $('#totalCash').text());dcomethealth.util.loadpage('BillView');
+                    dcomethealth.opdVal = 2;">
+                        <div class="tiles-heading">Cash</div>
+                        <div class="tiles-body-alt">
+                            <i class="fa fa-money"></i>
+                            <div class="text-center"><span id="totalCash">0</span></div>
+                            <small><span class="dcomet-c-s_currCode"></span></small>
+                        </div>
+                        <div class="tiles-footer">view more</div>
+                    </a>
+                </div>
+                <div class="col-md-3 col-xs-12 col-sm-6">
+                    <a class="info-tiles tiles-alizarin" href="#" onclick="localStorage.setItem('totalCard', $('#totalCard').text());dcomethealth.util.loadpage('BillView');
+                    dcomethealth.opdVal = 3;">
+                        <div class="tiles-heading">Card</div>
+                        <div class="tiles-body-alt">
+                            <i class="fa fa-credit-card"></i>
+                            <div class="text-center"><span id="totalCard">0</span></div>
+                            <small><span class="dcomet-c-s_currCode"></span></small>
+                        </div>
+                        <div class="tiles-footer">view more</div>
+                    </a>
+                </div>
+                <div class="col-md-3 col-xs-12 col-sm-6">
+                    <a class="info-tiles tiles-success" href="#" onclick="localStorage.setItem('totalCheque', $('#totalCheque').text());dcomethealth.util.loadpage('BillView');
+                    dcomethealth.opdVal = 4;">
+                        <div class="tiles-heading">Cheque</div>
+                        <div class="tiles-body-alt">
+                            <i class="fa fa-list-alt"></i>
+                            <div class="text-center"><span id="totalCheque">0</span></div>
+                            <small><span class="dcomet-c-s_currCode"></span></small>
+                        </div>
+                        <div class="tiles-footer">view more</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="panel panel-grape">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-12 clearfix">
+                            <h4 class="pull-left" style="margin:0 0 10px">Payer info.<small>(overview)</small></h4>
+                            <div class="btn-group pull-right">
+                                <a href="javascript:;" id="updatePieCharts" class="btn btn-default-alt btn-sm">Refresh</a>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-4" style="padding-top:10px;padding-bottom:10px;">
+                            <div class="easypiechart" id="returningvisits" data-percent="65">
+                                <span class="percent"></span>
+                            </div>
+                            <label for="newvisits">Insurance</label>
+                            <hr class="hidden-md hidden-lg">
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-4" style="padding-top:10px;padding-bottom:10px;">
+                            <span class="easypiechart" id="newvisitor" data-percent="81">
+                                <span class="percent"></span>
+                            </span>
+                            <label for="bouncerate">Corporates</label>
+                            <hr class="hidden-md hidden-lg">
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-4" style="padding-top:10px;padding-bottom:10px;">
+                            <span class="easypiechart" id="clickrate" data-percent="42">
+                                <span class="percent"></span>
+                            </span>
+                            <label for="clickrate">TPA's</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:ehcache="http://www.springmodules.org/schema/ehcache" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+       http://www.springmodules.org/schema/ehcache
+       http://www.springmodules.org/schema/cache/springmodules-ehcache.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-2.5.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+       http://www.springframework.org/schema/util  
+       http://www.springframework.org/schema/beans/spring-util-2.5.xsd">
+    <tx:annotation-driven />
+    <import resource="classpath:health-db-applicationcontext.xml" />
+    <import resource="classpath:health-dao-applicationcontext.xml" />
+    	
+    <context:component-scan base-package="com.dcomet.fw.domain" />
+    <context:component-scan base-package="com.dcomet.fw.adapter" />
+    <context:component-scan base-package="com.dcomet.fw.security.service" />
+    <context:component-scan base-package="com.dcomet.fw.service.aop" />
+    <context:component-scan base-package="com.dcomet.fw.email" />    
+    <context:component-scan base-package="com.dcomet.fw.workflow.adapter" />
+    <context:component-scan base-package="com.dcomet.fw.workflow.caching" />
+    <context:component-scan base-package="com.dcomet.fw.workflow.service" />    
+    <context:component-scan base-package="com.dcomet.health.adapter" />
+    <context:component-scan base-package="com.dcomet.health.service" />
+    <context:component-scan base-package="com.dcomet.module.master.adapter" />
+    <context:component-scan base-package="com.dcomet.module.master.service" />
+    <context:component-scan base-package="com.dcomet.module.inventory.adapter" />
+    <context:component-scan base-package="com.dcomet.module.inventory.service" />
+    <context:component-scan base-package="com.dcomet.module.purchase.adapter" />
+    <context:component-scan base-package="com.dcomet.module.purchase.service" />
+    <context:component-scan base-package="com.dcomet.module.laboratory.adapter" />
+    <context:component-scan base-package="com.dcomet.module.laboratory.service" />
+    <context:component-scan base-package="com.dcomet.module.billing.adapter" />
+    <context:component-scan base-package="com.dcomet.module.billing.service" />
+    <context:component-scan base-package="com.dcomet.health.caching" />
+  
+
+    <bean id="serviceProxy"
+          class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">
+        <property name="beanNames" value="*Service" />
+        <property name="interceptorNames">
+            <list>
+                <value>serviceAdvisor</value>
+            </list>
+        </property>
+    </bean>
+    <bean id="serviceAdvisor"
+          class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
+        <property name="patterns">
+            <list>
+                <value>.*</value>
+            </list>
+        </property>
+        <property name="advice" ref="serviceAdviceAroundMethodBeanAdvice" />
+    </bean>
+    <context:component-scan base-package="com.dcomet.health.web.excel" />       
+    <context:component-scan base-package="com.dcomet.health.web.rest" />
+    <bean id="applicationContextProvder" class="com.dcomet.fw.security.service.jaas.DComMetLoginModule"/>
+</beans>

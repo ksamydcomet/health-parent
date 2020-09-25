@@ -1,0 +1,34 @@
+<div class="row" id="Worklist">     
+    <div class="panel panel-orange">
+        <div class="panel-heading"><h4 id="taskHeader">Tasks</h4>
+            <div class="hidden-print">
+                <div class="pull-right edit-all-button-container">
+                    <!--<a href="#" class="btn btn-orange"><span>Search </span><i class="fa fa-search"></i></a>-->
+                    <div class="pull-right edit-all-button-container"></div>
+                    <div class="btn-group hidden-xs">
+                        <a href='#' class="btn btn-orange dropdown-toggle jqueryUIToolTip" title="Download" data-toggle='dropdown' style="margin-top: 3px; margin-bottom: 3px;"><i class="fa fa-cloud-download"></i></a>
+                        <ul class="dropdown-menu">
+                            <li onclick="dcomethealth.Notification.exportExcel();"><a href="#" >Excel File (*.xlsx)</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="row clearfix">
+                    <div class="col-md-12 table-responsive" id="ReportTableDiv">
+                        <table id="taksDynTable" class="table table-striped table-hover">
+                            <thead id="tr_head">                            
+                            </thead>            
+                            <tbody id="tr_details">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
+    <display-name>health_web</display-name>
+    <context-param>
+        <param-name>log4j.property.file</param-name>
+        <param-value>classpath:health_service_log4j.xml</param-value>
+    </context-param>
+    <context-param>
+        <param-name>log4j.property.refreshSecs</param-name>
+        <param-value>300</param-value>
+    </context-param>
+    <context-param>
+        <param-name>resteasy.servlet.mapping.prefix</param-name>
+        <param-value>/rest</param-value>
+    </context-param>
+    <listener>
+        <listener-class>com.dcomet.health.web.listener.Log4jConfigListener</listener-class>
+    </listener>	
+    <listener>
+        <listener-class>org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap</listener-class>
+    </listener>
+    <listener>
+        <listener-class>org.jboss.resteasy.plugins.spring.SpringContextLoaderListener</listener-class>
+    </listener>
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath:health-service-applicationcontext.xml</param-value>
+    </context-param>
+    <servlet>
+        <servlet-name>health_service</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet>
+        <servlet-name>Resteasy</servlet-name>
+        <servlet-class>org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>LogoutServlet</servlet-name>
+        <servlet-class>com.dcomet.fw.security.service.jaas.LogoutServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>health_service</servlet-name>
+        <url-pattern>/ws/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Resteasy</servlet-name>
+        <url-pattern>/rest/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>LogoutServlet</servlet-name>
+        <url-pattern>/logout</url-pattern>
+    </servlet-mapping>
+    <security-constraint><!--Exclude css and images here -->
+        <web-resource-collection>
+           <web-resource-name>Exclude from Security</web-resource-name>
+           <url-pattern>/loginPage/*</url-pattern>
+        </web-resource-collection>
+    </security-constraint>
+    <security-constraint><!--Non Redtricted-->
+        <web-resource-collection>
+            <web-resource-name>Restricted</web-resource-name>
+            <url-pattern>/*</url-pattern>
+            <http-method>POST</http-method>
+        </web-resource-collection>
+    </security-constraint>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Restricted</web-resource-name>
+            <url-pattern>/*</url-pattern>
+            <http-method>DELETE</http-method>
+            <http-method>GET</http-method>
+            <http-method>POST</http-method>
+            <http-method>PUT</http-method>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>dcometusers</role-name>
+        </auth-constraint>
+        <user-data-constraint>
+            <transport-guarantee>NONE</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+    <security-role>
+        <description>An administrator</description>
+        <role-name>dcometusers</role-name>
+    </security-role>
+    
+    <login-config>
+        <auth-method>FORM</auth-method>
+        <form-login-config>
+            <form-login-page>/login.html</form-login-page>
+            <form-error-page>/error.html</form-error-page>
+        </form-login-config>
+    </login-config>
+    
+    
+    
+    <!--     <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+    
+    <security-constraint>
+        <display-name>Apptics Security Constraint</display-name>
+        <web-resource-collection>
+            <web-resource-name>Protected Area</web-resource-name>
+            <url-pattern>/rest/*</url-pattern>
+            <http-method>DELETE</http-method>
+            <http-method>GET</http-method>
+            <http-method>POST</http-method>
+            <http-method>PUT</http-method>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>dcometusers</role-name>
+        </auth-constraint>
+        <user-data-constraint>
+            <transport-guarantee>NONE</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+    
+    <login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>myrealm</realm-name>
+    </login-config>-->
+    
+</web-app>

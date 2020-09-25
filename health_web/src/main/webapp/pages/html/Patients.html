@@ -1,0 +1,1240 @@
+<script>
+//    function movePage(e) {
+//        var list = $("#patient_visit_tab");
+//        var li = list.children();
+//        var lengthMinusOne = li.length - 1;
+//        var index = 0;
+//        var num = $("#patient_visit_tab li").length;
+//        var prevLi = $(li[0]).css("background-color", "");
+//        $("#next").click(function () {
+//            index++;
+//            if (index > lengthMinusOne) {
+//                index = 0;
+//            }
+//            prevLi.css("background", "");
+//            if ($(li[index]).attr("style"))
+//            {
+//                if (index != 0) {
+//                    $(li[index]).prevAll().css("text-decoration", "none");
+//                }
+//            }
+//            $(li[index]).next().attr("style", "text-decoration:underline;");
+//        });
+//        $("#prev").click(function () {
+//            index--;
+//            if (index < 0) {
+//                index = lengthMinusOne;
+//            }
+//            if ($("#patient_visit_tab li").attr("style"))
+//            {
+//                $("#patient_visit_tab li").removeAttr("style");
+//            }
+//            prevLi = $(li[index]).attr("style", "text-decoration:underline;");
+//        });
+//    }
+    function insert_row(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('complaintsTable');
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            var complaintsName = dynTableGetNodeInRow(table.rows[i + 1], 'complaintsValue').value;
+        }
+        if (complaintsName == "") {
+            alert("Enter Complaints");
+            return false;
+        }
+        else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "complaintsValue").value = "";
+            dynTableGetNodeInRow(newRow, "compId").value = "";
+            dynTableGetNodeInRow(newRow, "complaintsDurations").value = "";
+            dynTableGetNodeInRow(newRow, "compDurataionSelect").value = "";
+            dynTableGetNodeInRow(newRow, "compDurataionSelect").className = "col-md-12 dcomet-c-s_ddict_duration-list";
+            dynTableGetNodeInRow(newRow, "compCurrentStatus").value = "";
+            dynTableGetNodeInRow(newRow, "compCurrentStatus").className = "col-md-12 dcomet-c-s_ddict_complaint_status-list";
+//            dynTableGetNodeInRow(newRow, "addnotes").value = "";
+            dynTableGetNodeInRow(newRow, "minus").className = 'ace-icon fa fa-minus';
+        }
+        dcomethealth.datatypes.init($("#complaintsTbody"));
+        $("select option").each(function () { //For remove duplicates
+            $(this).siblings("[value='" + this.value + "']").remove();
+        });
+    }
+    function insert_servicerow(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('serviceOrderTable');
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            var serviceName = dynTableGetNodeInRow(table.rows[i + 1], 'serviceName').value;
+        }
+        if (serviceName == "") {
+            alert("Enter Service");
+            return false;
+        } else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "serviceName").value = "";
+            dynTableGetNodeInRow(newRow, "itemRID").value = "";
+            dynTableGetNodeInRow(newRow, "serReqItemGroupRid").value = "";
+//            dynTableGetNodeInRow(newRow, "favouriteDId").value = "";
+//            dynTableGetNodeInRow(newRow, "favHRid").value = "";
+//            dynTableGetNodeInRow(newRow, "favDid").value = "";
+            dynTableGetNodeInRow(newRow, "serviceReqDId").value = "";
+            dynTableGetNodeInRow(newRow, "servicePrice").value = "";
+            dynTableGetNodeInRow(newRow, "qtyService").value = "1";
+            dynTableGetNodeInRow(newRow, "qtyService").style.cursor = "not-allowed";
+            dynTableGetNodeInRow(newRow, "qtyService").readOnly = "true";
+            dynTableGetNodeInRow(newRow, "processServiceOn").value = moment().format("DD-MM-YYYY");
+            dynTableGetNodeInRow(newRow, "processServiceOn").style.cursor = "not-allowed";
+            dynTableGetNodeInRow(newRow, "processServiceOn").readOnly = "true";
+//            dynTableGetNodeInRow(newRow, "addInstructions").value = "";
+            dynTableGetNodeInRow(newRow, "minus").className = 'ace-icon fa fa-minus';
+            dcomethealth.Patients.autocompleteService();
+        }
+    }
+    function clearTables(tableName) {
+        var tbl = document.getElementById(tableName);
+        var tby = tbl.getElementsByTagName("TBODY");
+        if (tby.length == 0)
+            return null;
+        tby = tby[tby.length - 1];
+        rows = tby.getElementsByTagName("TR");
+        while (rows.length != 1) {
+            var lastRow = rows[rows.length - 1];
+            lastRow.parentNode.removeChild(lastRow);
+            rows = tby.getElementsByTagName("TR");
+        }
+    }
+    $('.resetBtn').on('click', function () {
+        var title = $(this).attr("title");
+        if ($(this).attr("title") == 'complaintsTable' || $(this).attr("title") == 'serviceOrderTable' || $(this).attr("title") == 'rxOrderTable') {
+            clearTables($(this).attr("title"));
+        }
+        if ($(this).attr("title") == 'serviceOrderTable') {
+            $("#qtyService,#processServiceOn").attr('readOnly', false);
+            $("#qtyService,#processServiceOn").attr('style', '');
+//            $("#processServiceOn").attr('value', moment().format("DD-MM-YYYY"));
+            dcomethealth.Patients.autocompleteService();
+        }
+        $('#' + $(this).attr("title")).find('tbody input').each(function () {
+            $(this).attr('value', '') || $(this).val('');
+        });
+        $('#' + $(this).attr("title")).find('tbody select').each(function (idx, select) {
+            $(select).append('<option value="0" selected>-Select-</option>');
+        });
+        $("div.targetDiv").each(function (indx, div) {
+            if (title == 'Vitals' && $(div).hasClass('Vitals')) {
+                $.map($("span#bmiValue,#bmiPrescription"), function (item) {
+                    return $(item).text('');
+                });
+            }
+            if ($(div).hasClass('Plan/FollowUp')) {
+                $("#" + $(this).find("form").attr('id')).trigger("reset");   //reset form with id 
+            }
+        });
+        $("select option").each(function () { //For remove duplicates
+            $(this).siblings("[value='" + this.value + "']").remove();
+        });
+
+    });
+    function deleteserviceRow(elem, tableName) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById(tableName);
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+    function insert_rxrow(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('rxOrderTable');
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            var drugName = dynTableGetNodeInRow(table.rows[i + 1], 'drugName').value;
+        }
+        if (drugName == "") {
+            alert("Enter DrugName");
+            return false;
+        } else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "drugName").value = "";
+            dynTableGetNodeInRow(newRow, "SkuRID").value = "";
+            dynTableGetNodeInRow(newRow, "drugHRid").value = "";
+            dynTableGetNodeInRow(newRow, "drugDid").value = "";
+            dynTableGetNodeInRow(newRow, "strength").value = "";
+            dynTableGetNodeInRow(newRow, "strengthSelect").value = "";
+            dynTableGetNodeInRow(newRow, "duration").value = "";
+            dynTableGetNodeInRow(newRow, "durataionSelect").value = "";
+            dynTableGetNodeInRow(newRow, "durataionSelect").className = "col-md-12 dcomet-c-s_ddict_duration-list";
+            dynTableGetNodeInRow(newRow, "whenSelect").value = "";
+            dynTableGetNodeInRow(newRow, "whenSelect").className = "col-md-12 dcomet-c-s_ddict_dosage_time-list";
+            dynTableGetNodeInRow(newRow, "morning").value = "";
+            dynTableGetNodeInRow(newRow, "afternoon").value = "";
+            dynTableGetNodeInRow(newRow, "evening").value = "";
+            dynTableGetNodeInRow(newRow, "night").value = "";
+            dynTableGetNodeInRow(newRow, "drugQty").value = "";
+            dynTableGetNodeInRow(newRow, "minus").className = 'ace-icon fa fa-minus';
+            dcomethealth.Patients.autoCompleteDrug();
+        }
+        dcomethealth.datatypes.init($("#rxOrderTbody"));
+    }
+    function deleteRow(elem, tableName) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById(tableName);
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+    function addRow(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dyn_table_upload');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var uploadedFile = dynTableGetNodeInRow(table.rows[i + 1], 'file').value;
+//            var fileDescription = dynTableGetNodeInRow(table.rows[i + 1], 'taFileDesc').value;
+        }
+        if (uploadedFile === "" || uploadedFile === "undefined") {
+            alert("Attach AnyOne File");
+            return false;
+        } else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "del_Upload").className = "ace-icon fa fa-minus";
+//            dynTableGetNodeInRow(newRow, "fileId").value = 0;
+            dynTableGetNodeInRow(newRow, "file").value = "";
+//            dynTableGetNodeInRow(newRow, "taFileDesc").value = "";
+        }
+    }
+    $('body').on('focus', "#drugReqHfollowupDate", function () {
+        $(this).datepicker({
+            format: 'dd-mm-yyyy'
+        });
+    });
+
+    $(function () {
+        $('.office-title').click(function () {
+            $(this).next('div').slideToggle();
+
+            $(this).parent().siblings().children().next().slideUp();
+            return false;
+        });
+    });
+//$(function () {
+//    $('.myDivs').click (function () {
+//        $('.myDivs').not(this).hide();
+//    });
+//
+//    $('#all').click (function () {
+//        $('.myDivs').show();
+//    });
+//});
+
+    $('.show').click(function () {
+        if (parseInt($(this).attr('target')) == 1) {
+            $("#complaintsValue").focus();
+        } else if (parseInt($(this).attr('target')) == 2) {
+            $("#personalHistory").focus();
+        } else if (parseInt($(this).attr('target')) == 3) {
+            $("#od_vital_height").focus();
+        } else if (parseInt($(this).attr('target')) == 4) {
+            $("#visDiagnosis").focus();
+        } else if (parseInt($(this).attr('target')) == 5) {
+            $("#facialSymmettryText").focus();
+        } else if (parseInt($(this).attr('target')) == 6) {
+            $("#patSpeciality").focus();
+        } else if (parseInt($(this).attr('target')) == 7) {
+            $("#treatTable").focus();
+        } else if (parseInt($(this).attr('target')) == 8) {
+            $("#drugName").focus();
+        } else if (parseInt($(this).attr('target')) == 9) {
+            $("#complaintsValue").focus();
+        }
+//        alert($('#div' + $(this).attr('target')));
+//        console.log($('#div' + $(this).attr('target')).find('div'));
+//        $('.targetDiv').hide();
+//        $('#div' + $(this).attr('target')).slideToggle('');
+////        .siblings('.targetDiv').hide('');
+//        if ($(this).attr('target') == 12) { //For hide Ledger visit Date  
+//            $("#patient_visit_tab").hide();
+//        } else {
+//            $("#patient_visit_tab").show();
+//            $("#height,#weight,#blood,#heart,#respiratory,#bodyTemp").removeClass("hidden");
+//        }
+//        checkOverflow();
+    });
+    function checkOverflow() { //For Scrollable View
+        if ($("#pageContent").height() > 64) {
+            $("#pageContent").attr("style", "overflow-y: scroll;height: 250px;");
+        } else {
+            $("#pageContent").attr("style", "");
+        }
+    }
+    function  showAttachFile() {
+        if ($("#fileUpload_Header").hasClass("hidden")) {
+            $("#fileUpload_Header,#uploadButton").removeClass('hidden');
+            $("#fileDownload_Header").addClass('hidden');
+            $("").removeClass('hidden');
+        } else {
+            $("#fileUpload_Header").addClass('hidden');
+            if ($('#dyn_table_download tbody#fileDownload_tbody').children().length == 0) { // For Table Head view if it's length != 0
+                $("#fileDownload_Header,#uploadButton").addClass('hidden');
+            } else {
+                $("#fileDownload_Header,#uploadButton").removeClass('hidden');
+            }
+        }
+    }
+    function  clearForm(elem) {  //For Clinical notes reset
+        if (elem.id == 'divCnotes') {
+            $('.toggle-success').toggles({on: false});
+            $('#div5').find('form').each(function (ix, forms) {
+                $("#" + forms.id).trigger("reset");         //reset form with id 
+                $(forms).find("span").attr('style', '');   //reset span background color
+                $(forms).trigger("reset");                //reset form without id
+                $("#" + forms.id).find("select").each(function (indx, select2) {
+                    var s2Id = $(select2).attr("id");
+                    $("#s2id_" + s2Id).select2('data', '');
+                });
+            });
+            CKEDITOR.instances.noTempNodes.setData('');
+        } else {
+            $("#div11").find("div#image_containerImg").empty();
+        }
+    }
+    function computeBMI() {
+        // user inputs
+        if (!!$("#od_vital_height").val()) {
+            var height = Number(document.getElementById("od_vital_height").value);
+        }
+        if (!!$("#od_vital_weight").val()) {
+            var weight = Number(document.getElementById("od_vital_weight").value);
+        }
+        var heightunits = $("#od_vital_height_unit option:selected").text();
+        var weightunits = $("#od_vital_weight_unit option:selected").text();
+        //Convert all units to metric
+        if (heightunits == "Ft")
+            height /= 39.3700787;
+        if (weightunits == "Lbs") {
+            weight /= 2.20462;
+//            weight = weight * .45;
+        }
+//        var BMI = (weight / Math.pow(finalHeight, 2));
+
+        //Perform calculation
+        //        var BMI = weight /Math.pow(height, 2)*10000;
+        var BMI = Math.round(weight / Math.pow(height, 2) * 10000);
+        var bmiValue = Math.round(BMI * 100) / 100;
+        //Display result of calculation
+        if (bmiValue != "NaN" && !!bmiValue) {
+            document.getElementById("bmiValue").innerText = bmiValue;
+        }
+        var output = Math.round(BMI * 100) / 100
+        if (output < 18.5)
+            document.getElementById("bmiPrescription").innerText = "Underweight";
+        else if (output >= 18.5 && output <= 25)
+            document.getElementById("bmiPrescription").innerText = "Normal";
+        else if (output >= 25 && output <= 30)
+            document.getElementById("bmiPrescription").innerText = "Obese";
+        else if (output > 30)
+            document.getElementById("bmiPrescription").innerText = "Overweight";
+        // document.getElementById("answer").value = output; 
+        $("#bmiText").removeClass('hidden');
+    }
+</script>
+<style>
+    .pg{
+        display: inline-block;
+        padding-left: 0;
+        margin: 20px 0;
+        border-radius: 1px;
+
+    } 
+    .pg li{
+        float:left;
+        list-style-type: none;
+        padding: 6px;
+        display: inline;
+        color: #0d5d4d;
+        font-size: 12px;
+
+    }
+    /*    .page li a{
+            text-decoration: none;
+            padding: .2em 1em;
+            color: #369;
+            background-color: grey;
+        }*/
+    /*    .page li:hover{
+          padding: 10px;
+          background-color: grey;
+          color: #fff;        
+      }*/
+
+    .effect8
+    {
+        position:relative;
+        -webkit-box-shadow:0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+        -moz-box-shadow:0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+        box-shadow:0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+    }
+    .effect8:before, .effect8:after
+    {
+        content:"";
+        position:absolute;
+        z-index:-1;
+        -webkit-box-shadow:0 0 20px rgba(0,0,0,0.8);
+        -moz-box-shadow:0 0 20px rgba(0,0,0,0.8);
+        box-shadow:0 0 20px rgba(0,0,0,0.8);
+        top:10px;
+        bottom:10px;
+        left:0;
+        right:0;
+        -moz-border-radius:100px / 10px;
+        border-radius:100px / 10px;
+    }
+    .effect8:after
+    {
+        right:10px;
+        left:auto;
+        -webkit-transform:skew(8deg) rotate(3deg);
+        -moz-transform:skew(8deg) rotate(3deg);
+        -ms-transform:skew(8deg) rotate(3deg);
+        -o-transform:skew(8deg) rotate(3deg);
+        transform:skew(8deg) rotate(3deg);
+    }
+    ul#serviceMenu {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        width: 65%;
+        background-color: #f1f1f1;
+        height: 400px;
+        overflow-y:  scroll;
+    }
+    ul#serviceMenu > li.serviceList > a {
+        display: block;
+        color: #000;
+        padding: 8px 16px;
+        text-decoration: none;
+    }
+    ul#serviceMenu > li.serviceList > a.active {
+        background-color: #4CAF50;
+        color: white;
+    }
+    ul#serviceMenu > li.serviceList > a:hover:not(.active) {
+        background-color: #555;
+        color: white;
+    }
+</style>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css'/>
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<script type="text/javascript" src="js/plugins/ckeditor/ckeditor.js"></script>
+<link rel="stylesheet" type='text/css' href="pages/css/pictures.css">
+<div class="panel panel-gray " id="frontPanel">
+    <div class="panel-heading"> 
+        <div class="col-md-9 col-sm-12 col-xs-12"><strong><small><span id="patName1">Today's Patient!</span></small></strong></div>
+        <div class="input-group col-md-3 col-sm-6 col-xs-2 pull-right">
+            <input id="patSearch" placeholder="Search patient..." class="form-control col-md-10 col-sm-12 col-xs-2" type="text">
+            <input id="patRidSearch" type="hidden"><div class="input-group-addon"><i class="fa fa-search"></i></div>
+        </div>
+    </div>
+    <div class="panel-body">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="row col-md-2 col-sm-6 col-xs-2">
+                <div class="panel list-group">
+                    <a  data-parent="#accordion" href="#todayPatients" id="today" class="row list-group-item" onclick="dcomethealth.Patients.getStatus(this);"><i class="fa fa-users"></i><small> &nbsp; Today's Patients</small></a> 
+                    <a  data-parent="#accordion" href="#awaiting" id="waiting" class="row list-group-item" onclick="dcomethealth.Patients.getStatus(this);"><i class="fa fa-spinner"></i><small> &nbsp; Awaiting</small><span class="badge badge-danger"> </span></a> 
+                    <a  data-parent="#accordion" href="#completed" id="completed" class="row list-group-item" onclick="dcomethealth.Patients.getStatus(this);"><i class="fa fa-check"></i><small> &nbsp; Completed</small><span class="badge badge-success"> </span></a> 
+                    <!--<a  data-parent="#accordion" href="#appointments" id="appointments" class="list-group-item" onclick="dcomethealth.Patients.getStatus(this);"><i class="fa fa-calendar"></i><small> &nbsp; Appointments</small><span class="badge badge-warning"> </span></a>--> 
+                </div>
+            </div>
+            <div class="col-md-10 col-sm-10 col-xs-10" id="patientDiv"></div>
+        </div>
+    </div>
+</div>
+<div class="panel panel-gray hidden" id="backPanel" style="">
+    <div class="panel-heading"> 
+        <div class="col-md-10 col-sm-12 col-xs-12">
+            <strong><small><span id="patName"></span></small></strong>
+            <span id="patDemoInfo" class="text-primary" style="font-size: small"></span>
+            <!--<span class="text-primary pull-right" style="font-size: small">Link to medical history</span>-->
+            <!--<input id="completedPatRid" type="hidden">-->
+            <input id="visitTempRID" type="hidden" value=""/>
+            <input id="patMRN" type="hidden" value=""/>
+            <input id="activeVisitRid" type="hidden" value=""/>
+            <input id="activeVisitDate" type="hidden" value=""/>
+            <input id="activeSpecialityIndex" type="hidden" value=""/>
+            <input id="activeDoctorId" type="hidden" value=""/>
+        </div>
+        <div class="col-md-2 col-sm-4 col-xs-2">
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="col-md-4 col-sm-2 col-xs-6"></div>
+                <div class="row col-md-4 col-sm-5 col-xs-6 ">
+                    <button type="button" id="backBtn" class="btn-dulab1  jqueryUIToolTip" title="Back" style="margin-top:5px;" onclick="dcomethealth.util.loadpage('Patients');"><i class="fa fa-arrow-left"></i></button> 
+                </div>
+                <div class="col-md-4 col-sm-5 col-xs-6 pull-right">
+                    <button type="button" id="completeBtn" class="btn-dulab1  jqueryUIToolTip" title="Complete" style="margin-top:5px;" onclick="dcomethealth.Patients.setCompleted()"><i class="fa fa-check"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!--<i class="fa fa-check"></i>-->
+        <!--            <button type="button" id="backBtn" class="btn-dulab1" style="margin-top: -3px;margin-left: 30px;" onclick="dcomethealth.util.loadpage('Patients');">Back</button>
+                    <button type="button" id="completeBtn" class="btn-dulab1 pull-right" style="margin-top: 5px;" onclick="dcomethealth.Patients.setCompleted()">Complete</button> </div> <i class="fa fa-check"></i>-->
+        <!--        <div class="input-group col-md-2 pull-right">
+                    <input id="patSearch" placeholder="Search patient..." class="form-control" type="text">
+                    <input id="patRid" type="hidden"/>
+                    <input id="visitTempRID" name="visitTempRID" type="hidden" value=""/>            
+                    <div class="input-group-addon"><i class="fa fa-search"></i></div>
+                </div>-->
+    </div>
+    <div class="panel-body panel-gray" style="">
+
+
+
+        <div class="row col-md-2 col-sm-4 col-xs-2">
+            <div class="col-md-12 panel list-group" style="">
+                <table id="dyn_table" cellpadding="0" cellspacing="0" border="0" style="background-color: #6ac2e8" class="col-md-12 col-sm-12 col-xs-12 table">                  
+                    <tbody id="so_tbody"> 
+                        <tr><td width="40%"><a style="text-decoration:none; cursor: pointer; color: #fff" class="show" target="1"><i class="fa fa-info-circle"></i><small> Symptoms</small></a></td></tr>
+                        <tr><td width="40%"><a style="text-decoration:none; cursor: pointer; color: #fff" class="show" target="2"><i class="fa fa-history"></i><small> History</small></a></td></tr>
+                        <tr><td width="40%"><a style="text-decoration:none; cursor: pointer; color: #fff" class="show" target="3"><i class="fa fa-heartbeat"></i><small> Vitals</small></a></td></tr>                        
+                        <tr><td width="40%"><a style="text-decoration:none; cursor: pointer; color: #fff" class="show" target="5"><i class="fa fa-edit"></i> <small> Clinical Notes</small></a></td></tr>
+                        <tr><td width="40%"><a style="text-decoration:none; cursor: pointer; color: #fff" class="show" target="4"><i class="fa fa-flask"></i><small> Diagnosis</small></a></td></tr>
+                        <tr><td width="50%"><a style="text-decoration:none; cursor: pointer; color: #fff;" class="show" target="6"><i class="fa fa-flag-o"></i><small> Investigation Order</small></a></td></tr>
+                        <tr><td width="50%"><a style="text-decoration:none; cursor: pointer; color: #fff;" class="show" target="7"><i class="fa fa-medkit"></i><small> Investigation Completed</small></a></td></tr>
+                        <tr><td width="40%"><a style="text-decoration:none; cursor: pointer; color: #fff" class="show" target="8"><i class="fa fa-medkit"></i><small> Rx.Order</small></a></td></tr>
+                        <tr><td width="40%"><a style="text-decoration:none; cursor: pointer; color: #fff" class="show" target="19"><i class="fa fa-female"></i><small> Nursing</small></a></td></tr>
+                        <tr><td width="40%"><a style="text-decoration:none; cursor: pointer; color: #fff" class="show" target="10"><i class="fa fa-wheelchair"></i><small> Admitted Patients</small></a></td></tr>                        
+                        <tr><td width="40%"><a style="text-decoration:none; cursor: pointer; color: #fff" class="show" target="9"><i class="fa fa-list-alt"></i><small> Treatment</small></a></td></tr>
+                        <tr><td width="50%"><a style="text-decoration:none; cursor: pointer; color: #fff" class="show" target="8"><i class="fa fa-medkit"></i><small> Plan / Follow Up</small></a></td></tr>                        
+
+                        <tr><td width="50%"><a style="text-decoration:none; cursor: pointer; color: #fff" class="show" target="10"><i class="fa fa-list-alt"></i><small> ClinicalSummary</small></a></td></tr> 
+                        <tr><td width="40%"><a style="text-decoration:none; cursor: pointer; color: #fff" class="show" target="11"><i class="fa fa-folder-open-o"></i><small> Files</small></a></td></tr>
+                        <tr><td width="40%"><a style="text-decoration:none; cursor: pointer; color: #fff" class="show" target="12"><i class="fa fa-book"></i><small> Ledgers</small></a></td></tr>                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+
+
+        <div class=" col-md-10 col-sm-10 col-xs-10">
+            <div id="pageContent" class="panel" style="overflow-y: scroll;height: 600px;"> 
+                <div id="container">
+                    <!--      margin-top: -10px;margin-bottom: 0;              <a href="#" id="prevBtn" class="btn btn-default btn-sm" onclick="dcomethealth.Patients.callNavigation('prevBtn')"><i class="fa fa-chevron-left"></i></a>
+                                        <button id="visitDateBtn" class="btn btn-sm btn-default" type="button"></button>
+                                        <a href="#" id="nextBtn" class="btn btn-default btn-sm" onclick="dcomethealth.Patients.callNavigation('nextBtn')"><i class="fa fa-chevron-right"></i></a>-->
+                    <ul class="pg" id="patient_visit_tab" style="margin-bottom: -5px;margin-top: -5px;">
+                    </ul> 
+                </div>                
+                <!-- SYMPTOMS -->
+                <div class="panel panel-default">                                            
+                    <div id="div1" class="targetDiv Symptoms"  style="margin-top: -15px;">  
+                        <form id="div1Form">
+                            <div class="row col-md-12">
+                                <div class="pull-right">
+                                    <!--dcomethealth.Patients.submitSymptoms();-->
+                                    <input type="reset"  id="divComp" class="btn-dulab1 btn-dulab1-sm resetBtn" onclick=""  title="complaintsTable"/><!--dcomethealth.Patients.submitSymptoms();-->
+                                </div></div><!--btn btn-primary btn-sm-->
+                            <table id="complaintsTable" class="table table-condensed table-hover">
+                                <thead>
+                                    <tr>
+                                        <td width="2%"></td>
+                                        <td width="30%"><b><small>Symptoms</small></b></td>
+                                        <td width="10%"><b><small>Durations</small></b></td>
+                                        <td width="10%"><b><small>DurationsSelect</small></b></td>
+                                        <td width="15%"><b><small>Current Status</small></b></td>
+                                        <td width="45%"></td>
+                                        <td width="2%"></td>
+                                    </tr>
+                                </thead>
+                                <tbody id="complaintsTbody">
+                                    <tr>
+                                        <td><i id="minus" class="ace-icon fa fa-minus hidden" onclick="deleteRow(this, 'complaintsTable')"></i></td>
+                                        <td><input type="text" id="complaintsValue" name="complaintsValue" class="col-md-12" /><br><!--<span><small><a href="#">show Teeth</a></small></span>-->
+                                            <input type="hidden" id="compId" value=""/>
+                                        </td>
+                                        <td><input type="text" id="complaintsDurations" class="col-md-12" onkeypress="return dcomethealth.validation.isNumberKey(event, this)"/></td>
+                                        <td><select id="compDurataionSelect" class="col-md-12 dcomet-c-s_ddict_duration-list">
+                                            </select></td>
+                                        <td><select id="compCurrentStatus"  class="col-md-12 dcomet-c-s_ddict_complaint_status-list"></select></td>
+                                        <!--<td><span id="addnotes"><small><a href="#">add Notes</a></small></span></td>-->
+                                        <td><i class="ace-icon fa fa-plus red" onclick="insert_row('complaintsTable', this)"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </form>                        
+                    </div>  
+                </div>
+                <!--History-->
+                <div class="panel panel-default">
+                    <div id="div2" class="targetDiv History" style="margin-top: -15px;">   
+                        <form id="div2Form">
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <input type="hidden" id="history_rid"/>
+                                <div class="pull-right">
+                                    <input type="reset"  id="divHis" class="btn-dulab1 btn-dulab1-sm " onclick=""  title="History"/>
+                                </div><!--dcomethealth.Patients.submitSymptoms();-->
+                            </div><!--dcomethealth.Patients.saveHistory();-->
+                            <div class="row col-md-12 col-xs-12 col-sm-12">
+                                <div class="col-md-6 col-xs-6 col-sm-6">
+                                    <label class="col-md-12 col-sm-12 col-xs-12"><strong>Personal History</strong></label>
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <textarea id="personalHistory" name="personalHistory" class="col-md-12 col-sm-12 col-xs-12" cols="30"></textarea>                               
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-xs-6 col-sm-6">
+                                    <label class="col-md-12 col-sm-12 col-xs-12"><strong>Drug History</strong></label>
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <textarea id="drugHistory" name="drugHistory" class="col-md-12 col-sm-12 col-xs-12" cols="30"></textarea>                               
+                                    </div>
+                                </div>
+                            </div>
+                            <br><br>
+                            <div class="row col-md-12 col-xs-12 col-sm-12">                           
+                                <div class="col-md-6 col-xs-6 col-sm-6">                           
+                                    <label class="col-md-12 col-sm-12 col-xs-12"><strong>Past Medical History</strong></label>
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <textarea id="pastMedical" name="pastMedical" class="col-md-12 col-sm-12 col-xs-12" cols="30"></textarea>                               
+                                    </div>
+                                    <div class="col-md-12 col-xs-12 col-sm-12">
+                                        <label class="row col-md-12 col-sm-12 col-xs-12">Allergies</label>
+                                        <div class="row col-md-10 col-sm-10 col-xs-10">
+                                            <div class="allergies"></div>
+                                            <input type="radio" id="allergiesYes"  name="allergies"  value=""/> 
+                                            <label for="1">Yes</label>
+                                            <input type="radio" id="allergiesNo" name="allergies" checked value=""/>
+                                            <label for="2">No</label>                                  
+                                        </div>
+                                        <label class="row col-md-12 col-sm-12 col-xs-12">DM</label>
+                                        <div class="row col-md-10 col-sm-10 col-xs-10">
+                                            <input type="radio" id="dmYes"  name="dmYes"  value=""/> 
+                                            <label for="1">Yes</label>
+                                            <input type="radio" id="dmNo" name="dmYes" checked value=""/>
+                                            <label for="2">No</label>
+                                        </div>
+                                        <label class="row col-md-12 col-sm-12 col-xs-12">HT </label>
+                                        <div class="row col-md-10 col-sm-10 col-xs-10">
+                                            <input type="radio" id="htYes"  name="htYes"  value=""/> 
+                                            <label for="1">Yes</label>
+                                            <input type="radio" id="htNo" name="htYes" checked value=""/>
+                                            <label for="2">No</label>
+                                        </div>
+                                        <label class="row col-md-12 col-sm-12 col-xs-12">Asthma</label>
+                                        <div class="row col-md-10 col-sm-10 col-xs-10">
+                                            <input type="radio" id="asthmaYes"  name="asthmaYes"  value=""/> 
+                                            <label for="1">Yes</label>
+                                            <input type="radio" id="asthmaNo" name="asthmaYes" checked value=""/>
+                                            <label for="2">No</label>
+                                        </div>
+                                        <label class="row col-md-12 col-sm-12 col-xs-12">Eczema</label>
+                                        <div class="row col-md-10 col-sm-10 col-xs-10">
+                                            <input type="radio" id="eczemaYes"  name="eczemaYes"  value=""/> 
+                                            <label for="1">Yes</label>
+                                            <input type="radio" id="eczemaNo" name="eczemaYes" checked value=""/>
+                                            <label for="2">No</label>
+                                        </div>
+                                        <div id="glaucomaDivMH" class="row col-md-12 col-sm-12 col-xs-12">
+                                            <label class="row col-md-12 col-sm-12 col-xs-12">Glaucoma</label>
+                                            <div class="row col-md-10 col-sm-10 col-xs-10">
+                                                <input type="radio" id="glaucomaYes"  name="glaucomaYes"  value=""/> 
+                                                <label for="1">Yes</label>
+                                                <input type="radio" id="glaucomaNo" name="glaucomaYes" checked value=""/>
+                                                <label for="2">No</label>                                          
+                                            </div>
+                                        </div>
+                                        <label class="row col-md-12 col-sm-12 col-xs-12">Arthritis</label>
+                                        <div class="row col-md-10 col-sm-10 col-xs-10">
+                                            <input type="radio" id="arthritisYes"  name="arthritisYes"  value=""/> 
+                                            <label for="1">Yes</label>
+                                            <input type="radio" id="arthritisNo" name="arthritisYes" checked value=""/>
+                                            <label for="2">No</label>
+                                        </div>
+                                    </div>                                    
+                                </div>
+                                <div class="col-md-6 col-sm-6 col-xs-6">
+                                    <label class="col-md-12 col-sm-12 col-xs-12"><strong>Family History</strong></label>
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <textarea id="familyHistory" name="familyHistory" class="col-md-12 col-sm-12 col-xs-12" cols="30"></textarea>                               
+                                    </div>
+                                    <div class="col-md-12 col-xs-12 col-sm-12">                                
+                                        <label class="row col-md-12 col-sm-12 col-xs-12">DM</label>
+                                        <div class="row col-md-10 col-sm-10 col-xs-10">
+                                            <input type="radio" id="fmdmYes"  name="fmdmYes"  value=""/> 
+                                            <label for="1">Yes</label>
+                                            <input type="radio" id="fmdmNo" name="fmdmYes" checked value=""/>
+                                            <label for="2">No</label>
+                                        </div>
+                                        <label class="row col-md-12 col-sm-12 col-xs-12">HT </label>
+                                        <div class="row col-md-10 col-sm-10 col-xs-10">
+                                            <input type="radio" id="fmhtYes"  name="fmhtYes"  value=""/> 
+                                            <label for="1">Yes</label>
+                                            <input type="radio" id="fmhtNo" name="fmhtYes" checked value=""/>
+                                            <label for="2">No</label>
+                                        </div>
+                                        <label class="row col-md-12 col-sm-12 col-xs-12">Asthma</label>
+                                        <div class="row col-md-10 col-sm-10 col-xs-10">
+                                            <input type="radio" id="fmasthmaYes"  name="fmasthmaYes"  value=""/> 
+                                            <label for="1">Yes</label>
+                                            <input type="radio" id="fmasthmaNo" name="fmasthmaYes" checked value=""/>
+                                            <label for="2">No</label>
+                                        </div>
+                                        <div id="glaucomaDivFH" class="row col-md-12 col-sm-12 col-xs-12">
+                                            <label class="row col-md-12 col-sm-12 col-xs-12">Glaucoma</label> 
+                                            <div class="row col-md-10 col-sm-10 col-xs-10">
+                                                <input type="radio" id="fmglaucomaYes"  name="fmglaucomaYes"  value=""/> 
+                                                <label for="1">Yes</label>
+                                                <input type="radio" id="fmglaucomaNo" name="fmglaucomaYes" checked value=""/>
+                                                <label for="2">No</label>
+                                            </div>                      
+                                        </div>                      
+                                        <label class="row col-md-12 col-sm-12 col-xs-12">Arthritis</label>
+                                        <div class="row col-md-10 col-sm-10 col-xs-10">
+                                            <input type="radio" id="fmarthritisYes"  name="fmarthritisYes"  value=""/>
+                                            <label for="1">Yes</label>
+                                            <input type="radio" id="fmarthritisNo" name="fmarthritisYes" checked value=""/>
+                                            <label for="2">No</label>
+                                        </div>
+                                        <label class="row col-md-12 col-sm-12 col-xs-12">Smoking</label>
+                                        <div class="row col-md-10 col-sm-10 col-xs-10">
+                                            <input type="radio" id="fmsmokingYes"  name="fmsmokingYes"  value=""/> 
+                                            <label for="1">Yes</label>
+                                            <input type="radio" id="fmsmokingNo" name="fmsmokingYes" checked value=""/>
+                                            <label for="2">No</label>
+                                        </div>
+                                        <label class="row col-md-12 col-sm-12 col-xs-12">Alcohol</label>
+                                        <div class="row col-md-10 col-sm-10 col-xs-10">
+                                            <input type="radio" id="fmalcoholYes"  name="fmalcoholYes"  value=""/> 
+                                            <label for="1">Yes</label>
+                                            <input type="radio" id="fmalcoholNo" name="fmalcoholYes" checked value=""/>
+                                            <label for="2">No</label>
+                                        </div>
+                                    </div>                                                  
+                                </div>
+                            </div>
+                            <br><br>
+                            <div class="row col-md-12 col-xs-12 col-sm-12">                           
+                                <div class="col-md-6 col-xs-6 col-sm-6">    
+                                    <label class="col-md-12 col-sm-12 col-xs-12"><strong>Past Surgical History</strong></label>
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <textarea id="surgicalHistory" name="surgicalHistory" class="col-md-12 col-sm-12 col-xs-12" cols="30"></textarea>                               
+                                    </div>
+                                </div>
+                                <div id="pastOpthalmic" class="hidden col-md-6 col-sm-6 col-xs-6">
+                                    <label class="col-md-12 col-sm-12 col-xs-12"><strong>Past Opthalmic History</strong></label>
+                                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                                        <label class="col-md-1 col-sm-1 col-xs-1">Right</label>
+                                        <div class="col-md-5 col-sm-5 col-xs-5"> 
+                                            <textarea id="opthalmicRight" name="opthalmicRight" class="col-md-12 col-sm-12 col-xs-12" cols="30"></textarea>
+                                        </div>
+                                        <label class="col-md-1 col-sm-1 col-xs-1">Left</label>
+                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                            <textarea id="opthalmicLeft" name="opthalmicLeft" class="pull-left col-md-12 col-sm-12 col-xs-12" cols="30"></textarea>					     
+                                        </div>                                        
+                                    </div>
+                                </div>
+                                <div id="pastDental" class="hidden col-md-6 col-sm-6 col-xs-6">
+                                    <label class="col-md-12 col-sm-12 col-xs-12"><strong>Past Dental History</strong></label>
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <textarea id="pastDentalHistory" name="pastDentalHistory" class="col-md-12 col-sm-12 col-xs-12" cols="30"></textarea>                               
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>  
+                </div>  
+                <!-- VITALS -->
+                <div class="panel panel-default"> 
+                    <div id="div3" class="targetDiv Vitals"  style="margin-top: -15px;">
+                        <form id="div3Form">
+                            <div class="row col-md-12">
+                                <div class="pull-right">
+                                    <input type="reset"  id="div_Vitals" class="btn-dulab1 btn-dulab1-sm resetBtn" onclick=""  title="Vitals"/>
+                                </div>
+                            </div><!--dcomethealth.Patients.submit();-->
+                            <div class="row col-md-12"><hr></div>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-3 col-sm-12 col-xs-12">
+                                    <label id="height" class="hidden row col-md-12 col-sm-12 col-xs-12">Height</label>
+                                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                                        <div class="input-group col-sm-12">                                        
+                                            <input type="text" id="od_vital_height" maxlength="3" class="form-control" onkeypress="return dcomethealth.validation.isDecimalKey(event, this)" onchange="computeBMI()" placeholder="Height"/>
+                                            <input type="hidden" id="visitVitalId"/>
+                                            <div class="input-group-btn">
+                                                <select id="od_vital_height_unit" class="dcomet-c-s_ddict_height-list input-group-addon form-control"></select>
+                                            </div>
+                                        </div>                                       
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-12 col-xs-12"> 
+                                    <label id="weight" class="hidden row col-md-12 col-sm-12 col-xs-12">Weight</label>
+                                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                                        <div class="input-group col-sm-12">
+                                            <input type="text" id="od_vital_weight" maxlength="3" class="form-control" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" onchange="computeBMI()" placeholder="Weight"/>
+                                            <div class="input-group-btn">
+                                                <select id="od_vital_weight_unit" class="dcomet-c-s_ddict_weight-list input-group-addon form-control"></select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-12 col-xs-12">
+                                    <label id="blood" class="hidden row col-md-12 col-sm-12 col-xs-12">Blood Pressure</label>
+                                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                                        <div class="input-group col-sm-12">
+                                            <input type="text" id="od_vital_blood_pressure" maxlength="6" class="form-control" placeholder="Blood Pressure"/>
+                                            <div class="input-group-btn">
+                                                <select id="od_vital_blood_pressure_unit" class="dcomet-c-s_ddict_blood_pressure-list input-group-addon form-control"></select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-12 col-xs-12">
+                                    <label id="heart" class="hidden row col-md-12 col-sm-12 col-xs-12">Heart Rate</label>
+                                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                                        <div class="input-group col-sm-12">
+                                            <input type="text" id="od_vital_heart_rate" class="form-control " maxlength="3" placeholder="Heart Rate" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" />
+                                            <div class="input-group-btn">
+                                                <select id="od_vital_heart_rate_unit" class="dcomet-c-s_ddict_heart_rate-list row input-group-addon form-control"></select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-3 col-sm-12 col-xs-12">
+                                    <label id="respiratory" class="hidden row col-md-12 col-sm-12 col-xs-12">Respiratory Rate</label>
+                                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                                        <div class="input-group col-sm-12">
+                                            <input type="text" id="od_vital_resporatory_rate" class="form-control" maxlength="3" placeholder="Respiratory Rate" onkeypress="return dcomethealth.validation.isNumberKey(event, this)"/>
+                                            <div class="input-group-btn">
+                                                <select id="od_vital_resporatory_rate_unit" class="dcomet-c-s_ddict_respiratory_rate-list row input-group-addon form-control"></select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>                       
+                                <div class="col-md-3 col-sm-12 col-xs-12">
+                                    <label id="bodyTemp" class="hidden row col-md-12 col-sm-12 col-xs-12">Body Temperature</label>
+                                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                                        <div class="input-group col-sm-12">
+                                            <input type="text" id="od_vital_body_temp" class="form-control" maxlength="6" placeholder="Body Temperature" onkeypress="dcomethealth.validation.isDecimalKey(event, this)"/>
+                                            <div class="input-group-btn">
+                                                <select id="od_vital_body_temp_unit" class="dcomet-c-s_ddict_body_temperature-list row input-group-addon form-control"></select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>                            
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <span class="col-md-1 col-sm-8 col-xs-8"><small>BMI:</small></span><span id="bmiValue" class="row col-md-1 col-sm-8 col-xs-8 text-primary"></span>
+                                <span id="bmiText" class="col-md-1 col-sm-8 col-xs-8 hidden">Category: </span><span id="bmiPrescription" class="row col-md-2 col-sm-8 col-xs-8 text-primary"></span>  
+                            </div>
+                        </form>
+                    </div>
+                    <div id="vitalsTemplate"></div>
+                </div>
+                <!--DIAGNOSIS -->
+                <div class="panel panel-default">
+                    <div id="div4" class="targetDiv Diagnosis"  style="margin-top: -15px;">
+                        <form id="div4Form">
+                            <div class="row col-md-12">
+                                <div class="pull-right">
+                                    <input type="reset"  id="divVitals" class="btn-dulab1 btn-dulab1-sm " onclick=""  title="Diagnosis"/>
+                                </div>
+                            </div><!--dcomethealth.Patients.saveDiagnosis()-->
+                            <div class="row col-md-12"><hr></div>
+                            <div class="row col-md-12">
+                                <span><small><b>Diagnosis</b></small></span>
+                                <textarea id="visDiagnosis" maxlength="100" class="col-md-12 col-sm-12 col-xs-12"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- CLINICAL NOTES -->
+                <div class="panel panel-default" style="">
+                    <div id="div5" class="targetDiv ClinicalNotes"  style="margin-top: -15px;">
+                        <!--<form id="div5Form">-->
+                        <div class="row col-md-12">
+                            <div class="pull-right">
+                                <input type="reset"  id="divCnotes" class="btn-dulab1 btn-dulab1-sm " onclick="clearForm(this)"  title="ClinicalNotes"/>
+                            </div>
+                        </div><!--dcomethealth.Patients.save()-->
+                        <div class="row col-md-12"><hr></div>
+                        <div class="col-md-12">
+                            <span><small><b>Clinical Notes</b></small></span>
+                            <div class="row" id="template"></div>
+                            <div class="row col-md-12"><br></div>
+                            <div class="row col-md-9 col-sm-9 col-xs-12 hidden" id="noTemplate">                                
+                                <textarea class="form-control" id="noTempNodes" name="noTempNodes"  rows="10" ></textarea>
+                                <script>
+                                    CKEDITOR.replace('noTempNodes');
+                                </script>
+                            </div>
+                            <input type = "hidden" id="tempType"/>
+                        </div>
+                        <!--</form>-->
+                    </div>
+                </div>
+                <!-- INVESTIGATION ORDER -->
+                <div class="panel panel-default">
+                    <div id="div6" class="targetDiv InvestigationOrder"  style="margin-top: -15px;">
+                        <form id="div6Form">
+                            <div class="row col-md-12">
+                                <div class="pull-right">
+                                    <!--<button type="button" class="btn-dulab1 btn-dulab1-sm">Print</button>-->
+                                    <input type="reset"  id="divTorder" class="btn-dulab1 btn-dulab1-sm resetBtn" onclick=""  title="serviceOrderTable"/>
+                                </div><!--dcomethealth.Patients.submitService();-->
+                            </div>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <div class="row col-md-3 col-sm-3 col-xs-6">
+                                    <label class="col-md-12 col-sm-12 col-xs-12">Speciality</label>
+                                    <div class="col-md-7 col-sm-12 col-xs-12">
+                                        <select id="patSpeciality" name="patSpeciality" class="" onchange="dcomethealth.Patients.getCategoryWiseService()">
+                                            <option value="0"></option>
+                                        </select>
+                                    </div>
+                                </div> 
+                                <div class="row col-md-3 col-sm-3 col-xs-6"></div> 
+                                <!--                                <div class="row col-md-6 col-sm-3 col-xs-6">
+                                                                    <input type="reset"  id="addFavourite" class="btn-dulab1 btn-dulab1-sm " onclick=""  title="Add As Favourite"/>
+                                                                    <button type="button" class="btn-dulab1" onclick="dcomethealth.Patients.addFavourite()">Add As Favourite</button>
+                                                                    <button type="button" class="btn-dulab1" onclick="dcomethealth.Patients.getFavourite()">View Favourite</button>
+                                                            </div>-->
+                            </div>
+                            <div class="row col-md-12 col-sm-12 col-xs-12"></div>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <div id="serviceListDiv" class="col-md-5 col-sm-5 col-xs-6">
+                                    <input id="patService" type="text" class="col-md-8 col-sm-12 col-xs-12 hidden" onkeypress="dcomethealth.Patients.getServiceList()" placeholder="Search Service..."/>
+                                    <ul id="serviceMenu" class="" style=''></ul>                                    
+                                </div>
+                                <div class="row col-md-7 col-sm-10 col-xs-12">
+                                    <input type="hidden" id="serviceId"/>
+                                    <!--<input type="hidden" id="favouriteId"/>-->
+                                    <table id="serviceOrderTable" class="table table-condensed table-hover">
+                                        <thead>
+                                            <tr>
+                                                <td></td>
+                                                <td width="40%"><b><small>Service Name</small></b></td>
+                                                <td width="10%"><b><small>Qty</small></b></td>
+                                                <td width="35%"><b><small>Process on</small></b></td>
+                                                <td width="15%"></td>
+                                                <td></td>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="serviceOrderTbody">
+                                            <tr>
+                                                <td><i id="minus" class="ace-icon fa fa-minus hidden" onclick="deleteRow(this, 'serviceOrderTable')"></i></td>
+                                                <td><input type="text" id="serviceName" name="serviceName" class="col-md-12"/><input type="hidden" id="itemRID" value=""/><input type="hidden" id="serReqItemGroupRid" value=""/><input type="hidden" id="serviceReqDId" value=""/><input type="hidden" id="servicePrice" value=""/><input type="hidden" id="serviceType" value=""/><input type="hidden" id="favHRid" name="favHRid"/><input type="hidden" id="favDid" name="favDid"/><br></td> <!--<span><small><a href="#">show Teeth</a></small></span>-->
+                                                <td><input type="text" id="qtyService" value="1" style="cursor: not-allowed;" class="col-md-12" readonly/></td>
+                                                <td><input type="text" id="processServiceOn" value="" style="cursor: not-allowed;" class="col-md-12" readonly/></td>
+                                                <!--<td><span id="addInstructions"><small><a href="#">add Instructions</a></small></span></td>-->
+                                                <td><i class="ace-icon fa fa-plus red" onclick="insert_servicerow('serviceOrderTable', this)"></i></td>
+                                            </tr>
+
+                                            <!--                                            <tr>
+                                                                                            <td><i id="minus" class="ace-icon fa fa-minus hidden" onclick="deleteRow(this, 'serviceOrderTable')"></i>
+                                                                                            </td>
+                                                                                            <td><input type="text" id="serviceName" name="serviceName" class="col-md-12"/><input type="hidden" id="itemRID" value=""/><input type="hidden" id="serviceReqDId" value=""/><input type="hidden" id="servicePrice" value=""/><br></td> <!--<span><small><a href="#">show Teeth</a></small></span>-->
+                                            <!--                                                <td><input type="text" id="qtyService" value="1" style="cursor: not-allowed;" class="col-md-12" readonly/></td>
+                                                                                            <td><input type="text" id="processServiceOn" value="" style="cursor: not-allowed;" class="col-md-12" readonly/></td>-->
+                                            <!--<td><span id="addInstructions"><small><a href="#">add Instructions</a></small></span></td>-->
+                                            <!--<td><i class="ace-icon fa fa-plus red" onclick="insert_servicerow('serviceOrderTable', this)"></i></td>-->
+                                            <!--</tr>-->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>                            
+                        </form>
+                    </div>
+                </div>
+                <!-- INVESTIGATION COMPLETED -->
+                <div class="panel panel-default">
+                    <div id="div7" class="targetDiv InvestigationCompleted"  style="margin-top: -15px;">
+                        <div class="row col-md-12">
+                            <div class="pull-right">
+                                <!--<button class="btn btn-green btn-xs" id="tcDateRange"><span class="hidden-xs hidden-sm" id="tcDateRangeSpan"></span> <b class="caret"></b></button>-->
+                            </div>
+                        </div>
+                        <div class="row col-md-12"><hr></div>
+                        <div class="row col-md-12">
+                            <table id="treatTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Service Name</th>
+                                        <th>Date</th>
+                                        <th>Print</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="treatTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!--RX-ORDER -->
+                <div class="panel panel-default"></div>
+                <!-- Plan/follow Up-->
+                <div class="panel panel-default">
+                    <div id="div8" class="targetDiv Plan/FollowUp"  style="margin-top: -15px;">   
+                        <form id="div8Form">
+                            <div class="row col-md-12">
+                                <a href="#" id="divRxOrder" class="btn btn-dulab1 btn-dulab1-sm  pull-right resetBtn" onclick=""  title="rxOrderTable"><i class="fa fa-refresh"></i></a>
+                                <a onclick="dcomethealth.Patients.drugPrint();" id="drugprint" class="hidden btn-dulab1 btn-dulab1-sm pull-right">Print</a>    
+                            </div>
+                            <div class="row col-md-12"><hr></div>
+                            <!--                            <button type="button" class="btn-dulab1" onclick="dcomethealth.Patients.addDrugFavourite()">Add As Favourite</button>
+                                                        <button type="button" class="btn-dulab1" onclick="dcomethealth.Patients.getDrugFavourite()">View Favourite</button>-->
+                            <div class="row col-md-12">
+                                <span><small><b>Plan/Follow Up</b></small></span>
+                                <!--<textarea id="planFup" maxlength="100" class="col-md-12 col-sm-12 col-xs-12"></textarea>-->
+                                <!--                            <div class="row col-md-12">
+                                                                <div class="pull-right">
+                                                                    <button type="button" class="btn-dulab1 btn-dulab1-sm">Print Rx.</button> dcomethealth.Patients.submitRxOrder();
+                                                                    <input type="reset"  id="divRxOrder" class="btn-dulab1 btn-dulab1-sm " onclick=""  title="Reset"/>
+                                                                    
+                                                                </div>                                
+                                                            </div>-->
+                                <input type="hidden" id="drugId"/>
+                                <input type="hidden" id="drugfavouriteId"/>
+                                <table id="rxOrderTable" class="table table-condensed table-hover">
+                                    <thead>
+                                        <tr>
+                                            <td></td>
+                                            <td width="25%"><b><small>Drug Name</small></b></td>
+                                            <td width="8%"><b><small>Strength</small></b></td>
+                                            <td width="10%"></td>
+                                            <td width="5%"><b><small>Duration</small></b></td>
+                                            <td width="10%"></td>
+                                            <td width="12%"><b><small>When</small></b></td>
+                                            <td width="5%"><b><small>M</small></b></td>
+                                            <td width="5%"><b><small>A</small></b></td>
+                                            <td width="5%"><b><small>E</small></b></td>
+                                            <td width="5%"><b><small>N</small></b></td>
+                                            <td width="10%"><b><small>Qty</small></b></td>
+                                            <td></td>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rxOrderTbody">
+                                        <tr>
+                                            <td><i id="minus" class="ace-icon fa fa-minus hidden" onclick="deleteRow(this, 'rxOrderTable')"></i></td>
+                                            <td><input type="text" id="drugName" name="drugName" class="col-md-12"/><input type="hidden" id="SkuRID" name="SkuRID"/><input type="hidden" id="drugHRid" name="drugHRid"/><input type="hidden" id="drugDid" name="drugDid"/><br></td> <!--<span><small><a href="#">add Notes</a></small></span>-->
+                                            <td><input type="text" id="strength" class="col-md-12"/></td>
+                                            <td><select id="strengthSelect" class="col-md-12"><option>mg</option></select></td>
+                                            <td><input type="text" id="duration" class="col-md-12"/></td>
+                                            <td><select id="durataionSelect" class="col-md-12 dcomet-c-s_ddict_duration-list"></select></td>
+                                            <td><select id="whenSelect" class="col-md-12 dcomet-c-s_ddict_dosage_time-list"></select></td>
+                                            <td><input type="text" id="morning" class="col-md-12"/></td>
+                                            <td><input type="text" id="afternoon" class="col-md-12"/></td>
+                                            <td><input type="text" id="evening" class="col-md-12"/></td>
+                                            <td><input type="text" id="night" class="col-md-12"/></td>
+                                            <td><input type="text" id="drugQty" class="col-md-12"/></td>
+                                            <td><i class="ace-icon fa fa-plus red" onclick="insert_rxrow('rxOrderTable', this)"></i></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-3 col-sm-12 col-xs-12">
+                                    <span class="row col-md-12 col-sm-4 col-xs-6">Follow Up Visit On</span>
+                                    <input type="text" id="drugReqHfollowupDate" name="drugReqHfollowupDate" class="col-md-8"/>
+                                </div>
+                                <div class="row col-md-9 col-sm-12 col-xs-12">
+                                    <span class="row col-md-12 col-sm-2 col-xs-2">Comments</span>
+                                    <textarea id="drugReqHComments"  name="drugReqHComments" maxlength="100" class="col-md-12 col-sm-12 col-xs-12"></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!--Treatment-->
+                <div class="panel panel-default">
+                    <div id="div9" class="targetDiv Treatment" style="margin-top: -15px;">
+                        <form action="" >
+                            <div class="row col-md-12">
+                                <div class="pull-right">
+                                    <input type="reset"  id="divTreat" class="btn-dulab1 btn-dulab1-sm " onclick=""  title="Treatment"/>
+                                </div>
+                            </div>                       
+                            <div class="row col-md-12"><hr></div>
+                            <div class="row col-md-12">
+                                <span><small><b>Treatment</b></small></span>
+                                <textarea id="treatText" class="col-md-12 col-sm-12 col-xs-12"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div> 
+                <!--Clinical Summary-->
+                <div class="panel panel-default">
+                    <div id="div10" class="targetDiv ClinicalSummary" style="margin-top: -15px;">
+                        <form id="div10Form" action="" >
+                            <span><small><b>Clinical Summary</b></small></span>
+                            <div class="col-md-12 col-sm-12 col-xs-12"> 
+                                <div class="row col-md-6 col-sm-6 col-xs-6">
+                                    <span class="col-md-3 col-sm-6 col-xs-12">Came On:</span>
+                                    <span id="sCameDate" class="row col-md-9 col-sm-6 col-xs-12"></span>
+                                </div>
+                                <div class="col-md-6 col-sm-6 col-xs-6">
+                                    <div class="row col-md-2 col-sm-12 col-xs-6"><input type="checkbox" id="sendEmailCheck" name="sendEmailCheck" class="row col-md-12 col-sm-12 col-xs-12"/></div>
+                                    <div class="row col-md-10 col-sm-12 col-xs-4">
+                                        <span class="row col-md-12 col-sm-12 col-xs-12 pull-right"> Send Email to Patient</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 col-sm-12 col-xs-12"><p></p></div>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-6 col-sm-9 col-xs-9">
+                                    <a id="attachFile" class="btn btn-dulab1 btn-dulab1-sm jqueryUIToolTip" title="Attach File" onclick="showAttachFile()"><i class="fa fa-paperclip"></i></a>&nbsp;&nbsp;
+                                    <a id="uploadButton" class="row btn btn-dulab1 btn-dulab1-sm hidden" title="Upload File" onclick="dcomethealth.Patients.uploadAttachFiles();"><i class="fa fa-upload"></i></a>
+                                </div>
+                                <div class="row col-md-3 col-sm-3 col-xs-3 pull-left">
+                                    <button type="button" id="csPrintBtn" class=" btn btn-dulab1 btn-dulab1-sm jqueryUIToolTip" onclick="dcomethealth.Patients.csPrint();" title="Print"><i class="fa fa-print"></i></button>
+                                </div>
+                            </div> 
+                            <div class="col-md-12 col-sm-12 col-xs-12"><p></p></div>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-8 col-sm-12 col-xs-12">
+                                    <textarea class="form-control" id="visCsNodes" name="visCsNodes"  rows="10" ></textarea>
+                                    <script>
+                                        CKEDITOR.replace('visCsNodes');
+                                    </script>
+                                </div>
+                                <div class="col-md-4 hidden" id="fileUpload_Header">
+                                    <div class="col-md-12 col-sm-4 col-xs-4">
+                                        <div class="table-responsive">
+                                            <table id="dyn_table_upload" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                                <thead>
+                                                    <!--<th></th>-->
+                                                <th>Attach Files</th>
+                                                <!--<th></th>-->
+                                                </thead>
+                                                <tbody id="fileUpload_tbody" class="">
+                                                    <tr>
+                                                        <!--<td><i id="del_Upload" class="ace-icon fa fa-minus red hidden" onclick="deleteRow(this, 'dyn_table_upload')"></i></td>-->
+                                                        <td class="hidden"></td>
+                                                        <td>
+                                                            <input id="file" name="file" type="file" class="btn btn-inverse col-md-11" onchange="dcomethealth.Patients.attachFiles(0)"/>
+                                                        </td>                                               
+                                                        <!--                                                        <td width="40%">
+                                                                                                                    <input type="text" class="form-control" id="taFileDesc" name="taFileDesc" />
+                                                                                                                </td>
+                                                                                                                <td width="13%">
+                                                                                                                    <button type="button" id="Button" class="btn btn-danger cancel" onclick="RemoveFile('file')">
+                                                                                                                        <i class="fa fa-ban"></i>
+                                                                                                                        <span>Cancel upload</span>
+                                                                                                                    </button>
+                                                                                                                </td>-->
+                                                        <!--                                                        <td>                                
+                                                                                                                    <i class="ace-icon fa fa-plus red" id = "addUpload" onclick="addRow('dyn_table_upload', this)" ></i>
+                                                                                                                </td> -->
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-sm-8 col-xs-8 hidden" id="fileDownload_Header">
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="table-responsive">
+                                            <table id="dyn_table_download" class="col-md-12 col-sm-12 col-xs-12 table ">
+                                                <thead>
+                                                <th></th>
+                                                <th>File Name</th>
+                                                <th></th>
+                                                </thead>
+                                                <tbody id="fileDownload_tbody" class="">
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>                      
+                    </div>
+                </div>
+                <!-- FILES -->
+                <div class="panel panel-default">
+                    <div id="div11" class="targetDiv Files"  style="margin-top: -15px;">
+                        <form id="div11Form" action="" >
+                            <div class="row col-md-12">
+                                <div class="pull-right">
+                                    <input type="reset" class="btn-dulab1 btn-dulab1-sm " onclick="clearForm(this)" title="Files"/>
+                                </div>
+                            </div><!--<!onclick="dcomethealth.Patients.saveFiles()"-->                            
+                            <div class="row col-md-12"><hr></div>
+                            <div class="row col-md-12">
+                                <div class="row col-md-12">
+                                    <fieldset id="pictures">    
+                                        <!--<img id="zoom_01" src='css/images/image1.png' data-zoom-image="css/images/image1.jpg" alt="Logo"/>-->
+                                        <span><b><i>Drag and drop any image files to attach..</i></b></span>
+                                        <input type='hidden' name="resourceId" id="resourceId" value="" />
+                                        <div id="image_containerImg" class="ImgPlaceHolder ddplaceHolder"></div>                                        
+                                    </fieldset>
+                                </div>
+                            </div>                          
+                        </form>
+                    </div>
+                </div>
+                <!-- LEDGER -->
+                <div class="panel panel-default"  style="">
+                    <div id="div12" class="targetDiv Ledgers"  style="margin-top: -15px;">
+                        <div class="pull-right">
+                            <div class="btn-group open">
+                                <button type="button" class="btn-dulab1 dropdown-toggle alt-border" data-toggle="dropdown">
+                                    View&nbsp;<i class="fa fa-chevron-down"></i></button>
+                                <ul class="dropdown-menu" role="menu" style="">
+                                    <li><a href="#" onclick="dcomethealth.Patients.viewLedger('1')">Invoice</a></li>
+                                    <li><a href="#" onclick="dcomethealth.Patients.viewLedger('2')">Receipt</a></li>
+                                    <li><a href="#" onclick="dcomethealth.Patients.viewLedger('3')">Advance</a></li>
+                                    <li><a href="#" onclick="dcomethealth.Patients.viewLedger('4')">Refund</a></li>
+                                </ul>
+                            </div>          
+                        </div>
+                        <table id="ledgersTable" class="table table-condensed table-hover">
+                            <thead>
+                                <tr>
+                                    <td><b><small>Date</small></b></td>
+                                    <td><b><small>Type</small></b></td>
+                                    <td><b><small>Invoice / Receipt No</small></b></td>
+                                    <td><b><small>Credit</small></b></td>
+                                    <td><b><small>Debit</small></b></td>
+                                    <td><b><small>Balance</small></b></td>
+                                    <!--<td><b><small>Actions</small></b></td>-->
+                                </tr>
+                            </thead>
+                            <tbody id="ledgersTbody"></tbody>
+                        </table>
+                        <div class="col-md-12"><br><br><br><br><p></p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="gallarymodal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <h3 class="modal-title">Heading</h3>
+            </div>
+            <div id="modalBody" class="modal-body">
+                <img id="imgModal" width="750" height="500" />
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="csPrintDiv" class="hidden"></div>
+<div id="printDiv" class="hidden"></div>
+<div id="printHtml" class="hidden"></div>
+<div id="fopDiv" class="hidden"></div>
+<script type="text/javascript" src="server/pictures.js"></script>
+<script type="text/javascript" src="js/plugins/form-toggle/toggle.min.js"></script>
+<script type='text/javascript' src="js/plugins/form-daterangepicker/daterangepicker.min.js"></script>
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script>

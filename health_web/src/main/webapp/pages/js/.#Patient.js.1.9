@@ -1,0 +1,565 @@
+var dcomethealth = dcomethealth || {};
+var payerData = {};
+dcomethealth.Patient = (function () {
+    var id = "Patient";
+    function init() {
+        $("#main_navigation_bar").append('<div id="' + id + '" class="main_container">');
+        $("#" + id).load("pages/html/" + id + ".html", function () {
+            dcomethealth.datatypes.applyDataTypes($("#" + id));
+            if (dcomethealth.searchPatByAppointments !== 0) {
+                searchPatByAppointment(dcomethealth.searchPatByAppointments);
+            }
+            if (dcomethealth.searchApptByAppointments !== 0) {
+                searchApptByAppointment(dcomethealth.searchApptByAppointments);
+            }
+            if (dcomethealth.security.isPrivillage(13) === true) {
+                document.getElementById('collectPayment').value = 1;
+                $("#paymentMode").removeClass("hidden").addClass("panel panel-primary");
+            } else {
+                document.getElementById('collectPayment').value = 0;
+                $("#paymentMode").removeClass("panel panel-primary").addClass("hidden");
+            }
+            autocomplete();
+            autocompleteService();
+            getStates();
+            $.each(dcomethealth.s_countries, function (pIdx, s_countries) {
+                $(s_countries).each(function () {
+                    if (s_countries.couCode === dcomethealth.userEntityCountryCode) {
+                        $('#prefixMobile').val(s_countries.couPhoneCode);
+                    }
+                });
+            });
+
+            $('#countryCode').val(dcomethealth.userEntityCountryCode);
+            var obj = $('#patCountry').find('option[id="' + dcomethealth.userEntityCountryCode + '"]');
+            $('#countryName').val(obj.val());
+            $.each(dcomethealth.s_ddict, function (pIdx, s_ddict) {
+                if (s_ddict.dditCode === "VISIT_TYPE") {
+                    $.each(s_ddict.ddict, function (i) {
+                        if (s_ddict.ddict[i].ddictValue === "OP") {
+                            $("#visitType").val(s_ddict.ddict[i].id);
+                        }
+                    });
+                }
+            });
+            $("#VDept").change(function () {
+                var searchParams = {"staffSpecialityIndex": $('#VDept option:selected').val()};
+                var options = '';
+                dcomethealth.MasterResource.searchStaff(searchParams, function (data) {
+                    $.each(data, function (idx, Val) {
+                        options += '<option value="' + Val.id + '">' + Val.staffName + '</option>';
+                    });
+                    $("#VDName").html(options);
+                });
+            });
+            $("#edit_user_form").validate({
+                // Specify the validation rules                
+                rules: {
+                    patName: "required",
+                    patMobile: "required",
+                    patDOB: "required",
+                    VDept: {
+                        selectcheck: true
+                    },
+                    visitReason: {
+                        selectchk: true
+                    }
+                },
+                messages: {
+                    patName: "Enter Patient name",
+                    patMobile: "Enter Mobile Number",
+                    patDOB: "Enter Date Of Birth",
+                },
+                submitHandler: function (form) {
+                    submit(0, "VISIT", "SUBMIT", $("#collectPayment").val());
+                }
+            });
+
+            jQuery.validator.addMethod('selectcheck', function (value) {
+                return (value != '0');
+            }, "Select Speciality");
+            jQuery.validator.addMethod('selectchk', function (value) {
+                return (value != '0');
+            }, "Select Reason");
+        });
+    }
+    function getCity() {
+        $("#Cities").empty();
+        var searchObj = {"couCode": $('#patCountry option[value="' + $('#countryName').val() + '"]').text()};
+        dcomethealth.DataDictionaryResource.searchByZipcode(searchObj, function (data) {
+            $.each(data, function (pIdx, s_cou_zipcode) {
+                $(s_cou_zipcode).each(function () {
+//                    if (dcomethealth.userEntityCountryCode == s_cou_zipcode.couCode) {
+                    if (s_cou_zipcode.division1 == $("#stateGeo").val()) {
+                        $("#Cities").append('<option value="' + s_cou_zipcode.place + '">' + s_cou_zipcode.place + '</option>');
+                    }
+//                    }
+                });
+            });
+
+        });
+    }
+    function getStates() {
+        $.each(dcomethealth.s_countries, function (pIdx, s_countries) {
+            $(s_countries).each(function () {
+                if (s_countries.couCode === $('#patCountry option[value="' + $('#countryName').val() + '"]').text()) {
+                    $('#prefixMobile').val(s_countries.couPhoneCode);
+                }
+            });
+        });
+        dcomethealth.DataDictionaryResource.searchStates({}, function (data) {
+            dcomethealth.s_states = data;
+            var targetContainer = targetContainer || document;
+            $("datalist.dcomet-c-s_states-list", targetContainer).each(function (idx, elem) {
+                $.each(dcomethealth.s_states, function (pIdx, s_states) {
+                    $(s_states).each(function () {
+                        if ($('#patCountry option[value="' + $('#countryName').val() + '"]').text() === s_states.countryCode) {
+                            $(elem).append('<option value="' + s_states.states + '">' + s_states.stateRid + '</option>');
+                        }
+                    });
+                });
+            });
+        });
+    }
+
+    function payerChange() {
+        var payerType = $("#patRefType option:selected").val();
+        payerData = {};
+        if (parseInt(payerType) != 31) {
+            $("#payerInfo").removeClass("hidden").addClass("");
+            $("#paymentDiv").addClass("hidden");
+            $("#payerName").empty();
+            var searchObj = {"pdPayerType": payerType};
+            dcomethealth.MasterResource.searchPayerMaster(searchObj, function (data) {
+                $('#payerName').append($("<option></option>").attr("value", 0).text("- Select Payer -"));
+                $.each(payerData = data, function (pSx, payer) {
+                    $('#payerName').append($("<option></option>").attr("value", payer.pdId).text(payer.pdPayerName));
+                });
+            });
+        } else {
+            $("#payerInfo").removeClass("").addClass("hidden");
+            $("#paymentDiv").removeClass("hidden");
+        }
+        payerNameChange();
+    }
+
+    function payerNameChange() {
+        var payerType = $("#patRefType option:selected").val();
+        var table = document.getElementById('dyn_table');
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            var serviceRid = dynTableGetNodeInRow(table.rows[i + 1], 'serviceRID').value;
+            if (parseInt(payerType) != 31 && !!payerData) {
+                var payerId = $("#payerName option:selected").val();
+                $.each(payerData, function (pdx, payer) {
+                    if (payerId == payer.pdId) {
+                        $.each(payer.payerServiceMap, function (pEx, payerSerCost) {
+                            if (parseInt(serviceRid) == parseInt(payerSerCost.psmServiceRid)) {
+                                dynTableGetNodeInRow(table.rows[i + 1], 'MRP').value = payerSerCost.psmDiscountPrice;
+                                return false;
+                            } else {
+                                $.each(dcomethealth.serviceMaster, function (pfx, ServicePr) {
+                                    if (parseInt(serviceRid) == parseInt(ServicePr.id)) {
+                                        dynTableGetNodeInRow(table.rows[i + 1], 'MRP').value = ServicePr.bPrice;
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            } else {
+                $.each(dcomethealth.serviceMaster, function (pfx, ServicePr) {
+                    if (parseInt(serviceRid) == parseInt(ServicePr.id)) {
+                        dynTableGetNodeInRow(table.rows[i + 1], 'MRP').value = ServicePr.bPrice;
+                    }
+                });
+            }
+            calculation();
+        }
+    }
+    function autocompleteService() {
+        $("#" + id + " input[name='serviceName']").item_autocomplete({
+            select: function (event, ui) {
+                dynTableGetNodeInRow(this, 'serviceRID').value = ui.item.data.id;
+                dynTableGetNodeInRow(this, 'MRP').value = ui.item.data.bPrice;
+                payerNameChange();
+            },
+            open: function (event, ui) {
+                $(document).tooltip({
+                    position: {
+                        my: "center bottom-20",
+                        at: "right center",
+                        using: function (position, feedback) {
+                            $(this).css(position);
+                        }
+                    }
+                });
+            },
+            close: function () {
+                $(document).tooltip("destroy");
+            },
+            source: function (request, response) {
+                var queryString = request.term;
+                queryString = queryString.trim();
+                var searchParams = {"bsName": queryString};
+                dcomethealth.MasterResource.searchServices(searchParams, function (data) {
+                    response($.grep($.map(data, function (item) {
+                        return {
+                            label: item.bsName || "",
+                            value: item.bsName || "",
+                            name: (item.bsName || "") + (item.bsName && item.id ? " - " : "") + (item.id || ""),
+                            data: item
+                        };
+                    }), function (item, index) {
+                        return index < 10;
+
+                    }));
+                });
+            },
+            minLength: 1
+        });
+    }
+    function searchPatByAppointment(patRid) {
+        dcomethealth.PatientResource.searchPatient({"id": patRid}, function (data) {
+            $.each(data, function (i, pat) {
+                $('#lvDateLi').removeClass('hidden');
+                var lastVisitDate = "New Entry";
+                dcomethealth.PatientResource.searchVisit({"visPatRid": patRid}, function (data2) {
+                    if (data2 != undefined) {
+                        $.each(data2, function (i, visit) {
+                            lastVisitDate = visit.createdDateTime;
+                            if (moment(visit.createdDateTime, 'DD-MM-YYYY HH:mm:ss').format('DD-MM-YYYY') === moment().format('DD-MM-YYYY')) {
+                                alert("Patient is Active Today");
+                                dcomethealth.util.base_init();
+                                dcomethealth.util.loadpage('Patient');
+                            }
+                        });
+                        $('#lastVDate').text(moment(lastVisitDate, 'DD-MM-YYYY HH:mm:ss').format('DD-MM-YYYY'));
+                    } else {
+                        $('#lastVDate').text(lastVisitDate);
+                    }
+                    $('#patTitle option[value="' + pat.patTitle + '"]').prop('selected', true);
+                    $('#patName').val(pat.patFullName);
+                    $('#mrnSearch').val(pat.patMrnNo);
+                    $('#patDOB').val(pat.patDob);
+                    var c = $('#patDOB').val().split('-');
+                    $('#patAge').val(Math.floor((new Date() - new Date(new Date(c[2], c[1] - 1, c[0]))) / (365.25 * 24 * 60 * 60 * 1000)));
+                    $('#patGender option[value="' + pat.patGenderIndex + '"]').prop('selected', true);
+                    $('#patMaritalStatus option[value="' + pat.patMaritalStatus + '"]').prop('selected', true);
+                    $('#patMobile').val(pat.patPhoneNo);
+                    $('#patEmail').val(pat.patEmailId);
+                    $('#pinCode').val(pat.patPincode);
+                    $('#stateGeo').val(pat.patStateIndex);
+                    $('#patCity').val(pat.patCityIndex);
+                    $('#countryName').val(pat.patCountryIndex);
+                    $('#patAddress').val(pat.patAddress);
+                    $('#patBldGrp').val(pat.patBloodGroupIndex);
+                    $('#isVIP').val(pat.patVipStatus);
+                    if (parseInt($('#isVIP').val()) === 1) {
+                        document.getElementById("openVip").checked = true;
+                    }
+                });
+            });
+            document.getElementById("patRID").value = parseInt(patRid);
+
+        });
+    }
+    function searchApptByAppointment(apptRid) {
+        var options = "";
+        dcomethealth.AppointmentsResource.searchAppointments({"armApptRid": apptRid}, function (data) {
+            $.each(data, function (id, arm) {
+                dcomethealth.MasterResource.searchStaff({"staffResourceRID": arm.armResourceRid}, function (data) {
+                    $.each(data, function (idx, Val) {
+                        $('#VDept option[value="' + Val.staffSpecialityIndex + '"]').prop('selected', true);
+                        options += '<option value="' + Val.id + '">' + Val.staffName + '</option>';
+                    });
+                    $("#VDName").html(options);
+                });
+            });
+
+        });
+        $('#VDept').prop('disabled', true);
+        $('#VDName').prop('disabled', true);
+    }
+    function genderChange() {
+        if (parseInt($('#patTitle option:selected').val()) === 5 || parseInt($('#patTitle option:selected').val()) === 6) {
+            $('#patGender option[value="2"]').prop('selected', true);
+        } else if (parseInt($('#patTitle option:selected').val()) === 4) {
+            $('#patGender option[value="1"]').prop('selected', true);
+        }
+    }
+    function autocomplete() {
+        $("#" + id + " input[name='mrnSearch']").item_autocomplete({
+            select: function (event, ui) {
+                $('#lvDateLi').removeClass('hidden');
+                var RegDate = "New Entry";
+                dcomethealth.PatientResource.searchVisit({"visPatRid": ui.item.data.id}, function (data2) {
+                    if (data2 != undefined) {
+                        RegDate = data2[0].createdDateTime;
+                        $.each(data2, function (i, visit) {
+                            if (moment(visit.createdDateTime, 'DD-MM-YYYY HH:mm:ss').format('DD-MM-YYYY') === moment().format('DD-MM-YYYY')) {
+                                alert("Patient is Active Today");
+                                dcomethealth.util.base_init();
+                                dcomethealth.util.loadpage('Patient');
+                            }
+                        });
+                        $('#lastVDate').text(moment(RegDate, 'DD-MM-YYYY HH:mm:ss').format('DD-MM-YYYY'));
+                    } else {
+                        $('#lastVDate').text(RegDate);
+                    }
+                    $('#patTitle option[value="' + ui.item.data.patTitle + '"]').prop('selected', true);
+                    $('#patName').val(ui.item.data.patName);
+                    $('#LName').val(ui.item.data.patFamilyName);
+                    $('#patDOB').val(ui.item.data.patDob);
+                    var c = $('#patDOB').val().split('-');
+                    $('#patAge').val(Math.floor((new Date() - new Date(new Date(c[2], c[1] - 1, c[0]))) / (365.25 * 24 * 60 * 60 * 1000)));
+                    $('#patGender option[value="' + ui.item.data.patGenderIndex + '"]').prop('selected', true);
+                    $('#patMaritalStatus option[value="' + ui.item.data.patMaritalStatus + '"]').prop('selected', true);
+                    $('#patMobile').val(ui.item.data.patPhoneNo);
+                    $('#patEmail').val(ui.item.data.patEmailId);
+                    $('#pinCode').val(ui.item.data.patPincode);
+                    $('#stateGeo').val(ui.item.data.patStateIndex);
+                    $("#patCity").val(ui.item.data.patCityIndex);
+                    $('#countryName').val(ui.item.data.patCountryIndex);
+                    $('#patAddress').val(ui.item.data.patAddress);
+                    $('#patBldGrp').val(ui.item.data.patBloodGroupIndex);
+                    $('#isVIP').val(ui.item.data.patVipStatus);
+                    if (parseInt($('#isVIP').val()) === 1) {
+                        document.getElementById("openVip").checked = true;
+                    }
+                });
+                document.getElementById("patRID").value = parseInt(ui.item.data.id);
+            },
+            open: function (event, ui) {
+                $(document).tooltip({
+                    position: {
+                        my: "center bottom-20",
+                        at: "right center",
+                        using: function (position, feedback) {
+                            $(this).css(position);
+                        }
+                    }
+                });
+            },
+            close: function () {
+                $(document).tooltip("destroy");
+            },
+            source: function (request, response) {
+                var queryString = request.term;
+                queryString = queryString.trim();
+                var searchParams = {"q": queryString};
+                dcomethealth.PatientResource.searchPatient(searchParams, function (data) {
+                    response($.grep($.map(data, function (item) {
+                        return {
+                            label: (item.patMrnNo || "") + (item.patMrnNo && item.patPhoneNo ? " - " : "") + (item.patPhoneNo || ""),
+                            value: (item.patMrnNo || ""),
+                            name: (item.patTitle || "") + (item.patTitle && item.patFullName ? " - " : ""),
+                            data: item
+                        };
+                    }), function (item, index) {
+                        return index < 10;
+
+                    }));
+                });
+            },
+            minLength: 1
+        });
+    }
+    function searchPostalCode() {
+        var pincode = $('#pinCode').val();
+        var searchObj = {"zipCode": pincode, "couCode": dcomethealth.userEntityCountryCode};
+        dcomethealth.DataDictionaryResource.searchByZipcode(searchObj, function (data) {
+            $("#Cities").empty();
+            $.each(data, function (pIdx, data) {
+                $("#Cities").append('<option value="' + data.place + '">' + data.place + '</option>');
+                $("#stateGeo").val(data.division1);
+            });
+        });
+    }
+    function submit(boRID, boCode, actionCode, iscollectPayment) {
+        var form = $("form");
+        if (dcomethealth.Patient.validateForm(form)) {
+            var visit = {};
+            visit.visTypeIndex = $("#visitType").val();
+            visit.visSubTypeIndex = 0; // Need to change the value;
+            visit.visPatType = 0;   // Need to check and change it.
+            visit.visApptRid = 0;  // passing 0 because its a direct OP registration
+            visit.visEpisodeRid = 0; // Passing 0 as of now, need to enable visit episode
+            visit.visReasonIndex = $("#visitReason").val();
+            visit.visSpecialityIndex = $("#VDept option:selected").val();
+            visit.visRemarks = $("#visitRemarks").val();
+            visit.visConsDocRid = $("#VDName option:selected").val();
+            visit.visAttnDocRid = 0;  // We have only consulting doc RID now, need to update it later if the attending doctor is different.
+            visit.visRefTypeIndex = $("#refType").val();
+            var visitPatDetails = [];
+            var patient = {};
+            if ($("#patRID").val() !== "") {
+                patient.id = $("#patRID").val();
+            }
+            patient.patTitle = $("#patTitle").val();
+            patient.patName = $("#patName").val();
+            patient.patFullName = $("#patName").val() + " " + $("#LName").val();
+            patient.patFamilyName = $("#LName").val();
+            patient.patGenderIndex = $("#patGender").val();
+            patient.patBloodGroupIndex = $("#patBldGrp").val();
+            patient.patDob = $("#patDOB").val();
+            patient.patMaritalStatus = $("#patMaritalStatus").val();
+            patient.patAddress = $("#patAddress").val();
+            patient.patCityIndex = $("#patCity").val();
+            if ($("#pinCode").val() !== "") {
+                patient.patPincode = $("#pinCode").val();
+            }
+            patient.patStateIndex = $("#stateGeo").val();
+            patient.patCountryIndex = $("#countryName").val();
+            patient.patPhoneNo = $("#patMobile").val();
+            patient.patEmailId = $("#patEmail").val();
+            patient.patVipStatus = $("#isVIP").val();
+//        patient.patParentRid = 0; Need to enable later;
+            patient.patGeneratedDob = $("#patDOB").val();
+
+            visitPatDetails.push(patient);
+            visit.patient = visitPatDetails;
+            var visitSerBillDetails = [];
+            var billDList = [], pmdList = [], receiptDList = [];
+            var billH = {};
+            var receiptHList = [];
+            var receiptH = {};
+
+            var serviceNetAmount = document.getElementById('serviceNetAmount').value;
+            var total_pmd = document.getElementById('total_pmd').value;
+            if (total_pmd == "") {
+                total_pmd = 0;
+            }
+            if (serviceNetAmount == "") {
+                alert("Bill Amount is empty");
+                return false;
+            }
+            billH.bhType = 1; // OP bill type : 1;
+            billH.bhGrossAmount = $("#serviceGrossAmount").val();
+            billH.bhTotalDiscountAmount = $("#serviceDiscountAmount").val();
+            billH.bhPatientName = $("#patName").val() + " " + $("#LName").val();
+            billH.bhPatientNo = $("#patMobile").val(); // Please change the name
+            billH.bhNetAmount = $("#serviceNetAmount").val();
+            billH.bhDiscount = $("#serviceDiscountAmount").val();  // Its already taken as total discount amount
+            billH.bhPaidAmount = parseFloat(total_pmd);
+            billH.bhDocRefRID = $("#VDName").val();
+            billH.bhUnitRID = dcomethealth.selectedunit; // user selected unit;
+            billH.bhPayerType = $("#patRefType").val();
+            billH.bhPayerRID = $("#payerName").val();
+
+            receiptH.rhTotalAmount = $("#serviceNetAmount").val();
+            receiptH.rhPayerName = $("#patName").val() + " " + $("#LName").val();
+            receiptH.rhPayerNo = $("#patMobile").val();
+            receiptH.rhPaidAmount = parseFloat(total_pmd);
+//            if (parseInt(iscollectPayment) == 1) {
+
+            var table2 = document.getElementById('pmd_table');
+            var table_length2 = table2.rows.length;
+            for (var j = 0; j < table_length2; j++) {
+                if (dynTableGetNodeInRow(table2.rows[j], 'pmd_amount').value != "") {
+                    if (parseFloat(serviceNetAmount) < parseFloat(total_pmd)) {
+                        alert("Net amount and Total amount paid not equal");
+                        return false;
+                    }
+                    var pmd = {};
+                    var receiptDPmd = {};
+                    pmd.pmdTransType = 3;
+                    pmd.pmdPaymentMode = dynTableGetNodeInRow(table2.rows[j], 'pay_mode_ddict').value;
+                    pmd.pmdCardType = dynTableGetNodeInRow(table2.rows[j], 'cardtype').value;
+                    pmd.pmdDocNo = dynTableGetNodeInRow(table2.rows[j], 'cheqno').value;
+                    pmd.pmdDocDate = dynTableGetNodeInRow(table2.rows[j], 'cheqdate').value;
+                    pmd.pmdDocExpDate = dynTableGetNodeInRow(table2.rows[j], 'expdate').value;
+                    pmd.pmdDocApprovalNo = dynTableGetNodeInRow(table2.rows[j], 'approvalno').value;
+                    pmd.pmdBankName = dynTableGetNodeInRow(table2.rows[j], 'bankname').value;
+                    pmd.pmdBankDetails = dynTableGetNodeInRow(table2.rows[j], 'branchname').value;
+                    if (dynTableGetNodeInRow(table2.rows[j], 'pmd_amount').value != "") {
+                        pmd.pmdAmount = dynTableGetNodeInRow(table2.rows[j], 'pmd_amount').value;
+                    } else {
+                        pmd.pmdAmount = 0;
+                    }
+//                        child2.pmdCurrencyRID = dynTableGetNodeInRow(table.rows[i + 1], 'retailNetAmount').value;
+//                        child2.pmdCurrencyValue = dynTableGetNodeInRow(table.rows[i + 1], 'retailNetAmount').value;
+//                        child2.pmdCurrencyExchangeRate = dynTableGetNodeInRow(table.rows[i + 1], 'retailNetAmount').value;
+//                        child2.pmdDisplaySymbol = dynTableGetNodeInRow(table.rows[i + 1], 'retailNetAmount').value;
+//                        child2.pmdRemarks = dynTableGetNodeInRow(table.rows[i + 1], 'retailNetAmount').value;
+//                        child2.pmdCardHolderName = dynTableGetNodeInRow(table.rows[i + 1], 'retailNetAmount').value;
+                    receiptDPmd.rdBillAmount = $("#serviceNetAmount").val();
+                    receiptDPmd.rdPaidAmount = dynTableGetNodeInRow(table2.rows[j], 'pmd_amount').value;
+                    pmdList.push(pmd);
+                    receiptDList.push(receiptDPmd);
+                }
+                receiptH.receiptD = receiptDList;
+                receiptH.paymentModeDetails = pmdList;
+                receiptHList.push(receiptH);
+                billH.receiptH = receiptHList;
+            }
+            var table = document.getElementById('dyn_table');
+            var table_length = table.rows.length;
+            for (var i = 0; i < table_length - 1; i++) {
+//            var serviceOrder = {};
+                var billD = {};
+                //BillD
+                billD.bdItemType = "Service";//Change to serv related
+                billD.bdItemRID = dynTableGetNodeInRow(table.rows[i + 1], 'serviceRID').value;
+                billD.bdItemName = dynTableGetNodeInRow(table.rows[i + 1], 'serviceName').value;
+                billD.bdQty = dynTableGetNodeInRow(table.rows[i + 1], 'qtyService').value;
+                billD.bdPrice = dynTableGetNodeInRow(table.rows[i + 1], 'MRP').value;
+                billD.bdGrossAmount = dynTableGetNodeInRow(table.rows[i + 1], 'qtyService').value * dynTableGetNodeInRow(table.rows[i + 1], 'MRP').value;
+                if (dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').value != "") {
+                    billD.bdDiscountAmount = dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').value;
+                } else {
+                    billD.bdDiscountAmount = 0;
+                }
+//            child.bdTotalTaxAmount = dynTableGetNodeInRow(table.rows[i + 1], 'grdSkuRID').value;
+//            child.bdTaxPercent = dynTableGetNodeInRow(table.rows[i + 1], 'grdSkuRID').value;
+                billD.bdNetAmount = dynTableGetNodeInRow(table.rows[i + 1], 'netAmount').value;
+//            child.bdIsDiscountPercentage = dynTableGetNodeInRow(table.rows[i + 1], 'grdSkuRID').value;
+//            child.bdDiscountValue = dynTableGetNodeInRow(table.rows[i + 1], 'discVal').value;
+//            child.bdIsItemLevelDiscountGiven = dynTableGetNodeInRow(table.rows[i + 1], 'grdSkuRID').value;
+//            child.bdDiscountReasonRID = dynTableGetNodeInRow(table.rows[i + 1], 'grdSkuRID').value;
+//            child.bdDiscountVoucherNo = dynTableGetNodeInRow(table.rows[i + 1], 'grdSkuRID').value;
+//            child.bdDiscountApprovalUserRID = dynTableGetNodeInRow(table.rows[i + 1], 'grdSkuRID').value;
+//            child.bdIsItemOrderedFromBIll = dynTableGetNodeInRow(table.rows[i + 1], 'grdSkuRID').value;
+//            child.bdIsManualInclusion = dynTableGetNodeInRow(table.rows[i + 1], 'grdSkuRID').value;
+//            child.bdIsDsicountApproved = dynTableGetNodeInRow(table.rows[i + 1], 'grdSkuRID').value;
+                billDList.push(billD);
+            }
+            billH.billD = billDList;
+            visitSerBillDetails.push(billH);
+            visit.billH = visitSerBillDetails;
+            var search = boRID + "/" + boCode + "/" + actionCode;
+            dcomethealth.PatientResource.save(visit, search)
+                    .done(function (data, textStatus, jqXHR) {
+                        dcomethealth.PatientResource.searchPatient({"id": data}, function (data) {
+                            alert(data[0].patMrnNo + " is Saved");
+                        });
+                        dcomethealth.util.base_init();
+                        dcomethealth.util.loadpage('Patient');
+                        loadNotification();
+                    }).fail(function (jqXHR, textStatus, errorThrown) {
+                alert("failed");
+            });
+        }
+    }
+    function validateForm(form) {
+        return form.validate();
+    }
+    function refreshData() {
+    }
+    return {
+        init: init,
+        getCity: getCity,
+        getStates: getStates,
+        payerChange: payerChange,
+        payerNameChange: payerNameChange,
+        autocompleteService: autocompleteService,
+        searchPatByAppointment: searchPatByAppointment,
+        searchApptByAppointment: searchApptByAppointment,
+        genderChange: genderChange,
+        autocomplete: autocomplete,
+        searchPostalCode: searchPostalCode,
+        submit: submit,
+        validateForm: validateForm,
+        refreshData: refreshData
+    };
+}());
+dcomethealth.Patient.init();

@@ -1,0 +1,291 @@
+<script>
+    function div_hide() {
+        $("#ItemMasterHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+        $(':text').val('');
+        $(':checkbox, :radio').prop('checked', false);
+    }
+    function clearAll() {
+        document.getElementById("skuCode").value = '';
+        document.getElementById("skuName").value = '';
+        document.getElementById("skuGenericName").value = '';
+        document.getElementById("rol").value = '';
+        document.getElementById("mrp").value = '';
+        document.getElementById("p_conv_factor").value = '';
+        document.getElementById("s_conv_factor").value = '';
+        document.getElementById("rol").value = '';
+        document.getElementById("supplierName").value = '';
+        document.getElementById("costPrice").value = '';
+        document.getElementById("skuMinOrderQty").value = '';
+    }
+    function div_back() {
+        $("#add_new").removeClass("panel panel-primary").addClass("hidden");
+        $("#ItemMasterHeader").removeClass("hidden").addClass("panel panel-primary");
+    }
+    function delete_row(elem) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+    function insert_row(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var supName = dynTableGetNodeInRow(table.rows[i + 1], 'supplierName').value;
+            var cost = dynTableGetNodeInRow(table.rows[i + 1], 'costPrice').value;
+            var minOrderQty = dynTableGetNodeInRow(table.rows[i + 1], 'skuMinOrderQty').value;
+        }
+        if (supName == "" || parseInt(supName) == 0) {
+            alert("Enter Supplier Name");
+            return false;
+        } else if (cost == "" || parseInt(cost) == 0) {
+            alert("Enter Cost");
+            return false;
+        } else if (minOrderQty == "" || parseInt(minOrderQty) == 0) {
+            alert("Enter Min Order Qty");
+            return false;
+        }
+        else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "skuSuppDel").className = "ace-icon fa fa-minus";
+            dynTableGetNodeInRow(newRow, "supplierName").value = "";
+            dynTableGetNodeInRow(newRow, "costPrice").value = 0;
+            dynTableGetNodeInRow(newRow, "skuMinOrderQty").value = 0;
+            dcomethealth.ItemMaster.supplier_autocomplete();
+        }
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<div class="row">
+    <div id="ItemMasterHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>Item Master</h4>
+            <div class="pull-right edit-all-button-container">
+                <a href="#" class="btn btn-primary " onclick="div_hide()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Add New</span></a>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12">
+                <div class="col-md-12">
+                    <div id="itemMasterFooter">
+                        <table id="itemsTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th>Code</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody_head">
+                            </tbody> 
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="add_new" class="hidden"> 
+    <div class="row" id="ItemMaster">     
+        <div class="panel panel-primary">
+            <form action="#" id="edit_user_form" name="edit_user_form" novalidate="novalidate" class="form-horizontal row-border">
+                <div class="panel-heading"><h4>Item Master</h4>
+                    <div class="hidden-print">
+                        <div class="edit-all-button-container pull-right">                            
+                            <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('ItemMaster');
+                                    dcomethealth.util.base_init()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Back</span></a>
+                            <input type="submit" class="btn btn-primary" value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="panel-body">             
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <span class="text-primary"><strong>Item Info.</strong></span><hr class="btn-danger">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">                        
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Item Code</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <input id="skuCode" type="text" name="skuCode" class="form-control"/>
+                                <input type="hidden" name="skuRID" id="skuRID" value=""/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Item Name</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <input id="skuName" type="text" name="skuName" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Generic Name</label>
+                            <div class= "row col-md-7 col-sm-7 col-xs-7">
+                                <input id="skuGenericName" type="text" name="skuGenericName" class="form-control"  />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Group Name</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <select id="skuGroupRID" name="skuGroupRID" class="dcomet-c-s_ddict_sku_group-list form-control">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Sub Group Name</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <select id="sku_sub_group" name="sku_sub_group" class="dcomet-c-s_ddict_sku_subgroup-list form-control">
+                                </select>
+                            </div>
+                        </div>
+<!--                        <div class="row col-md-4 col-sm-8 col-xs-8">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Manufacturer</label>
+                            <div class= "row col-md-8 col-sm-12 col-xs-12">
+                                <select id="manufacturer" name="manufacturer" class="dcomet-c-s_ddict_manufacturer-list form-control">
+                                </select>
+                            </div>
+                        </div>-->
+                    </div>     
+
+                    <div class="col-md-12 col-sm-12 col-xs-12">   
+                        <hr class="btn-danger">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Is Consumable</label>                       
+                            <div class="row col-md-3 col-sm-3 col-xs-3 control-label"> <!--  control-label needed for positioning -->
+                                <div class="consumableStatus"></div>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Is Billable</label>                          
+                            <div class="row col-md-3 col-sm-3 col-xs-3 control-label"> <!--  control-label needed for positioning -->
+                                <div class="billableStatus"></div>
+                            </div>                             
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Is Consignment Item</label>                           
+                            <div class="row col-md-3 col-sm-3 col-xs-3  control-label"> <!--  control-label needed for positioning -->
+                                <div class="consignmentStatus"></div>
+                            </div>                                                            
+                        </div>            
+                    </div>
+                    <br><br><br>
+                    <div class="col-md-12 col-sm-12 col-xs-12"> 
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Reorder Level</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" class="form-control" id="rol" name="rol" onkeypress="return dcomethealth.validation.isNumberKey(event)" value="">
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Minimum Order Level</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" class="form-control" id="minOL" name="minOL" onkeypress="return dcomethealth.validation.isNumberKey(event)" value="">
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">MRP</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="mrp" class="form-control" name="mrp" maxlength="9" onkeypress="return dcomethealth.validation.isDecimalKey(event)" value="">
+                            </div>
+                        </div>              
+                    </div> 
+                    <br>
+                    <div class="col-md-12 col-sm-12 col-xs-12">                       
+                        <span class="text-primary"><strong>UOM Info.</strong></span><hr class="btn-danger">               
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row  col-md-12 col-sm-12 col-xs-12">Base UOM</label><br>
+                            <div class="row  col-md-8 col-sm-8 col-xs-8">
+                                <select id="skuDdBaseUomIndex" name="skuDdBaseUomIndex" class="form-control dcomet-c-s_ddict_uom-list jqueryUIToolTip" title="Base UOM"></select>
+                            </div>
+                        </div>
+                        <div class="row  col-md-4 col-sm-4 col-xs-4">
+                            <label class="row  col-md-12 col-sm-12 col-xs-12">Purchase UOM</label><br>
+                            <div class="row  col-md-8 col-sm-8 col-xs-8">
+                                <select id="skuDdPurUomIndex" name="skuDdPurUomIndex" class="form-control dcomet-c-s_ddict_uom-list jqueryUIToolTip" title="Purchase UOM">			
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row  col-md-12 col-sm-12 col-xs-12">Purchase Conversion</label><br>
+                            <div class="row  col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="p_conv_factor" class="form-control" name="p_conv_factor" value="1"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-12">                        
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Sale UOM</label><br>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <select id="skuDdSaleUomIndex" name="skuDdSaleUomIndex" class="form-control dcomet-c-s_ddict_uom-list jqueryUIToolTip" title="Sale UOM"></select>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Sale Conversion</label><br>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="s_conv_factor" class="form-control" name="s_conv_factor" value="1"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4"></div>
+                    </div>
+                    <hr>
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <span class="text-primary"><strong>Preferred Supplier Info.</strong></span><hr class="btn-danger">                
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8 col-sm-8 col-xs-8">
+                            <div class="table-responsive">
+                                <table id="dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Supplier Name</th>
+                                            <th>Cost(<span class="dcomet-c-s_currCode"></span>)</th>
+                                            <th>Min Order Qty</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemMasterTbody">
+                                        <tr>
+                                            <td>
+                                                <i id="skuSuppDel" class="ace-icon fa fa-minus hidden" onclick="delete_row(this)"></i>
+                                                <input type="hidden" id="suppRid" name="suppRid" value=""/>
+                                                <input type="hidden" id="ssmRid" name="ssmRid" value=""/>
+                                            </td>
+                                            <td width="40%">
+                                                <input class="col-md-10 col-sm-10 col-xs-10" type="text" id="supplierName" name="supplierName" value=""/>
+                                            </td>
+                                            <td width="30%">
+                                                <input class="col-md-11 col-sm-11 col-xs-11" type="text" id="costPrice" maxlength="9" name="costPrice" onkeypress="return dcomethealth.validation.isDecimalKey(event)" value=""/>
+                                            </td>
+                                            <td width="30%">
+                                                <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="skuMinOrderQty" maxlength="9" name="skuMinOrderQty" onkeypress="return dcomethealth.validation.isNumberKey(event)" value=""/>
+                                            </td>
+                                            <td>
+                                                <i class="ace-icon fa fa-plus blue" onclick="insert_row('dyn_table', this)"></i>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-4 col-xs-4">
+                            <label class="col-md-12 col-sm-12 col-xs-12">Is Active</label>
+                            <div class="col-md-3 col-sm-3 col-xs-3 control-label"> <!--  control-label needed for positioning -->
+                                <div class="activeStatus"></div>
+                            </div>                   
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> 

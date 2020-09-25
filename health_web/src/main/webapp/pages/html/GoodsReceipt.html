@@ -1,0 +1,567 @@
+
+<script type="text/javascript">
+    $("#grhDcDate").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    $("#grhInvoiceDate").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    $("#from_date").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    $("#to_date").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+
+    $('body').on('focus', "#grdExpiryDate", function () {
+        $(this).datepicker({
+            format: 'yyyy/mm',
+            viewMode: "months",
+            minViewMode: "months"
+        });
+    });
+
+    function div_reset() {
+        document.getElementById("edit_user_form").reset();
+    }
+    function modifyGrn(id, status) {
+        $('#grhRid').val(id);
+        $('#grhStatus').val(status);
+        if (parseInt(status) === 2) {
+            $('#saveSubmit').addClass('hidden');
+            $('#Cancel').addClass('hidden');
+        } else if (parseInt(status) === -1) {
+            alert("already Cancelled");
+            return false;
+        } else {
+            $('#saveSubmit').val("Modify");
+        }
+        $("#GoodsReceiptHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#AddNew").removeClass("hidden").addClass("panel panel-primary");
+        dcomethealth.GoodsReceipt.getGrn(id);
+    }
+
+    function delete_row(elem) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+    function mrpValidation(tableid, elem)
+    {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var mrp = dynTableGetNodeInRow(table.rows[i + 1], 'grdMrp').value;
+            var rate = dynTableGetNodeInRow(table.rows[i + 1], 'grdRate').value;
+            if (parseFloat(mrp) == 0 || mrp == '') {
+                alert("Enter mrp");
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'grdMrp').focus();
+                }, 1);
+            } else if (parseFloat(rate) == 0 || rate == '') {
+                alert("Enter rate");
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'grdRate').focus();
+                }, 1);
+                return  false;
+            } else if (parseFloat(rate) > parseFloat(mrp)) {
+                alert("MRP is less");
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'grdMrp').focus();
+                }, 1);
+                return  false;
+            }
+        }
+    }
+    function calculation(row) {
+        var itemname = dynTableGetNodeInRow(row, 'grdItemName').value;
+        var rec_qty_row = dynTableGetNodeInRow(row, 'grdReceiptQty').value;
+        var ord_qty_row = dynTableGetNodeInRow(row, 'grdOrderQty').value;
+        var acc_qty_row = dynTableGetNodeInRow(row, 'grdAcceptedQty').value;
+        var rate_row = dynTableGetNodeInRow(row, 'grdRate').value;
+        var dis_row = dynTableGetNodeInRow(row, 'grdDiscount').value;
+        if (itemname != "") {
+            if (parseInt(rec_qty_row) != 0 && rec_qty_row != "") {
+                if (parseInt(acc_qty_row) != 0 && acc_qty_row != "") {
+                    if (parseInt(rate_row) != 0 && rate_row != "") {
+                        var gross = 0, net = 0, disc_total = 0, tax_total = 0, serv_tax_total = 0;
+                        var table = document.getElementById('dyn_table');
+                        var table_length = table.rows.length;
+                        for (var i = 0; i < table_length - 1; i++) {
+                            var qty_row = dynTableGetNodeInRow(table.rows[i + 1], 'grdAcceptedQty').value;
+                            var cost_row = dynTableGetNodeInRow(table.rows[i + 1], 'grdRate').value;
+                            var disc_row = dynTableGetNodeInRow(table.rows[i + 1], 'grdDiscount').value;
+                            var tax_row = dynTableGetNodeInRow(table.rows[i + 1], 'grdTax').value;
+                            if (qty_row == '') {
+                                qty_row = 0;
+                            }
+                            if (cost_row == '') {
+                                cost_row = 0;
+                            }
+                            if (disc_row == '') {
+                                dynTableGetNodeInRow(table.rows[i + 1], 'grdDiscount').value = 0.00;
+                                disc_row = 0;
+                            }
+                            if (tax_row == '') {
+                                dynTableGetNodeInRow(table.rows[i + 1], 'grdTax').value = 0.00;
+                                tax_row = 0;
+                            }
+
+                            var gross_row = parseInt(qty_row) * parseFloat(cost_row);
+                            var disc_calc = parseFloat(gross_row) * (parseFloat(disc_row) / 100);
+                            disc_total = parseFloat(disc_total) + parseFloat(disc_calc);
+                            var tax_calc = parseFloat(gross_row) * (parseFloat(tax_row) / 100);
+                            tax_total = parseFloat(tax_total) + parseFloat(tax_calc);
+                            gross = parseFloat(gross) + parseFloat(gross_row);
+                            var net_row = parseFloat(gross_row) - parseFloat(disc_calc) + parseFloat(tax_calc);
+                            dynTableGetNodeInRow(table.rows[i + 1], 'grdNet').value = net_row.toFixed(2);
+                            net = parseFloat(net) + parseFloat(net_row);
+                            var round = parseInt(net.toFixed(0)) - parseFloat(net);
+                        }
+                        document.getElementById('grhGrossAmount').value = gross.toFixed(2);
+                        document.getElementById('grhDiscountAmount').value = disc_total.toFixed(2);
+                        document.getElementById('grhTaxAmount').value = tax_total.toFixed(2);
+                        document.getElementById('round_off_amount').value = round.toFixed(2);
+                        document.getElementById('grhNetAmount').value = net.toFixed(0);
+                    }
+                    else {
+                        alert("Enter Rate");
+                        return false;
+                    }
+                } else {
+                    alert("Enter Accepted Qty");
+                    return false;
+                }
+            } else {
+                alert("Enter RecQty");
+                return false;
+            }
+
+        }
+        else {
+            alert("Enter Itemname");
+            return false;
+        }
+
+        if (parseInt(rec_qty_row) <= 0) {
+            alert("Enter Positive Recieved Qty");
+            dynTableGetNodeInRow(row, 'grdAcceptedQty').value = 0;
+            dynTableGetNodeInRow(row, 'grdMrp').value = 0;
+            dynTableGetNodeInRow(row, 'grdDiscount').value = 0;
+            dynTableGetNodeInRow(row, 'grdTax').value = 0;
+            dynTableGetNodeInRow(row, 'grdNet').value = 0;
+            return false;
+        }
+        else if (parseInt(ord_qty_row) < parseInt(rec_qty_row)) {
+            alert("Ordered Qty is less than Recieved Qty");
+            dynTableGetNodeInRow(row, 'grdReceiptQty').value = 0;
+            dynTableGetNodeInRow(row, 'grdAcceptedQty').value = 0;
+            dynTableGetNodeInRow(row, 'grdMrp').value = 0;
+            dynTableGetNodeInRow(row, 'grdDiscount').value = 0;
+            dynTableGetNodeInRow(row, 'grdTax').value = 0;
+            dynTableGetNodeInRow(row, 'grdNet').value = 0;
+            document.getElementById("grhGrossAmount").value = 0;
+            document.getElementById("grhDiscountAmount").value = 0;
+            document.getElementById("grhTaxAmount").value = 0;
+            document.getElementById("round_off_amount").value = 0;
+            document.getElementById("grhNetAmount").value = 0;
+            return false;
+        }
+        if (parseInt(acc_qty_row) <= 0) {
+            alert("Enter Positive Accpet Qty");
+            dynTableGetNodeInRow(row, 'grdAcceptedQty').value = 0;
+            dynTableGetNodeInRow(row, 'grdMrp').value = 0;
+            dynTableGetNodeInRow(row, 'grdDiscount').value = 0;
+            dynTableGetNodeInRow(row, 'grdTax').value = 0;
+            dynTableGetNodeInRow(row, 'grdNet').value = 0;
+            document.getElementById("grhGrossAmount").value = 0;
+            document.getElementById("grhDiscountAmount").value = 0;
+            document.getElementById("grhTaxAmount").value = 0;
+            document.getElementById("round_off_amount").value = 0;
+            document.getElementById("grhNetAmount").value = 0;
+            return false;
+        }
+        else if (parseInt(rec_qty_row) < parseInt(acc_qty_row)) {
+            alert("Recieved Qty is less than Accept Qty");
+            dynTableGetNodeInRow(row, 'grdAcceptedQty').value = 0;
+            dynTableGetNodeInRow(row, 'grdMrp').value = 0;
+            dynTableGetNodeInRow(row, 'grdDiscount').value = 0;
+            dynTableGetNodeInRow(row, 'grdTax').value = 0;
+            dynTableGetNodeInRow(row, 'grdNet').value = 0;
+            document.getElementById("grhGrossAmount").value = 0;
+            document.getElementById("grhDiscountAmount").value = 0;
+            document.getElementById("grhTaxAmount").value = 0;
+            document.getElementById("round_off_amount").value = 0;
+            document.getElementById("grhNetAmount").value = 0;
+            return false;
+        }
+
+        if (parseFloat(dis_row) < 0) {
+            alert("Enter Positive Disc Value");
+            dynTableGetNodeInRow(row, 'grdDiscount').value = 0;
+            return false;
+        }
+    }
+
+    function div_hide() {
+        $("#GoodsReceiptHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#AddNew").removeClass("hidden").addClass("panel panel-primary");
+        document.getElementById('edit_user_form').reset();
+        $('#saveSubmit').val("Save");
+    }
+
+    function div_back() {
+        $("#AddNew").removeClass("panel panel-primary").addClass("hidden");
+        $("#GoodsReceiptHeader").removeClass("hidden").addClass("panel panel-primary");
+    }
+
+    function insert_row(tableid, elem) {
+        calculation(elem);
+//        mrpValidation(tableid, elem);
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var total = dynTableGetNodeInRow(table.rows[i + 1], 'grdAcceptedQty').value;
+            var rate = dynTableGetNodeInRow(table.rows[i + 1], 'grdRate').value;
+            var mrp = dynTableGetNodeInRow(table.rows[i + 1], 'grdMrp').value;
+        }
+        if (total == "" || parseInt(total) == 0) {
+            alert("Enter AcceptedQty");
+            return false;
+        } else if (rate == "" || parseInt(rate) == 0) {
+            alert("Enter Rate");
+            return false;
+        } else if (mrp == "" || parseInt(mrp) == 0) {
+            alert("Enter mrp");
+            return false;
+        }
+        else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "del").className = "ace-icon fa fa-minus";
+            dynTableGetNodeInRow(newRow, "grdSkuRID").value = 0;
+            dynTableGetNodeInRow(newRow, "grdRID").value = "";
+            dynTableGetNodeInRow(newRow, "grdItemName").value = "";
+            dynTableGetNodeInRow(newRow, "grdItemName").readOnly = false;
+            dynTableGetNodeInRow(newRow, "grdBatchNo").value = "";
+            dynTableGetNodeInRow(newRow, "grdBatchNo").readOnly = false;
+            dynTableGetNodeInRow(newRow, "grdExpiryDate").value = "";
+            dynTableGetNodeInRow(newRow, "grdExpiryDate").readOnly = false;
+            dynTableGetNodeInRow(newRow, "grdOrderQty").value = "";
+            dynTableGetNodeInRow(newRow, "grdOrderQty").readOnly = false;
+            dynTableGetNodeInRow(newRow, "grdReceiptQty").value = "";
+            dynTableGetNodeInRow(newRow, "grdAcceptedQty").value = "";
+            dynTableGetNodeInRow(newRow, "grdRate").value = 0;
+            dynTableGetNodeInRow(newRow, "grdRate").readOnly = false;
+            dynTableGetNodeInRow(newRow, "grdUOM").value = "";
+            dynTableGetNodeInRow(newRow, "grdMrp").value = 0;
+            dynTableGetNodeInRow(newRow, "grdMrp").readOnly = false;
+            dynTableGetNodeInRow(newRow, 'grdDiscount').value = 0;
+            dynTableGetNodeInRow(newRow, 'grdTax').value = 0;
+            dynTableGetNodeInRow(newRow, 'grdNet').value = 0;
+            dcomethealth.GoodsReceipt.autocomplete();
+        }
+    }
+    function dateValidation() {
+        var a = moment();
+        var b = moment($("#grhDcDate").val(), 'DD-MM-YYYY');
+        if (a.isBefore(b)) {
+            alert("Enter Valid Date");
+            return false;
+        }
+    }
+    function invDateValidation() {
+        var a = moment();
+        var b = moment($("#grhInvoiceDate").val(), 'DD-MM-YYYY');
+        if (a.isBefore(b)) {
+            alert("Enter Valid Date");
+            return false;
+        }
+    }
+
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/codeprettifier/prettify.css' /> 
+<div class="">
+    <div id="GoodsReceiptHeader" class="panel panel-orange">
+        <div class="panel-heading"><h4>Goods Receipt</h4>
+            <div class="hidden-print">
+                <div class="pull-right edit-all-button-container">
+                    <button class="btn btn-orange" id="GrnDateRange" style="margin-top: 3px; margin-bottom: 3px;">
+                        <span class="hidden-xs hidden-sm" id="GrnDateRangeSpan"></span> <b class="caret"></b>
+                    </button>
+                    <a href="#" class="btn btn-orange" onclick="dcomethealth.GoodsReceipt.viewGrnAll()" style="margin-top: 3px; margin-bottom: 3px;">
+                        <span >Search </span><i class="fa fa-search"></i>
+                    </a>
+                    <a href="#" class="btn btn-orange" onclick="div_hide()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Add New</span></a>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                            <div id="GRNFooter">
+                                <table id="tab_grn_details" width="100%" border="0" cellspacing="0" class="table table-striped table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                GRN
+                                            </th>
+                                            <th>
+                                                Supplier Name
+                                            </th>
+                                            <th>
+                                                Date
+                                            </th>
+                                            <th>
+                                                Status
+                                            </th>
+                                        </tr>
+                                    </thead>            
+                                    <tbody id="grn_data">
+                                    </tbody> 
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="AddNew" class="hidden">
+        <form action="#" id="edit_user_form" name="edit_user_form" novalidate="novalidate" class="form-horizontal row-border">
+            <div class="panel-heading"><h4>Goods Receipt</h4>
+                <div class="hidden-print">
+                    <div class="pull-right edit-all-button-container">                        
+                        <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('GoodsReceipt');
+                                dcomethealth.util.base_init()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Back</span></a>
+                        <input type="submit" id="saveSubmit" class="btn btn-primary" value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="panel panel-default">
+                <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+                    <div class="clearfix">
+                        <div class="col-md-6 col-sm-6 col-xs-6">
+                            <div>
+                                <input type="text" id="grhSupplierName" name="grhSupplierName" maxlength="100" placeholder="Supplier Search" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" class="col-md-6 form-control"/>
+                                <input type="hidden" id="grhSupplierRid" value=""/>
+                                <input type="hidden" id="grhRid" value=""/>
+                                <input type="hidden" id="grhStatus" value=""/>
+                                <input type="hidden" id="grhNo" name="grhNo" value=""/>
+                                <input type="hidden" id="grhSequenceNo" name="grhSequenceNo" value=""/>
+                                <input type="hidden" id="grhVersion" name="grhVersion" value="0"/>
+                            </div>
+                        </div>
+                        <div class="pull-left col-md-1 col-sm-4 col-xs-4"></div>
+                        <div class="col-md-2 col-sm-4 col-xs-4">
+                            <a href="#" class="alert alert-info btn btn-default" onclick="dcomethealth.GoodsReceipt.addFromPO()"><span id="savePage4Form" >Add From PO</span></a>
+                        </div>
+                        <div class="pull-right col-md-3 col-sm-12 col-xs-12">
+                            <ul class="text-right list-unstyled">
+                                <li><strong>Date:</strong>
+                                    <a class="editable editable-click" href="#" id="grhDate"></a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="clearfix col-md-12">                                
+                                <span class="text-primary"><strong>Supplier Info.</strong></span>
+                                <div class="col-md-12 col-sm-12 col-xs-12">                                   
+
+                                    <div  class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="col-md-3 col-sm-4 col-xs-4"></div>
+                                        <div id="addDiv" class="alert alert-info col-md-6 col-sm-6 col-xs-6 hidden">
+                                            <table class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover" id="dyn_po_table">
+                                                <thead>
+                                                <th>Select</th>
+                                                <th>Order No</th>
+                                                </thead>
+                                                <tbody id="po_tbody"></tbody>
+                                            </table>
+                                            <button type="button" class="btn btn-inverse btn-label pull-right" onclick="dcomethealth.GoodsReceipt.submitPO()">Submit</button>
+                                        </div>
+                                        <div class="col-md-3 col-sm-4 col-xs-4"></div>
+                                    </div>
+                                    <!--                                    <div class="modal fade" id="addFromPO" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                                                            <div class="modal-dialog">
+                                                                                <div class="modal-content">
+                                                                                    <div class="modal-header">
+                                                                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                                                                        <h4 class="modal-title">Purchase Order</h4>
+                                                                                    </div>
+                                                                                    <div class="modal-body">
+                                    
+                                                                                    </div>
+                                                                                    <div class="modal-footer">
+                                                                                        <button type="button" class="btn btn-default" data-dismiss="modal">Submit</button>
+                                                                                    </div>
+                                                                                </div> /.modal-content 
+                                                                            </div> /.modal-dialog 
+                                                                        </div> /.modal -->
+                                </div>
+                                <br/>
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <div class="col-md-3 col-sm-4 col-xs-4">
+                                        <label><strong>DC.No:</strong></label>
+                                        <div>
+                                            <input type="text" id="grhDcNo" name="grhDcNo" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" class="col-md-12 col-sm-12 col-xs-12"/>
+                                        </div> 
+                                    </div>
+                                    <div class="col-md-3 col-sm-4 col-xs-4">
+                                        <label><strong>DC.Date:</strong></label>
+                                        <div>
+                                            <input type="text" id="grhDcDate" maxlength="10" name="grhDcDate" class="col-md-12 col-sm-12 col-xs-12 " onkeypress="return dcomethealth.validation.ValidateDateEntry(event)" onblur="dateValidation()" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-sm-4 col-xs-4">
+                                        <label><strong>Inv.No:</strong></label>
+                                        <div>
+                                            <input type="text" id="grhInvoiceNo" name="grhInvoiceNo" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" class="col-md-12 col-sm-12 col-xs-12"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-sm-4 col-xs-4">
+                                        <label><strong>Inv.Date:</strong></label>
+                                        <div>
+                                            <input type="text" id="grhInvoiceDate" name="grhInvoiceDate" maxlength="10" onblur="invDateValidation()" class="col-md-12 col-sm-12 col-xs-12"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>                        
+                            <div class="">
+                                <div class="col-md-12 col-sm-12 col-xs-12">
+                                    <hr class="btn-danger"><span class="text-primary"><strong>Item Info</strong></span>
+                                    <div class="table-responsive">
+                                        <table class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover" id="dyn_table">
+                                            <thead>
+                                            <th></th>
+                                            <th>Item Name</th>
+                                            <th>Batch No</th>
+                                            <th>Exp Date</th>
+                                            <th>Order Qty</th>
+                                            <th>Rec.Qty</th>
+                                            <th>Acc.Qty</th>
+                                            <th>UOM</th>
+                                            <th>Rate (<span class="dcomet-c-s_currCode"></span>)</th>
+                                            <th>MRP (<span class="dcomet-c-s_currCode"></span>)</th>
+                                            <th>Disc (%)</th>
+                                            <th>Tax (%)</th>
+                                            <th>Nett (<span class="dcomet-c-s_currCode"></span>)</th>
+                                            <th></th>
+                                            </thead>
+                                            <tbody id="grn_tbody">
+                                                <tr>
+                                                    <td width="1%">                                
+                                                        <i id="del" class="ace-icon fa fa-minus" onclick="delete_row(this)"></i>
+                                                        <input type="hidden" id="grdSkuRID" name="grdSkuRID" value=""/>
+                                                        <input type="hidden" id="grdRID" name="grdRID" value=""/>
+                                                        <input type="hidden" id="grdSkuType" name="grdSkuType" value=""/>
+                                                    </td>
+                                                    <td width="20%">
+                                                        <input class="col-md-11 col-sm-11 col-xs-11" type="text" id="grdItemName" name="grdItemName"/>
+                                                    </td>
+                                                    <td width="10%">
+                                                        <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="grdBatchNo" onkeypress="" name="grdBatchNo" value=""/>
+                                                    </td>
+                                                    <td width="10%">
+                                                        <input type="text" id="grdExpiryDate" name="grdExpiryDate" class="col-md-12 col-sm-12 col-xs-12 jqueryUIToolTip" title="YYYY/MM format" readonly="readonly"/>
+                                                    </td>                            
+                                                    <td width="5%">
+                                                        <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="grdOrderQty" name="grdOrderQty" maxlength="10" onkeypress="return dcomethealth.validation.isNumberKey(event, this)"  />
+                                                    </td>
+                                                    <td width="5%">
+                                                        <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="grdReceiptQty" name="grdReceiptQty" maxlength="10" onkeypress="return dcomethealth.validation.isNumberKey(event, this)"  value=""/>
+                                                    </td>
+                                                    <td width="5%">
+                                                        <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="grdAcceptedQty" name="grdAcceptedQty" maxlength="10" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" onchange="calculation(this)"/>
+                                                    </td>
+                                                    <td width="9%"> <select class="dcomet-c-s_ddict_uom-list col-md-10 col-sm-10 col-xs-10" id="grdUOM" name="grdUOM"></select></td>
+                                                    <td width="8%">
+                                                        <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="grdRate" name="grdRate" maxlength="9" onkeypress="return dcomethealth.validation.isDecimalKey(event, this)" onchange="calculation(this)"/>
+                                                    </td>
+                                                    <td width="8%">
+                                                        <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="grdMrp" name="grdMrp" maxlength="9" onkeypress="return dcomethealth.validation.isDecimalKey(event, this)" onBlur="mrpValidation('dyn_table', this)" value=""/>
+                                                    </td>
+                                                    <td width="5%">
+                                                        <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="grdDiscount" name="grdDiscount" maxlength="3" onchange="dcomethealth.validation.isPercentaged(this);calculation(this)" onkeypress="return dcomethealth.validation.isDecimalKey(event, this)"/>
+                                                    </td>
+                                                    <td width="5%">
+                                                        <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="grdTax" name="grdTax" maxlength="3" onchange="dcomethealth.validation.isPercentaged(this);calculation(this);" onkeypress="return dcomethealth.validationisDecimalKey(event, this)"  />
+                                                    </td>
+                                                    <td width="8%">
+                                                        <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="grdNet" name="grdNet" readonly="readonly" onBlur=""/>
+                                                    </td>
+                                                    <td width="1%">                                
+                                                        <i class="ace-icon fa fa-plus red" onclick="insert_row('dyn_table', this)"></i>
+                                                    </td> 
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="text-primary"><strong>Amount Details.</strong></span><hr class="btn-danger">
+                            <div class="alert alert-info pull-right col-md-12">
+                                <div class="col-xs-12 col-md-1 col-sm-6"></div>
+                                <div class="col-xs-12 col-md-2 col-sm-8">
+                                    <div class=""><strong>Gross</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <input type="hidden" id="row_count_lens" name="row_count_lens" />
+                                        <input type="hidden" id="total_qty_lens" name="total_qty_lens" />
+                                        <output id="grhGrossAmount" name="grhGrossAmount" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                    </div>
+                                </div>                    
+                                <div class="col-xs-12 col-md-2 col-sm-6">
+                                    <div class=""><strong>Discount</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <output id="grhDiscountAmount" name="grhDiscountAmount" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                    </div>
+                                </div>
+                                <div class="col-xs-12 col-md-2 col-sm-6">
+                                    <div class=""><strong>Tax</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <output id="grhTaxAmount" name="grhTaxAmount" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                    </div>
+                                </div>
+                                <div class="col-xs-12 col-md-2 col-sm-6">
+                                    <div class=""><strong>Round Off</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <output id="round_off_amount" name="round_off_amount" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                    </div>
+                                </div>
+                                <div class="col-xs-12 col-md-2 col-sm-6">
+                                    <div class=""><strong>Net</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <output id="grhNetAmount" name="grhNetAmount" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                    </div>
+                                </div>                       
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script type='text/javascript' src="js/plugins/form-daterangepicker/daterangepicker.min.js"></script>
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> 

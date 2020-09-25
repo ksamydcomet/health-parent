@@ -1,0 +1,154 @@
+/*--------------------------------------------------
+RTL Styles
+--------------------------------------------------*/
+.navbar-left li:last-child a {
+  padding-left: 0;
+}
+
+.btn i {
+  margin-right: 0;
+  margin-left: 5px;
+}
+
+.right-part {
+  text-align: left;
+}
+
+.banner-mock .front-mock {
+  left: 0;
+  right: auto;
+}
+.banner-mock .back-mock {
+  left: 140px;
+  right: auto;
+}
+
+.intro-icon {
+  float: right;
+  margin-right: 0;
+  margin-left: 20px;
+}
+
+.intro-body {
+  float: right;
+}
+
+.section-download a + a {
+  margin-left: 0;
+  margin-right: 18px;
+}
+
+.feature-item {
+  padding-left: 70px;
+  padding-right: 0;
+}
+.features-left .feature-item {
+  text-align: left;
+  padding-left: 0;
+  padding-right: 70px;
+}
+
+.process-icon:after {
+  -webkit-transform: scaleX(-1);
+          transform: scaleX(-1);
+  left: -46px;
+  right: auto;
+}
+.col-md-3:nth-child(2n) .process-item .process-icon:after {
+  -webkit-transform: scale(-1, -1);
+          transform: scale(-1, -1);
+}
+
+.owl-carousel {
+  direction: ltr;
+}
+
+.download .button-group .btn + .btn {
+  margin-left: 0;
+  margin-right: 15px;
+}
+
+.download-mock {
+  left: 0;
+  right: auto;
+  text-align: left;
+}
+.download-mock .download-back {
+  left: 120px;
+  right: auto;
+}
+
+.contact-info-area .contact-icon {
+  float: right;
+  margin-right: 0;
+  margin-left: 20px;
+}
+.contact-info-area .contact-content {
+  float: right;
+}
+
+.socials a + a {
+  margin-left: 0;
+  margin-right: 18px;
+}
+
+.subscription [type=email] {
+  margin-right: 0;
+  margin-left: 37px;
+}
+
+.feature.style-2 .right-img-wrap {
+  position: absolute;
+  top: 0;
+  left: auto;
+  right: 0;
+  height: 100%;
+}
+
+.account-page-banner .account-form .top-option {
+  text-align: right;
+}
+
+.account-page-banner .account-form .top-option input + label {
+  margin-left: 0;
+  margin-right: 10px;
+}
+
+.account-page-banner .account-form label {
+  text-align: right;
+  display: block;
+}
+
+.account-page-banner .account-form .newsletter-option {
+  text-align: right;
+}
+
+.account-page-banner .account-form .newsletter-option input + label {
+  margin-left: 0;
+  margin-right: 10px;
+}
+
+.account-page-banner .account-form .forgot-password {
+  float: right;
+}
+
+.faq-section {
+  padding: 0 20px 0 0;
+}
+
+@media (max-width: 991px) {
+  .rtl .navbar-collapse {
+    right: auto;
+    left: 15px;
+  }
+}
+@media (max-width: 639px) {
+  .rtl .features-left .feature-item {
+    text-align: right;
+  }
+}
+@media (max-width: 479px) {
+  .download .button-group .btn + .btn {
+    margin-right: 0;
+  }
+}

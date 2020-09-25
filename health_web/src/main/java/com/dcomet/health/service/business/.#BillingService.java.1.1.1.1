@@ -1,0 +1,14 @@
+package com.dcomet.health.service.business;
+
+import com.dcomet.fw.exception.DcometServiceException;
+import com.dcomet.module.billing.domain.BillHSearchRequest;
+import com.dcomet.module.billing.service.DCometBillingService;
+
+/**
+ *
+ * @author KS
+ */
+public interface BillingService extends DCometBillingService {
+
+    public String getTransactionReport(BillHSearchRequest billHSearchRequest) throws DcometServiceException;
+}

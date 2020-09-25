@@ -1,0 +1,323 @@
+var dcomethealth = dcomethealth || {};
+dcomethealth.ServiceMaster = (function () {
+    var id = "ServiceMaster";
+    function init() {
+        $("#main_navigation_bar").append('<div id="' + id + '" class="main_container">');
+        $("#" + id).load("pages/html/" + id + ".html", function () {
+            dcomethealth.datatypes.applyDataTypes($("#" + id));
+            $('#page-header').innerHTML = 'Service Master';
+            fetchServiceList();
+            dcomethealth.MasterResource.searchUnit({}, function (data) {
+                $.each(data, function (pIdx, unit) {
+                    $('#bsUnit').append('<option value="' + unit.id + '">' + unit.unitName + '</option>');
+                });
+            });
+            $('.schedulableStatus').toggles({on: false}, "isShedulable", 0);
+            $('.manualTestStatus').toggles({on: false}, "isManual", 0);
+            $('.resultStatus').toggles({on: false}, "isResultExpected", 0);
+            $('.conversionStatus').toggles({on: false}, "isConversion", 0);
+            $('.priceBillingStatus').toggles({on: false}, "BillPriceEditable", 0);
+            $('.priceOrderingStatus').toggles({on: false}, "OrderPriceEditable", 0);
+            $('.qtyBillingStatus').toggles({on: false}, "BillQtyEditable", 0);
+            $('.qtyOrderingStatus').toggles({on: false}, "OrderQtyEditable", 0);
+            $('.activeStatus').toggles({on: true}, "isActive");
+            $('.sampleStatus').toggles({on: false}, "isSampleRequired", 0);
+
+            $("#edit_user_form").validate({
+                rules: {
+                    bsCode: "required",
+                    bsName: "required",
+                },
+                messages: {
+                    bsCode: "Enter Service Code",
+                    bsName: "Enter Service Name",
+                },
+                submitHandler: function (form) {
+                    if ($("#serviceRid").val() === "") {
+                        var searchObj = {};
+                        var check = false;
+                        dcomethealth.MasterResource.searchServices(searchObj, function (data) {
+                            $.each(data, function (pIdx, t_service_master) {
+                                if ($("#bsCode").val() === t_service_master.bsCode) {
+                                    check = true;
+                                }
+                            });
+                            if (check === true) {
+                                alert("Enter New Service");
+                                return false;
+                            } else {
+                                submit();
+                            }
+                        });
+                    } else {
+                        submit();
+                    }
+                }
+            });
+
+        });
+    }
+    function fetchServiceList() {
+        $("#tbody_head").empty();
+        $.each(dcomethealth.serviceMaster, function (index, serviceM) {
+            if (serviceM.bsServiceActive == 1) {
+                $("#tbody_head").append('<tr onclick="dcomethealth.ServiceMaster.showServiceDetail(' + serviceM.id + ')" id="tr_head">\n\
+                                        <td>' + serviceM.bsCode + '<input type="hidden" value="' + serviceM.id + '"/></td>\n\
+                                        <td>' + serviceM.bsName + '</td></tr>');
+            }
+
+        });
+        $("#servicesTable").dataTable();
+        $('.dataTables_filter input').addClass('form-control').attr('placeholder', 'Search...');
+        $('.dataTables_length select').addClass('form-control');
+    }
+    function showServiceDetail(val) {
+        $.each(dcomethealth.serviceMaster, function (index, serviceM) {
+            if (serviceM.id == parseInt(val)) {
+                $("#ServiceHeader").removeClass("panel panel-primary").addClass("hidden");
+                $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+                populateFields(serviceM)
+            }
+        });
+    }
+    function populateFields(data) {
+        document.getElementById("bsName").value = data.bsName;
+        document.getElementById("serviceRid").value = parseInt(data.id);
+        document.getElementById("bsCode").value = data.bsCode;
+        document.getElementById("bsGroup").value = data.bsGroup;
+        document.getElementById("bsCategory").value = data.bsCategory;
+        document.getElementById("bsUnit").value = parseInt(data.bsUnit);
+        document.getElementById("bsServiceType").value = data.bsServiceType;
+        var isSchedulable = parseInt(data.bsServiceSchedule);
+        if (isSchedulable === 1) {
+            $('.schedulableStatus').toggles({on: true}, "isShedulable");
+        } else {
+            $('.schedulableStatus').toggles({on: false}, "isShedulable");
+        }
+        var isManual = parseInt(data.bsServiceManual);
+        if (isManual === 1) {
+            $('.manualTestStatus').toggles({on: true}, "isManual");
+        } else {
+            $('.manualTestStatus').toggles({on: false}, "isManual");
+        }
+        var isResultExpected = parseInt(data.bsIsresultExpected);
+        if (isResultExpected === 1) {
+            $("#labDiv").removeClass("hidden");
+            $('.resultStatus').toggles({on: true}, "isResultExpected");
+        } else {
+            $('.resultStatus').toggles({on: false}, "isResultExpected");
+        }
+
+        var isConversion = parseInt(data.bsServiceConversion);
+        if (isConversion === 1) {
+            $('.conversionStatus').toggles({on: true}, "isConversion");
+        } else {
+            $('.conversionStatus').toggles({on: false}, "isConversion");
+        }
+
+        var priceatbill = parseInt(data.bsPriceatbill);
+        if (priceatbill === 1) {
+            $('.priceBillingStatus').toggles({on: true}, "BillPriceEditable");
+        } else {
+            $('.priceBillingStatus').toggles({on: false}, "BillPriceEditable");
+        }
+
+        var priceatorder = parseInt(data.bsPriceatorder);
+        if (priceatorder === 1) {
+            $('.priceOrderingStatus').toggles({on: true}, "OrderPriceEditable");
+        } else {
+            $('.priceOrderingStatus').toggles({on: false}, "OrderPriceEditable");
+        }
+
+        var qtyatbill = parseInt(data.bsQtyatbilling);
+        if (qtyatbill === 1) {
+            $('.qtyBillingStatus').toggles({on: true}, "BillQtyEditable");
+        } else {
+            $('.qtyBillingStatus').toggles({on: false}, "BillQtyEditable");
+        }
+        var qtyatorder = parseInt(data.bsQtyatOrdering);
+        if (qtyatorder === 1) {
+            $('.qtyOrderingStatus').toggles({on: true}, "OrderQtyEditable");
+        } else {
+            $('.qtyOrderingStatus').toggles({on: false}, "OrderQtyEditable");
+        }
+        var isActive = parseInt(data.bsServiceActive);
+        if (isActive === 1) {
+            $('.activeStatus').toggles({on: true}, "isActive");
+        } else {
+            $('.activeStatus').toggles({on: false}, "isActive");
+        }
+        if (parseFloat(data.bPrice) !== "undefined") {
+            $("#price").val(data.bPrice);
+        }
+        if (parseFloat(data.bEprice) !== "undefined") {
+            document.getElementById("emergencyPrice").value = parseFloat(data.bEprice);
+        }
+        if (!!data.labServiceExtnList) {
+            $("#serviceMasterTbody").empty();
+        }
+        $.each(data.labServiceExtnList, function (idx, labServEx) {
+            var lsGender;
+            if (parseInt(labServEx.lsGenderType) === 1) {
+                lsGender = "Male";
+            }
+            if (parseInt(labServEx.lsGenderType) === 2) {
+                lsGender = "Female";
+            }
+            if (parseInt(labServEx.lsGenderType) === 3) {
+                lsGender = "Transgender";
+            }
+            $("#serviceMasterTbody").append('<tr><td><i class="ace-icon fa fa-minus" class="hidden" onclick="delete_row(this)"></i></td>\n\
+                <td width="25%"><input class="col-md-12 col-sm-10 col-xs-12" type="text" id="MethodName" name="MethodName" value="' + labServEx.lsProcessTechType + '"/><input type="hidden" id="id" name="id" value="' + labServEx.id + '"/></td>\n\
+                <td width="24%"><input class="col-md-12 col-sm-10 col-xs-12" type="text" id="GroupName" name="GroupName" value="' + labServEx.lsGroupName + '"/></td>\n\
+                <td width="6%"><input class="col-md-12 col-sm-11 col-xs-12" type="text" id="fromAge" maxlength="9" name="fromAge" onkeypress="return dcomethealth.validation.isNumberKey(event)" value="' + labServEx.lsAgeMinValue + '" /></td>\n\
+                <td width="6%"><input class="col-md-12 col-sm-12 col-xs-12" type="text" id="toAge" maxlength="9" name="toAge" onkeypress="return dcomethealth.validation.isNumberKey(event)" value="' + labServEx.lsAgeMaxValue + '"/></td>\n\
+                <td width="10%"><select class="col-md-12 col-sm-12 col-xs-12" id="Gender" maxlength="9" name="Gender"><option value="' + parseInt(labServEx.lsGenderType) + '">' + lsGender + '</option></select></td>\n\
+                <td width="6%"><input class="col-md-12 col-sm-12 col-xs-12" type="text" id="fromrange" maxlength="9" name="fromrange" onkeypress="return dcomethealth.validation.isDecimalKey(event)" value="' + labServEx.lsRangeMinValue + '"/></td>\n\
+                <td width="6%"><input class="col-md-12 col-sm-12 col-xs-12" type="text" id="toRange" maxlength="9" name="toRange" onkeypress="return dcomethealth.validation.isNumberKey(event)" value="' + labServEx.lsRangeMaxValue + '"/></td>\n\
+                <td width="10%"><input class="col-md-12 col-sm-12 col-xs-12" type="text" id="Description" maxlength="9" name="Description" onkeypress="return dcomethealth.validation.validateDateEntry(event)" value="' + labServEx.lsDescription + '"/></td>\n\
+                <td width="8%"><input class="col-md-12 col-sm-12 col-xs-12" type="text" id="Uom" maxlength="9" name="Uom" value="' + labServEx.lsUom + '"/></td>\n\
+                <td><i class="ace-icon fa fa-plus blue" onclick="insert_row(\'dyn_table\', this)"></i></td></tr>');
+        });
+        var isSampleRequired = parseInt(data.bSIsSampleRequired);
+        if (isSampleRequired === 1) {
+            $('.sampleStatus').toggles({on: true}, "isSampleRequired");
+        } else {
+            $('.sampleStatus').toggles({on: false}, "isSampleRequired");
+        }
+    }
+    function submit() {
+        var form = $("form");
+        if (validateForm(form)) {
+            var parent = {};
+            var RID = $("#serviceRid").val();
+            if (RID === "") {
+                RID = null;
+            }
+            parent.id = RID;
+            parent.bsCode = $("#bsCode").val();
+            parent.bsName = $("#bsName").val();
+            parent.bsUnit = $("#bsUnit").val();
+            parent.bsServiceType = $("#bsServiceType").val();
+            parent.bsCategory = $("#bsCategory").val();
+            parent.bsGroup = $("#bsGroup").val();
+            parent.bsServiceActive = $("#isActive").val();
+            if ($("#isShedulable").val() == "undefined") {
+                parent.bsServiceSchedule = 0;
+            } else {
+                parent.bsServiceSchedule = $("#isShedulable").val();
+            }
+            if ($("#isManual").val() == "undefined") {
+                parent.bsServiceManual = 0;
+            } else {
+                parent.bsServiceManual = $("#isManual").val();
+            }
+            if ($("#isConversion").val() == "undefined") {
+                parent.bsServiceConversion = 0;
+            } else {
+                parent.bsServiceConversion = $("#isConversion").val();
+            }
+            if ($("#OrderPriceEditable").val() == "undefined") {
+                parent.bsPriceatorder = 0;
+            } else {
+                parent.bsPriceatorder = $("#OrderPriceEditable").val();
+            }
+
+            if ($("#BillPriceEditable").val() == "undefined") {
+                parent.bsPriceatbill = 0;
+            } else {
+                parent.bsPriceatbill = $("#BillPriceEditable").val();
+            }
+            if ($("#BillQtyEditable").val() === "undefined") {
+                parent.bsQtyatbilling = 0;
+            } else {
+                parent.bsQtyatbilling = $("#BillQtyEditable").val();
+            }
+            if ($("#OrderQtyEditable").val() == "undefined") {
+                parent.bsQtyatOrdering = 0;
+            } else {
+                parent.bsQtyatOrdering = $("#OrderQtyEditable").val();
+            }
+            if ($("#isResultExpected").val() == "undefined") {
+                parent.bsIsresultExpected = 0;
+            } else {
+                parent.bsIsresultExpected = $("#isResultExpected").val();
+            }
+            if ($("#isSampleRequired").val() == "undefined") {
+                parent.bSIsSampleRequired = 0;
+            } else {
+                parent.bSIsSampleRequired = $("#isSampleRequired").val();
+            }
+
+
+            if ($("#price").val() !== "") {
+                parent.bPrice = $("#price").val();
+            } else {
+                parent.bPrice = 0;
+            }
+            if ($("#emergencyPrice").val() !== "") {
+                parent.bEprice = $("#emergencyPrice").val();
+            } else {
+                parent.bEprice = 0;
+            }
+            if (parseInt($("#isResultExpected").val()) === 1) {
+                var child = [];
+                var table = document.getElementById('dyn_table');
+                var table_length = table.rows.length;
+                for (var i = 0; i < table_length - 1; i++) {
+                    var LabSerExtn = {};
+                    LabSerExtn.lsServiceName = $("#bsName").val();
+                    if (dynTableGetNodeInRow(table.rows[i + 1], 'id').value !== "") {
+                        LabSerExtn.id = dynTableGetNodeInRow(table.rows[i + 1], 'id').value;
+                    }
+                    LabSerExtn.lsProcessTechType = dynTableGetNodeInRow(table.rows[i + 1], 'MethodName').value;
+                    LabSerExtn.lsGroupName = dynTableGetNodeInRow(table.rows[i + 1], 'GroupName').value;
+                    LabSerExtn.lsAgeMinValue = dynTableGetNodeInRow(table.rows[i + 1], 'fromAge').value;
+                    LabSerExtn.lsAgeMaxValue = dynTableGetNodeInRow(table.rows[i + 1], 'toAge').value;
+                    LabSerExtn.lsGenderType = dynTableGetNodeInRow(table.rows[i + 1], 'Gender').value;
+                    LabSerExtn.lsRangeMinValue = dynTableGetNodeInRow(table.rows[i + 1], 'fromrange').value;
+                    LabSerExtn.lsRangeMaxValue = dynTableGetNodeInRow(table.rows[i + 1], 'toRange').value;
+                    LabSerExtn.lsDescription = dynTableGetNodeInRow(table.rows[i + 1], 'Description').value;
+                    LabSerExtn.lsUom = dynTableGetNodeInRow(table.rows[i + 1], 'Uom').value;
+
+                    child.push(LabSerExtn);
+                }
+            }
+            parent.labServiceExtnList = child;
+            dcomethealth.MasterResource.saveService(parent).done(function (data, textStatus, jqXHR) {
+                alert("Data Saved");
+                dcomethealth.util.loadpage('ServiceMaster');
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                alert("Failed to save data");
+            });
+        }
+    }
+    function serializeFormData(form) {
+        var o = {};
+        var a = form.serializeArray();
+        $.each(a, function () {
+            if (o[this.name]) {
+                if (!o[this.name].push) {
+                    o[this.name] = [o[this.name]];
+                }
+                o[this.name].push(this.value || '');
+            }
+        });
+        return o;
+    }
+    function validateForm(form) {
+        return  form.validate();
+    }
+    function refreshData() {
+    }
+    return {
+        init: init,
+        fetchServiceList: fetchServiceList,
+        showServiceDetail: showServiceDetail,
+        populateFields: populateFields,
+        submit: submit,
+        refreshData: refreshData
+
+    };
+}());
+dcomethealth.ServiceMaster.init();

@@ -1,0 +1,296 @@
+<script>
+    var zero = 0;
+    function div_hide() {
+        $("#PayerMasterHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#add_new").removeClass("hidden").addClass("panel panel-primary  ");
+    }
+    function div_back() {
+        $("#add_new").removeClass("panel panel-primary").addClass("hidden");
+        $("#PayerMasterHeader").removeClass("hidden").addClass("panel panel-primary");
+    }
+    function insert_row(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x)
+        var table = document.getElementById('dyn_table');
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            var psmServiceName = dynTableGetNodeInRow(table.rows[i + 1], 'psmServiceName').value;
+            var psmDiscountPrice = dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountPrice').value;
+            var psmDiscountPercent = dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountPercent').value;
+        }
+        if (psmServiceName == "") {
+            alert("Enter the service name");
+            dynTableGetNodeInRow(table.rows[i + 1], 'psmServiceName').focus();
+            return false;
+        }
+        else if (psmDiscountPercent == "" || psmDiscountPercent == undefined) {
+            dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountPercent').value = zero.toFixed(2);
+        }
+        else if (psmDiscountPercent >= 100) {
+            alert("Enter The Valid Discount percent");
+            dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountPercent').value = zero.toFixed(2);
+            dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountPercent').focus();
+            return false;
+        }
+        else if (psmDiscountPrice == "" || parseInt(psmDiscountPrice) == 0) {
+            alert("Enter Payer Cost");
+            dynTableGetNodeInRow(table.rows[i + 1], 'psmServiceCost').focus();
+            return false;
+        }
+        else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "psmId").value = "";
+            dynTableGetNodeInRow(newRow, "psmPdRid").value = "";
+            dynTableGetNodeInRow(newRow, "psmServiceRid").value = "";
+            dynTableGetNodeInRow(newRow, "psmServiceName").readOnly = false;
+            dynTableGetNodeInRow(newRow, "psmServiceName").value = "";
+            dynTableGetNodeInRow(newRow, "psmServiceCost").value = zero.toFixed(2);
+            dynTableGetNodeInRow(newRow, "psmDiscountPercent").value = zero.toFixed(2);
+            dynTableGetNodeInRow(newRow, "psmServiceGroup").value = 0;
+            dynTableGetNodeInRow(newRow, "psmDiscountVal").value = zero.toFixed(2);
+            dynTableGetNodeInRow(newRow, "psmDiscountPrice").value = zero.toFixed(2);
+            dynTableGetNodeInRow(newRow, "minus").className = 'ace-icon fa fa-minus';
+            dcomethealth.PayerMaster.serviceAutoComplete();
+        }
+    }
+    function discountval(row, val) {
+        if (parseInt(val) == 1) {
+            dynTableGetNodeInRow(row, 'psmDiscountPercent').value = zero.toFixed(2);
+        }
+        else if (parseInt(val) == 0) {
+            dynTableGetNodeInRow(row, 'psmDiscountVal').value = zero.toFixed(2);
+        }
+        else {
+            var netcost = dynTableGetNodeInRow(row, 'psmDiscountPrice').value;
+            var servicecost = dynTableGetNodeInRow(row, 'psmServiceCost').value;
+            dynTableGetNodeInRow(row, 'psmDiscountVal').value = zero.toFixed(2);
+            dynTableGetNodeInRow(row, 'psmDiscountVal').value = zero.toFixed(2);
+            dynTableGetNodeInRow(row, 'psmDiscountPercent').value = zero.toFixed(2);
+            if (parseFloat(servicecost) > parseFloat(netcost)) {
+                var discountCost = parseFloat(servicecost) - parseFloat(netcost);
+                dynTableGetNodeInRow(row, 'psmDiscountVal').value = discountCost.toFixed(2);
+                var percentage = parseFloat(discountCost) / parseFloat(servicecost) * 100
+                dynTableGetNodeInRow(row, 'psmDiscountPercent').value = percentage.toFixed(2);
+            }
+        }
+    }
+    
+    function calculation(row) {
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var mrp = dynTableGetNodeInRow(table.rows[i + 1], 'psmServiceCost').value;
+            var psmDiscountPercent = dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountPercent').value;
+//            alert(dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountVal').value);
+            var psmDiscountvalue = dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountVal').value;
+            var payercost = parseFloat(mrp);
+//            alert(mrp);
+//            alert(psmDiscountPercent);
+//            alert(psmDiscountvalue);
+//            alert(payercost);
+            if (psmDiscountPercent > 100) {
+                alert("Enter the valid discount percent");
+                dynTableGetNodeInRow(row, 'psmDiscountPercent').value = zero.toFixed(2);
+                dynTableGetNodeInRow(row, 'psmDiscountPercent').focus();
+                return false;
+            }
+            if (psmDiscountvalue == 0 && psmDiscountPercent == 0) {
+//                var disPrice = parseFloat(mrp);
+//                dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountPrice').value = disPrice.toFixed(2)
+            }
+            else if (psmDiscountvalue == 0 && psmDiscountPercent != 0) {
+                if (parseFloat(psmDiscountPercent) != 0 && (psmDiscountPercent) <= 100) {
+                    var disAmnt = (psmDiscountPercent / 100) * mrp;
+                    var disPrice = (parseFloat(mrp) - parseInt(disAmnt));
+                    dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountVal').value = disAmnt.toFixed(2)
+                    dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountPrice').value = disPrice.toFixed(2)
+                }
+            }
+            else if (psmDiscountvalue != 0 && psmDiscountPercent == 0) {
+                if (parseFloat(psmDiscountvalue) != 0) {
+                    if (psmDiscountvalue > payercost) {
+                        alert("Discount cost is high");
+                        dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountVal').value = zero.toFixed(2);
+                        dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountVal').focus();
+                        return false;
+                    }
+                    var dispercent = (parseFloat(psmDiscountvalue) / parseFloat(payercost)) * 100;
+                    var disPrice = (parseFloat(payercost) - parseInt(psmDiscountvalue));
+                    dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountPrice').value = disPrice.toFixed(2);
+                    dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountPercent').value = dispercent.toFixed(2);
+                }
+            }
+        }
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<!--<link rel='stylesheet' type='text/css' href='js/plugins/form-select2/select2.css'/>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />-->
+<div class="row">
+    <div id="PayerMasterHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>Payer Master</h4>
+            <div class="pull-right edit-all-button-container">
+                <a href="#" class="btn btn-primary " onclick="div_hide()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Add New</span></a>
+            </div>
+        </div>  
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12">
+                <div id="PayerMasterFooter">
+                    <table id="PayerTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Payer No</th>
+                                <th>Payer Name</th>
+                                <th>City</th>
+                                <!--<th>Address</th>-->
+                            </tr>
+                        </thead>
+                        <tbody id="tbody_head"></tbody> 
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="add_new" class="hidden"> 
+    <div class="row">
+        <div id="PayerMaster" class="panel panel-primary">
+            <form action="#" id="edit_user_form" name="edit_User_form" novalidate="novalidate" class="form-horizontal row-border">
+                <div class="panel-heading"><h4>Payer Master</h4>
+                    <div class="hidden-print">
+                        <div class="pull-right edit-all-button-container">
+                            <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('PayerMaster')" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Back</span></a> 
+                            <input type="submit" id="save" class="btn btn-primary btn-primary"  value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>
+                            <!--                            <input type="submit" class="btn btn-orange" value="save" name="save" />-->
+                        </div>
+                    </div>
+                </div>
+                <br> 
+                <div class="panel panel-primary">
+                    <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+                        <span class="text-primary">Payer Info</span>
+                        <hr class="btn-danger">
+                        <div class="row col-md-12 col-sm-12 col-xs-12">
+                            <div class="row col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Payer No</label>
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <input type="text" id="pdPayerNo" name="pdPayerNo" class="form-control" maxlength="15"/>
+                                    <input type="hidden" id="pdId" name="PdId"/>
+                                </div>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Payer Name</label>
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <input type="text" id="pdPayerName" class="form-control" name="pdPayerName" maxlength="100" onkeypress="return dcomethealth.validation.ValidateAlphaNumeric(event)"/>
+                                </div>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Address</label>
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <input type="text" id="pdPayerAddress" class="form-control" name="pdPayerAddress" maxlength="50"/>
+                                </div>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">City</label>
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <input type="text" id="pdCity" class="form-control" name="pdCity" maxlength="40" onkeypress="return dcomethealth.validation.ValidateAlpha(event)"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row col-md-12 col-sm-12 col-xs-12">
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                        
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Payer Type</label>
+                                <div class= "row col-md-12 col-sm-12 col-xs-12">
+                                    <select id="payerType" name="payerType" class="form-control dcomet-c-s_ddict_payer_type-list"></select>
+                                </div>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Contact Number</label>
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <input type="text" id="pdContact" class="form-control" name="pdContact" maxlength="40"/>
+                                </div>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">NUIT Number</label>
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <input type="text" id="pdNuitNum" class="form-control" name="pdNuitNum" maxlength="40"/>
+                                </div>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Is Active</label>
+                                <div class="row col-md-8 col-sm-8 col-xs-8"> 
+                                    <div class="activeStatus"></div>
+                                </div>
+                            </div> 
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-primary">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="table-responsive">
+                                    <table id="dyn_table"  class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>Service Name</th>
+                                                <!--                                                <th>Qty</th>-->
+                                                <th>Service Cost</th>
+                                                <th>Discount Percent</th>
+                                                <th>Discount Value</th>
+                                                <th>Payer Cost</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="payerMaster">
+                                        <td width="2%"><i id="minus" class="ace-icon fa fa-minus hidden" onclick="dcomethealth.PayerMaster.deletedService(this)"></i>
+                                        </td>
+                                        <td width="16%">
+                                            <input type="text" class="col-md-11 col-sm-11 col-xs-11" id="psmServiceName" name="psmServiceName"  onblur="calculation(this)"  onchange="dcomethealth.PayerMaster.autoIdSet(this);
+                                                   " onkeypress="return dcomethealth.validation.ValidateAlpha(event)" maxlength="90"/>
+                                            <input type="hidden" id="psmServiceRid" name="psmServiceRid"/> 
+                                            <input type="hidden" id="psmPdRid" name="psmPdRid"/>
+                                            <input type="hidden" id="psmId" name="psmId"/>
+                                            <input type="hidden" id="psmServiceGroup" name="psmServiceGroup"/>
+                                        </td>
+                                        <!--                                        <td width="4%">
+                                                                                    <input id="qtyService" type="text" value = "1" name="qtyService" style=" text-align: right;" onkeypress="return dcomethealth.validation.isNumberKey(event)" onchange="calculationQty(this)" autocomplete="off" class="col-md-12 col-sm-12 col-xs-12" maxlength="2">
+                                                                                </td>-->
+                                        <td width="6%">
+                                            <input type="text" class="col-md-12 col-sm-12 col-xs-12" id="psmServiceCost" name="psmServiceCost" style=" text-align: right;" readonly onchange="calculation(this)"  onkeypress="return dcomethealth.validation.isNumberKey(event)" maxlength="12"/>
+                                        </td>          
+                                        <td width="4%">
+                                            <input type="text" class="col-md-12 col-sm-12 col-xs-12" id="psmDiscountPercent" value="0.00" style=" text-align: right;" onchange="discountval(this, 0);
+                                                    calculation(this)" name="psmDiscountPercent" onkeypress="return dcomethealth.validation.isDecimalKey(event)" maxlength="6"/>
+                                        </td>
+                                        <td width="6%">
+                                            <input type="text" class="col-md-12 col-sm-12 col-xs-12" style=" text-align: right;" maxlength="12" id="psmDiscountVal" value="0.00" onchange="discountval(this, 1);
+                                                    calculation(this)"  name="psmDiscountVal" onkeypress="return dcomethealth.validation.isDecimalKey(event)"  />
+                                        </td>
+                                        <td width="6%">
+                                            <input type="text" style=" text-align: right;" class="col-md-12 col-sm-12 col-xs-12 "  id="psmDiscountPrice"  name="psmDiscountPrice" maxlength="14" onchange="discountval(this, 2)" onkeypress="return dcomethealth.validation.isDecimalKey(event);"/>
+                                        </td>
+                                        <td width="2%">
+                                            <i class="ace-icon fa fa-plus red" onclick="insert_row('dyn_table', this)"></i>
+                                        </td>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script>
+<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+<!--<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-select2/select2.min.js'></script>
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> -->

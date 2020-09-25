@@ -1,0 +1,118 @@
+<script>
+    $("#packDate").datepicker({
+        dateFormat: 'dd-mm-yy',
+        showAnim: 'slideDown',
+        changeMonth: true,
+        changeYear: true,
+        showOtherMonths: true,
+    });
+    $("#packDate").datepicker("setDate", new Date());
+//            $("#date").datepicker("dateFormat:", 'dd-mm-yy');
+
+
+    function modifyTable() {
+        $("#data").empty();
+    }
+    function emptyColumns() {
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        var y = table_length - 2;
+        for (var i = 0; i < table_length - 1; i++) {
+            dynTableGetNodeInRow(table.rows[y + 1], 'stkNameRID').value = "";
+            dynTableGetNodeInRow(table.rows[y + 1], 'stkName').value = "";
+            dynTableGetNodeInRow(table.rows[y + 1], 'stkVal').value = "";
+            dynTableGetNodeInRow(table.rows[y + 1], 'stkUom').value = "";
+            dynTableGetNodeInRow(table.rows[y + 1], 'stkRate').value = "";
+            dynTableGetNodeInRow(table.rows[y + 1], 'stkNetVal').value = "";
+        }
+    }
+    function batchCheck() {
+        if ($('#withBatchNo').prop('checked') === true) {
+            var date = moment($("#packDate").val());
+            if ($('#UnitSelect').val() !== 0) {
+                var unit = $('#UnitSelect').val();
+            }
+            var searchObj = {"stkDate": date, "stkUnitRID": unit};
+            dcomethealth.StockReport.getReports(searchObj, 1);
+        } else {
+            var date = moment($("#packDate").val());
+            if ($('#UnitSelect').val() !== 0) {
+                var unit = $('#UnitSelect').val();
+            }
+            var searchObj = {"stkDate": date, "stkUnitRID": unit};
+            dcomethealth.StockReport.getReports(searchObj, 0);
+        }
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<div class="" id="StockReport">     
+    <div class="panel panel-orange">
+        <div class="panel-heading"><h4>Stock Report</h4>
+            <div class="pull-right">
+                <div class="btn-group hidden-xs">
+                    <a href='#' class="btn btn-orange dropdown-toggle" data-toggle='dropdown' style="margin-top: 3px; margin-bottom: 3px;"><i class="fa fa-cloud-download"></i><span class=""> Export as</span> <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li onclick="dcomethealth.StockReport.exportExcel(1)"><a href="#">Excel File (*.xlsx)</a></li>
+                        <li onclick="dcomethealth.StockReport.exportExcel(2)"><a href="#">Print File</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="clearfix">
+                            <div class="row">
+                                <div class="col-md-3 col-sm-4 col-xs-6">
+                                    <label><strong>Unit</strong></label>
+                                    <div>
+                                        <select id="UnitSelect" name="UnitSelect" class="form-control col-md-12 col-sm-12 col-xs-12 jqueryUIToolTip" onchange="dcomethealth.StockReport.onChange()" title="Unit List">
+                                            <option value="0">Search By Unit</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-4 col-xs-6">
+                                    <label><strong>As on Date</strong></label>
+                                    <div class="input-group jqueryUIToolTip " title="MM/DD/YYYY">
+                                        <input type="text" id="packDate" name="packDate" placeholder="MM/DD/YYYY" class="form-control"  
+                                               onchange="dcomethealth.StockReport.onChange()" onkeyup="return dcomethealth.validation.ValidateDate(this, event.keyCode)" onkeydown="return dcomethealth.validation.DateFormat(this, event.keyCode)"/><span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-4 col-xs-6">
+                                    <!--                                    <input type="hidden" id="isZero" name="isZero" value="0"/>
+                                                                        <input type="checkbox" id="items_with_zero_qty" name="items_with_zero_qty" onclick="stockReport.isZero()"> 
+                                                                        <label><strong>Include Zero Qty.</strong></label>-->
+                                </div>
+                                <div class="col-md-3 col-sm-4 col-xs-6">
+                                    <input type="hidden" id="skuBatch" name="skuBatch" value="0"/>
+                                    <input type="checkbox" id="withBatchNo" name="withBatchNo" onclick="batchCheck()" /> 
+                                    <label><strong>Include Batch Info.</strong></label>
+                                </div>
+                            </div>
+                            <hr>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <table id="reports_table" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                                    <thead id="thead_reports">
+                                    </thead>
+                                    <tbody id="tbody_reports">
+                                    </tbody>
+                                </table>
+                                 <table id="reports_full_table" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered hidden">
+                                    <thead id="thead_reports1">
+                                    </thead>
+                                    <tbody id="tbody_reports1">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 

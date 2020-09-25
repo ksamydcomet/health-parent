@@ -1,0 +1,222 @@
+<script>
+    $("#from").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    $("#to").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    function div_hide() {
+        $("#DiscountMasterHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+        $(':text').val('');
+        $(':checkbox, :radio').prop('checked', false);
+    }
+
+//    function calculation(row) {
+//        var itemname = dynTableGetNodeInRow(row, 'dsmServiceName').value;
+//        var mrp = dynTableGetNodeInRow(row, 'dsmServicePrice').value;
+//        var qty_row = dynTableGetNodeInRow(row, 'qtyService').value;
+//        if (qty_row == "") {
+//            alert("Enter Qty");
+//            return false;
+//        }
+//        else if (parseInt(qty_row) <= 0) {
+//            alert("Enter Positive Qty");
+//            dynTableGetNodeInRow(row, 'qtyService').value = 1;
+//            return false;
+//        }
+//        if (itemname != "") {
+//            if (parseInt(mrp) != 0) {
+//                if (parseInt(qty_row) != 0) {
+//                    var table = document.getElementById('dyn_table');
+//                    var table_length = table.rows.length;
+//                    for (var i = 0; i < table_length - 1; i++) {
+//
+//                        var mrp = dynTableGetNodeInRow(table.rows[i + 1], 'dsmServicePrice').value;
+//                        var qty_row = dynTableGetNodeInRow(table.rows[i + 1], 'qtyService').value;
+//                        var dsmDisPercentage = dynTableGetNodeInRow(table.rows[i + 1], 'dsmDisPercentage').value;
+//
+//                        if (parseFloat(dsmDisPercentage) != 0) {
+//                            var disAmnt = (dsmDisPercentage / 100) * mrp;
+//                            var disPrice = parseFloat(mrp) - parseInt(disAmnt);
+//                            dynTableGetNodeInRow(table.rows[i + 1], 'dsmDisAmount').value = disAmnt;
+//                            dynTableGetNodeInRow(table.rows[i + 1], 'dsmServiceDiscountPrice').value = disPrice;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+    function div_back() {
+        $("#add_new").removeClass("panel panel-primary").addClass("hidden");
+        $("#DiscountMasterHeader").removeClass("hidden").addClass("panel panel-primary");
+    }
+//
+//    function insert_row(tableid, elem) {
+//        var x = dynTableRow(elem);
+//        dynTableCloneRow(tableid, x);
+//        var table = document.getElementById('dyn_table');
+//        var table_length = table.rows.length;
+//        for (var i = 0; i < table_length - 1; i++) {
+//            var dsmServiceName = dynTableGetNodeInRow(table.rows[i + 1], 'dsmServiceName').value;
+//            var dsmDisPercentage = dynTableGetNodeInRow(table.rows[i + 1], 'dsmDisPercentage').value;
+//        }
+//        if (dsmServiceName == "") {
+//            alert("Enter Service Name");
+//            return false;
+//        } else if (dsmDisPercentage == "" || parseInt(dsmDisPercentage) == 0) {
+//            alert("Enter Discount Percentage");
+//            return false;
+//        }
+//        else {
+//            var newRow = dynTableAppendRow(tableid);
+//            dynTableGetNodeInRow(newRow, "dsmServiceName").value = "";
+//            dynTableGetNodeInRow(newRow, "dsmDisPercentage").value = "";
+//            dynTableGetNodeInRow(newRow, "dsmDisAmount").value = 0;
+//            dynTableGetNodeInRow(newRow, "dsmServicePrice").value = 0;
+//            dynTableGetNodeInRow(newRow, "dsmServiceDiscountPrice").value = 0;
+//            dynTableGetNodeInRow(newRow, "minus").className = 'ace-icon fa fa-minus';
+//            dcomethealth.DiscountMaster.autocomplete();
+//        }
+//    }
+//    function delete_row(elem) {
+//        var x = dynTableRow(elem);
+//        var table = document.getElementById('dyn_table');
+//        var table_length = table.rows.length;
+//        for (var i = 0; i < table_length - 1; i++) {
+//            if (table_length > 2) {
+//                dynTableDeleteRow(x);
+//            }
+//        }
+//    }
+//      function checkExsitingDiscount() {
+//        dcomethealth.MasterResource.searchPackage({}, function (data) {
+//            $.each(data, function (idx, s_package) {
+//                if (s_package.pmName == $('#disName').val()) {
+//                    $('#disName').val("");
+//                    alert("Discount name already exist");
+//                }
+//            });
+//        });
+//    }
+//      function checkExsitingDiscountcode() {
+//        dcomethealth.MasterResource.searchPackage({}, function (data) {
+//            $.each(data, function (idx, s_package) {
+//                if (s_package.pmName == $('#disCode').val()) {
+//                    $('#disCode').val("");
+//                    alert("Discount code already exist");
+//                }
+//            });
+//        });
+//    }
+    function validPercent() {
+        var percnt = $("#disPercentage").val()
+        if (percnt > 100) {
+            alert("Enter the valid percentage");
+            $("#disPercentage").val("");
+            $("#disPercentage").focus();
+            return false;
+        }
+
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-multiselect/css/multi-select.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-select2/select2.css' />
+<div class="row">
+    <div id="DiscountMasterHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>Discount Master</h4>
+            <div class="pull-right edit-all-button-container">
+                <a href="#" class="btn btn-primary " onclick="div_hide()"><span id="savePage4Form" >Add New</span></a>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12">
+                <div class="col-md-12">
+                    <div id="discountMasterFooter">
+                        <table id="discountMasterTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Discount Code</th>
+                                    <th>Category</th>
+                                    <th>Discount(%)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody_head">
+                            </tbody> 
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="add_new" class="hidden"> 
+    <div class="row" id="DiscuontMaster">     
+        <div class="panel panel-primary" >
+            <form action="#" id="edit_user_form" name="edit_user_form" novalidate="novalidate" class="form-horizontal row-border">
+                <div class="panel-heading"><h4>Discount Master</h4>
+                    <div class="hidden-print">
+                        <div class="edit-all-button-container pull-right">                            
+                            <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('DiscountMaster');
+                                    dcomethealth.util.base_init()"><span id="savePage4Form" >Back</span></a>
+                            <input type="submit" class="btn btn-primary" id="Save" value="Save">
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="panel-body">            
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-3 col-sm-3 col-xs-3">                        
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Discount Code</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <input  type="text"  id="disCode"  name="disCode"  title="" maxlength="25" class=" col-md-8 form-control " >
+                                <input type="hidden"   id="id"  name="id"  title="" class=" col-md-8 form-control " >
+                            </div>
+                        </div>                         
+                        <div class="row col-md-3 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Discount Name</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <input type="text" id="disName"  name="disName"  title="" onkeypress="dcomethealth.validaion.ValidateAlpha(event)" maxlength="25" class=" col-md-8 form-control jqueryUIToolTip" >
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Discount Percentage</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12" >
+                                <input type="text" id="disPercentage" name="disPercentage"  onkeypress="return dcomethealth.validation.isDecimalKey(event)" title="" onblur="validPercent()" class="col-md-8 form-control  "  maxlength="5">
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">                        
+                            <label class="row col-md-12 col-sm-12 col-xs-12">category</label>
+                            <div class= "row col-md-12 col-sm-12 col-xs-12">
+                                <select id="category" name="category" class="dcomet-c-s_ddict_discount_type-list form-control">
+                                </select>                                
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-3 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Discount Is Active</label>
+                            <div class="col-sm-3 control-label"> <!--  control-label needed for positioning -->
+                                <div class="discountStatus"></div>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Approval Required</label>
+                            <div class="col-sm-3 control-label"> <!--  control-label needed for positioning -->
+                                <div class="approvedStatus"></div>
+                            </div>
+                        </div>
+                    </div>                 
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-select2/select2.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-multiselect/js/jquery.multi-select.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> 

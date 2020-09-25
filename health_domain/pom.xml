@@ -1,0 +1,20 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>health</groupId>
+    <artifactId>health_domain</artifactId>
+    <packaging>jar</packaging>
+    <name>health_domain</name>
+    <parent>
+        <artifactId>health-parent</artifactId>
+        <groupId>health</groupId>
+        <version>1.0</version>
+    </parent>
+    <dependencies>	
+        <dependency>
+            <groupId>dcomet</groupId>
+            <artifactId>dcomet_fw</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies> 
+</project>

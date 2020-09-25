@@ -1,0 +1,499 @@
+var dcomethealth = dcomethealth || {};
+var boStatus = {};
+var PayerData = {};
+dcomethealth.ViewTransaction = (function () {
+    var id = "ViewTransaction";
+    function init() {
+        $("#main_navigation_bar").append('<div id="' + id + '" class="main_container">');
+        $("#" + id).load("pages/html/" + id + ".html", function () {
+            dcomethealth.datatypes.applyDataTypes($("#" + id));
+            dcomethealth.MasterResource.searchPayerMaster({}, function (data) {
+                PayerData = data;
+            });
+            var start = moment().endOf('days');
+            var end = moment().endOf('days');
+            $('#billDateRangeSpan').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+            $('#billDateRange').daterangepicker({
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
+                    'Last 7 Days': [moment().subtract('days', 6), moment()],
+                    'Last 30 Days': [moment().subtract('days', 29), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+                },
+                opens: 'left',
+                startDate: moment().subtract('days', 29),
+                endDate: moment()
+            },
+            function (start, end) {
+                $('#billDateRange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+            });
+            getBoStatus('Bill');
+            billView('--Status--');
+        });
+    }
+
+    function setData(elem) {
+        var payer = null, payerRid = null, PayerName = '';
+        $("#header_table").empty();
+        $("#header_table").append('<tr><td colspan="3">&nbsp;</td></tr>\n\
+          <tr><td>MRN</td><td width="2%">:</td><td width="47%"><span id="mrnSearch"></span></td><td width="28%" rowspan="3" style="border:thin"><p>Ref No&nbsp;&nbsp; : <span id="billNo"></span><br />\n\
+          Data&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : <span id="billDate"></span></p></td></tr>\n\
+          <tr><td>Nome / Idade / Sexo</td><td width="2%">:</td><td><span id="PatientName"></span> / <span id="PatientAge"></span> /<span id="PatientGender"></span></td></tr>\n\
+          <tr><td>Medico</td> <td width="2%">:</td><td><span id="printdocName"></span></td> </tr>');
+        $("#valorTr").empty();
+        $("#valorTr").append('<tr><td rowspan="2">&nbsp;</td><td rowspan="2">&nbsp;</td><td width="30%">Valor Liquido (MZN)<span class="dcomet-c-s_currCode"></span> </td><td width = "2%">:</td><td width="9%"><span id="GrossAmount"></span></td></tr>\n\
+        <tr><td width="30%">Valor pago(MZN)<span class="dcomet-c-s_currCode"></span></td><td width = "2%">:</td><td><span id="NetAmount"></span></td></tr>');
+        $('#Username').text(dcomethealth.loginuser.userFullName);
+        if (parseInt($('#transactionSel').val()) === 1) {
+            if (elem.checked) {
+                $('#bill_tbody input[type=checkbox]').not($(elem)).prop('checked', false);
+                $("#exp_tbody").empty();
+                $("#pmd_table").empty();
+
+                $('#entityName').text(dcomethealth.userEntityName);
+                $('#entityDisplayName').text(dcomethealth.userEntityDisplayAddress);
+                $('#entityEmail').text(dcomethealth.userEntityMail);
+                $('#entityPhone').text(dcomethealth.userEntityPhone);
+                $("#entityImagePath").prop('src', dcomethealth.userEntityPath);
+                $('#entityWebSite').text(dcomethealth.userEntityWebSite);
+                var searchObj = {"id": elem.value};
+                dcomethealth.BillingResource.searchBilling(searchObj, function (data) {
+                    $.each(data, function (pIdx, searchBill) {
+                        payer = parseInt(searchBill.billH.bhPayerType);
+                        if (payer != 31) {
+                            $.each(PayerData, function (Idx, Payer) {
+                                if (parseInt(Payer.pdId) == parseInt(data.billH.bhPayerRID)) {
+                                    PayerName = payer.pdPayerName;
+//                                    alert(payer.pdPayerName);
+                                }
+                            });
+
+                            $("#header_table").empty();
+                            $("#header_table").append('<tr><td colspan="3">&nbsp;</td></tr>\n\
+                            <tr><td>MRN</td><td width="2%">:</td><td width="47%"><span id="mrnSearch"></span></td><td width="28%" rowspan="3" style="border:thin"><p>Ref No&nbsp;&nbsp; : <span id="billNo"></span><br />\n\
+                            Data&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : <span id="billDate"></span></p></td></tr>\n\
+                            <tr><td>Nome / Idade / Sexo</td><td width="2%">:</td><td><span id="PatientName"></span> / <span id="PatientAge"></span> /<span id="PatientGender"></span></td></tr>\n\
+                            <tr><td>cliente</td><td width="2%">:</td><td><span id="clientName"></span></td></tr><tr id="AutoNumTr"><td>Autorizacao Numerio</td><td width="2%">:</td><td><span id="autoNum"></span></td> </tr>\n\
+                            <tr><td>Medico</td> <td width="2%">:</td><td><span id="printdocName"></span></td> </tr>');
+                            $("#valorTr").empty();
+                            $("#valorTr").append('<tr><td rowspan="2">&nbsp;</td><td rowspan="2">&nbsp;</td><td width="30%">Valor Liquido (MZN)<span class="dcomet-c-s_currCode"></span> </td><td width = "2%">:</td><td width="9%"><span id="GrossAmount"></span></td></tr>\n\
+                            <tr><td width="30%">Valor a pagar (MZN)<span class="dcomet-c-s_currCode"></span></td><td width = "2%">:</td><td><span id="NetAmount1"></span></td></tr>');
+
+                            $('#heading').text("Factura");
+                            $('#clientName').text(PayerName);
+                            $('#autoNum').text("");
+                            $('#NetAmount1').text(searchBill.billH.bhNetAmount + ".00");
+                        } else {
+                            $('#heading').text("Venda a Dinhero");
+                        }
+                        $('#billNo').text(searchBill.billH.bhBillNo);
+                        $('#payerType').val(parseInt(searchBill.billH.bhPayerType));
+                        $('#billDate').text(moment(searchBill.billH.createdDateTime, 'DD-MM-YYYY HH:mm:ss').format('DD-MM-YYYY'));
+                        $('#GrossAmount').text(searchBill.billH.bhGrossAmount + ".00");
+                        $('#NetAmount').text(searchBill.billH.bhNetAmount + ".00");
+                        $('#DataEHora').text(searchBill.billH.modifiedDateTime);
+                        $('#printdocName').text(searchBill.billH.bhDoctorName);
+                        $.each(searchBill.patient, function (pIdx, patient) {
+                            $('#mrnSearch').text(patient.patMrnNo);
+                            $('#PatientName').text(patient.patFullName);
+                            var c = patient.patDob.split('-');
+                            $('#PatientAge').text(Math.floor((new Date() - new Date(new Date(c[2], c[1] - 1, c[0]))) / (365.25 * 24 * 60 * 60 * 1000)));
+                            if (parseInt(patient.patGenderIndex) === 1) {
+                                $('#PatientGender').text('Male');
+                            } else if (parseInt(patient.patGenderIndex) === 2) {
+                                $('#PatientGender').text('Female');
+                            } else {
+                                $('#PatientGender').text('Transgender');
+                            }
+                            $('#patientMobile').text(patient.patPhoneNo);
+                        });
+                        $.each(searchBill.billH.billD, function (k, billD) {
+                            $("#exp_tbody").append('<tr><td style ="text-align: center" width="7%">' + parseInt(k + 1) + '</td><td width="34%">' + billD.bdItemName + '</td>\n\
+                                    <td style ="text-align: center" width="16%">' + billD.bdQty + '</td><td style ="text-align: right" width="19%">' + billD.bdPrice + ".00" + '</td><td style ="text-align: right" width="24%">' + billD.bdNetAmount + ".00" + '</td></tr>');
+                        });
+                        if (parseInt(payer) != 31) {
+                            $("#pmd_table").append('<tr><td width="30%">Valor a Pago por Extenso</td><td width="2%">:</td>\n\
+                                <td id="PagoporExtenso" width="70%">' + searchBill.billH.bhNetAmount + ' Meticais</td><td colspan="2" rowspan="2">&nbsp;</td></tr>');
+
+                        } else {
+                            $.each(searchBill.billH.receiptH, function (pIdx, receiptH) {
+                                var searchObjPmd = {"pmdTransRID": receiptH.id};
+                                dcomethealth.BillingResource.searchPmd(searchObjPmd, function (data) {
+                                    $.each(data, function (pIdx, pmd) {
+                                        $("#pmd_table").append('<tr><td width="30%">Valor Pago por Extenso</td><td width ="2%">:</td>\n\
+                                        <td width="30%">' + pmd.pmdAmountText + ' Meticais</td><td colspan="2" rowspan="2">&nbsp;</td></tr><tr>\n\
+                                        <td width="30%">Modo de Pagamento</td><td width="2%">:</td><td width="30%" id="modo">numer&aacute;rio</td></tr>\n\
+                                        <tr></tr>');
+                                    });
+                                });
+                            });
+                        }
+                    });
+                });
+            }
+        } else if (parseInt($('#transactionSel').val()) === 2) {
+            $('.selectAdvance :checkbox').each(function () {
+                if (this.checked) {
+                    $('#refund_tbody input[type=checkbox]').not($(elem)).prop('checked', false);
+                    $("#exp_tbody").empty();
+                    $("#pmd_table").empty();
+                    var searchObj = {"adPayerRID": payerRID};
+                    dcomethealth.AdvanceResource.searchAdvances(searchObj, function (data) {
+                        $.each(data, function (pIdx, advance) {
+                            if (advance.adStatus !== 4 && parseInt(advance.adBalanceAmount) > 0) {
+                                $('#advDetails').append('<tr><td><input type="checkbox" id="advanceCheck" value="' + advance.id + '" onclick="calculation(this)"/><input type="hidden" id="checkValue" value="0"/></td><td>' + advance.adNo + '"<input type="hidden" id="advanceRID" value="' + advance.id + '"/><input type="hidden" id="adPaidAmount" name="adPaidAmount" value="' + advance.adPaidAmount + '"/></td>\n\
+                        <td><input type="text" id="advanceAmount" value="' + (advance.adAmount).toFixed(2) + '" style="border: none"/></td>\n\
+                            <td><input type="text" id="adBalanceAmount" value="' + (advance.adBalanceAmount).toFixed(2) + '" style="border: none"/></td><td></td></tr>');
+                            }
+                        });
+                    });
+
+                }
+            });
+        } else if (parseInt($('#transactionSel').val()) === 3) {
+            $('.selectReceipt :checkbox').each(function () {
+                if (this.checked) {
+                }
+            });
+        } else {
+            $('.selectRefund :checkbox').each(function () {
+                if (this.checked) {
+                }
+            });
+        }
+    }
+    function changeStatus() {
+        var val = document.getElementById('transactionSel').value;
+        if (parseInt(val) === 1) {
+            dcomethealth.ViewTransaction.getBoStatus('Bill');
+            dcomethealth.ViewTransaction.billView($("#transtatus option:selected").html());
+        } else if (parseInt(val) === 2) {
+            dcomethealth.ViewTransaction.getBoStatus('Advance');
+            dcomethealth.ViewTransaction.advanceView($("#transtatus option:selected").html());
+        } else if (parseInt(val) === 3) {
+            dcomethealth.ViewTransaction.getBoStatus('Receipt');
+            dcomethealth.ViewTransaction.receiptView($("#transtatus option:selected").html());
+        } else if (parseInt(val) === 4) {
+            dcomethealth.ViewTransaction.getBoStatus('Refund');
+            dcomethealth.ViewTransaction.refundView($("#transtatus option:selected").html());
+        }
+    }
+    function  changeTransaction() {
+        var val = document.getElementById('transactionSel').value;
+        if (parseInt(val) === 1) {
+            dcomethealth.ViewTransaction.getBoStatus('Bill');
+            dcomethealth.ViewTransaction.billView('--Status--');
+            document.getElementById("Billing").className = 'visible';
+            document.getElementById("Advance").className = 'hidden';
+            document.getElementById("Receipt").className = 'hidden';
+            document.getElementById("Refund").className = 'hidden';
+            document.getElementById("billno").placeholder = 'Bill No...';
+            document.getElementById("transtatus").length = 0;
+            var batch = ",--Status--~0,Draft~1,Submitted~2,Partially paid~3,Fully Paid~3,Collected~4,Cancelled~5,Dont Care~6".split('~');
+            for (var i = 0; i < batch.length - 1; i++)
+            {
+                var batch1 = batch[i].split(',');
+                var opt = document.createElement("option");
+                opt.value = batch1[0];
+                opt.text = batch1[1];
+                document.getElementById("transtatus").options.add(opt);
+            }
+
+        } else if (parseInt(val) === 2) {
+            dcomethealth.ViewTransaction.getBoStatus('Advance');
+            dcomethealth.ViewTransaction.advanceView('--Status--');
+            document.getElementById("Billing").className = 'hidden';
+            document.getElementById("Advance").className = 'visible';
+            document.getElementById("Receipt").className = 'hidden';
+            document.getElementById("Refund").className = 'hidden';
+            document.getElementById("billno").placeholder = 'Advance No...';
+            document.getElementById("transtatus").length = 0;
+            var batch = ',--Status--~0,Draft~1,Advance created~2,Advance adjusted~4,Advance partially adjusted~8,Cancelled~16,Partially cancelled~,Dont Care~'.split('~');
+            for (var i = 0; i < batch.length - 1; i++)
+            {
+                var batch1 = batch[i].split(',');
+                var opt = document.createElement("option");
+                opt.value = batch1[0];
+                opt.text = batch1[1];
+                document.getElementById("transtatus").options.add(opt);
+            }
+        } else if (parseInt(val) === 3) {
+            dcomethealth.ViewTransaction.getBoStatus('Receipt');
+            dcomethealth.ViewTransaction.receiptView('--Status--');
+            document.getElementById("Billing").className = 'hidden';
+            document.getElementById("Advance").className = 'hidden';
+            document.getElementById("Receipt").className = 'visible';
+            document.getElementById("Refund").className = 'hidden';
+            document.getElementById("billno").placeholder = 'Receipt No...';
+            document.getElementById("transtatus").length = 0;
+            var batch = ",--Status--~0,Draft~1,Receipt created~2,Cancelled~3,Dont Care~4".split('~');
+            for (var i = 0; i < batch.length - 1; i++)
+            {
+                var batch1 = batch[i].split(',');
+                var opt = document.createElement("option");
+                opt.value = batch1[0];
+                opt.text = batch1[1];
+                document.getElementById("transtatus").options.add(opt);
+            }
+
+        } else if (parseInt(val) === 4) {
+            dcomethealth.ViewTransaction.getBoStatus('Refund');
+            dcomethealth.ViewTransaction.refundView('--Status--');
+            document.getElementById("Billing").className = 'hidden';
+            document.getElementById("Advance").className = 'hidden';
+            document.getElementById("Receipt").className = 'hidden';
+            document.getElementById("Refund").className = 'visible';
+            document.getElementById("billno").placeholder = 'Refund No...';
+            document.getElementById("transtatus").length = 0;
+            var batch = ",--Status--~0,Draft~1,Waiting for approval~2,Refund approved~3,Refund rejected~4,Cancelled~5,Dont Care~6".split('~');
+            for (var i = 0; i < batch.length - 1; i++)
+            {
+                var batch1 = batch[i].split(',');
+                var opt = document.createElement("option");
+                opt.value = batch1[0];
+                opt.text = batch1[1];
+                document.getElementById("transtatus").options.add(opt);
+            }
+        }
+    }
+    function getBoStatus(args) {
+        dcomethealth.DataDictionaryResource.getBoMasterByName(args, function (masters) {
+            $.each(masters, function (idx, bomStatus) {
+                boStatus = bomStatus.boStatus;
+            });
+        });
+    }
+    function billView(valStatus) {
+        var date = $('#billDateRangeSpan').html().split('-');
+        var searchObj = {"bhFromDate": moment(date[0]), "bhToDate": moment(date[1]).add(1, 'days'), "bhBillNo": $('#billno').val(), "bhPatientName": $('#cus_name').val()};
+        dcomethealth.BillingResource.searchBilling(searchObj, function (bills) {
+            if (!!bills) {
+                var tables = $.fn.dataTable.fnTables(true);
+                $(tables).each(function () {
+                    $(this).dataTable().fnClearTable();
+                    $(this).dataTable().fnDestroy();
+                });
+                $("#bill_tbody").empty();
+                $.each(bills, function (i, bill) {
+                    $.each(boStatus, function (idx, bomboStatus) {
+                        if (bomboStatus.bosuIndex === bill.billH.bhStatus) {
+                            if (valStatus === "--Status--") {
+                                $("#bill_tbody").append('<tr ><td><input onclick="dcomethealth.ViewTransaction.setData(this)" class="" name="bill" type="checkbox" value="' + bill.billH.id + '"></td><td onclick="modifyTran(' + bill.billH.id + ',\'bill\',\'' + bomboStatus.bosuName + '\')">' + bill.billH.bhBillNo + '</td><td onclick="modifyTran(' + bill.billH.id + ',\'bill\',\'' + bomboStatus.bosuName + '\')">' + bill.billH.bhPatientName + '</td><td onclick="modifyTran(' + bill.billH.id + ',\'bill\',\'' + bomboStatus.bosuName + '\')">' + bill.billH.bhPatientNo + '</td>\n\
+                                     <td onclick="modifyTran(' + bill.billH.id + ',\'bill\',\'' + bomboStatus.bosuName + '\')">' + bill.billH.createdDateTime + '</td>\n\
+                                     <td onclick="modifyTran(' + bill.billH.id + ',\'bill\',\'' + bomboStatus.bosuName + '\')">' + bill.billH.bhNetAmount + '</td><td onclick="modifyTran(' + bill.billH.id + ',\'bill\',\'' + bomboStatus.bosuName + '\')">' + bill.billH.bhDueAmount + '</td><td onclick="modifyTran(' + bill.billH.id + ',\'bill\',\'' + bomboStatus.bosuName + '\')">' + bomboStatus.bosuName + '</td></tr>');
+                            } else if (bomboStatus.bosuName === valStatus) {
+                                $("#bill_tbody").append('<tr><td><input onclick="dcomethealth.ViewTransaction.setData(this)" name="bill" class="" type="checkbox" value="' + bill.billH.id + '"></td><td onclick="modifyTran(' + bill.billH.id + ',\'bill\',\'' + bomboStatus.bosuName + '\')">' + bill.billH.bhBillNo + '</td><td>' + bill.billH.bhPatientName + '</td><td onclick="modifyTran(' + bill.billH.id + ',\'bill\',\'' + bomboStatus.bosuName + '\')">' + bill.billH.bhPatientNo + '</td>\n\
+                                     <td onclick="modifyTran(' + bill.billH.id + ',\'bill\',\'' + bomboStatus.bosuName + '\')">' + bill.billH.createdDateTime + '</td>\n\
+                                     <td onclick="modifyTran(' + bill.billH.id + ',\'bill\',\'' + bomboStatus.bosuName + '\')">' + bill.billH.bhNetAmount + '</td><td onclick="modifyTran(' + bill.billH.id + ',\'bill\',\'' + bomboStatus.bosuName + '\')">' + bill.billH.bhDueAmount + '</td><td onclick="modifyTran(' + bill.billH.id + ',\'bill\',\'' + bomboStatus.bosuName + '\')">' + bomboStatus.bosuName + '</td></tr>');
+                            }
+                        }
+                    });
+                });
+                $("#billsTable").dataTable({"bJQueryUI": false, "bAutoWidth": false, "bDestroy": true});
+                $('.dataTables_filter input').addClass('hidden');
+                $('.dataTables_length select').addClass('form-control');
+            } else {
+                var tables = $.fn.dataTable.fnTables(true);
+                $(tables).each(function () {
+                    $(this).dataTable().fnClearTable();
+                    $(this).dataTable().fnDestroy();
+                });
+                $("#bill_tbody").empty();
+                $("#billsTable").dataTable({"bJQueryUI": false, "bAutoWidth": false, "bDestroy": true});
+                $('.dataTables_filter input').addClass('hidden');
+                $('.dataTables_length select').addClass('form-control');
+            }
+        });
+    }
+    function receiptView(valStatus) {
+        var date = $('#billDateRangeSpan').html().split('-');
+        var searchObj = {"rhFromDate": moment(date[0]), "rhToDate": moment(date[1]).add(1, 'days'), "rhNo": $('#billno').val(), "rhPayerName": $('#cus_name').val()};
+        dcomethealth.ReceiptResource.searchReceipts(searchObj, function (receipts) {
+            if (!!receipts) {
+                var tables = $.fn.dataTable.fnTables(true);
+                $(tables).each(function () {
+                    $(this).dataTable().fnClearTable();
+                    $(this).dataTable().fnDestroy();
+                });
+                $("#receipt_tbody").empty();
+                $.each(receipts, function (i) {
+                    $.each(boStatus, function (idx, bomboStatus) {
+                        if (bomboStatus.bosuIndex === receipts[i].rhStatus) {
+                            if (valStatus === "--Status--") {
+                                $("#receipt_tbody").append('<tr ><td><input class="" type="checkbox" name="receipt"></td><td>' + receipts[i].rhNo + '</td><td onclick="modifyTran(' + receipts[i].id + ',\'receipt\',\'' + bomboStatus.bosuName + '\')">' + receipts[i].rhPayerName + '</td><td onclick="modifyTran(' + receipts[i].id + ',\'receipt\',\'' + bomboStatus.bosuName + '\')">' + receipts[i].rhPayerNo + '</td>\n\
+                                    <td onclick="modifyTran(' + receipts[i].id + ',\'receipt\',\'' + bomboStatus.bosuName + '\')">' + receipts[i].createdDateTime + '</td>\n\
+                                    <td onclick="modifyTran(' + receipts[i].id + ',\'receipt\',\'' + bomboStatus.bosuName + '\')">' + receipts[i].rhTotalAmount + '</td><td onclick="modifyTran(' + receipts[i].id + ',\'receipt\',\'' + bomboStatus.bosuName + '\')">' + receipts[i].rhPaidAmount + '</td><td onclick="modifyTran(' + receipts[i].id + ',\'receipt\',\'' + bomboStatus.bosuName + '\')">' + bomboStatus.bosuName + '</td></tr>');
+                            } else if (bomboStatus.bosuName === valStatus) {
+                                $("#receipt_tbody").append('<tr ><td><input class="" type="checkbox" name="receipt"></td><td onclick="modifyTran(' + receipts[i].id + ',\'receipt\',\'' + bomboStatus.bosuName + '\')">' + receipts[i].rhNo + '</td><td onclick="modifyTran(' + receipts[i].id + ',\'receipt\',\'' + bomboStatus.bosuName + '\')">' + receipts[i].rhPayerName + '</td><td onclick="modifyTran(' + receipts[i].id + ',\'receipt\',\'' + bomboStatus.bosuName + '\')">' + receipts[i].rhPayerNo + '</td>\n\
+                                    <td onclick="modifyTran(' + receipts[i].id + ',\'receipt\',\'' + bomboStatus.bosuName + '\')">' + receipts[i].createdDateTime + '</td>\n\
+                                    <td onclick="modifyTran(' + receipts[i].id + ',\'receipt\',\'' + bomboStatus.bosuName + '\')">' + receipts[i].rhTotalAmount + '</td><td onclick="modifyTran(' + receipts[i].id + ',\'receipt\',\'' + bomboStatus.bosuName + '\')">' + receipts[i].rhPaidAmount + '</td><td onclick="modifyTran(' + receipts[i].id + ',\'receipt\',\'' + bomboStatus.bosuName + '\')">' + bomboStatus.bosuName + '</td></tr>');
+                            }
+                        }
+                    });
+                });
+                $("#receiptTable").dataTable({"bJQueryUI": false, "bAutoWidth": false, "bDestroy": true});
+                $('.dataTables_filter input').addClass('hidden');
+                $('.dataTables_length select').addClass('form-control');
+            } else {
+                var tables = $.fn.dataTable.fnTables(true);
+                $(tables).each(function () {
+                    $(this).dataTable().fnClearTable();
+                    $(this).dataTable().fnDestroy();
+                });
+                $("#receipt_tbody").empty();
+                $("#receiptTable").dataTable({"bJQueryUI": false, "bAutoWidth": false, "bDestroy": true});
+                $('.dataTables_filter input').addClass('hidden');
+                $('.dataTables_length select').addClass('form-control');
+            }
+        });
+    }
+    function advanceView(valStatus) {
+        var date = $('#billDateRangeSpan').html().split('-');
+        var searchObj = {"adFromDate": moment(date[0]), "adToDate": moment(date[1]).add(1, 'days'), "adNo": $('#billno').val(), "adPayerName": $('#cus_name').val()};
+        dcomethealth.AdvanceResource.searchAdvances(searchObj, function (advances) {
+            if (!!advances) {
+                var tables = $.fn.dataTable.fnTables(true);
+                $(tables).each(function () {
+                    $(this).dataTable().fnClearTable();
+                    $(this).dataTable().fnDestroy();
+                });
+                $("#advance_tbody").empty();
+                $.each(advances, function (i) {
+                    $.each(boStatus, function (idx, bomboStatus) {
+                        if (bomboStatus.bosuIndex === advances[i].adStatus) {
+                            if (valStatus === "--Status--") {
+                                $("#advance_tbody").append('<tr ><td><input class="" type="checkbox" name="advance"></td><td>' + advances[i].adNo + '</td><td>' + advances[i].adPayerName + '</td><td>' + advances[i].adPayerNo + '</td>\n\
+                                    <td>' + advances[i].createdDateTime + '</td>\n\
+                                    <td>' + advances[i].adAmount + '</td><td>' + advances[i].adAdjustedAmount + '</td>\n\
+                                    <td>' + advances[i].adRefundedAmount + '</td><td>' + bomboStatus.bosuName + '</td></tr>');
+                            } else if (bomboStatus.bosuName === valStatus) {
+                                $("#advance_tbody").append('<tr onclick="modifyTran(' + advances[i].id + ',\'advance\',\'' + bomboStatus.bosuName + '\')"><td><input class="" type="checkbox" name="advance"></td><td>' + advances[i].adNo + '</td><td>' + advances[i].adPayerName + '</td><td>' + advances[i].adPayerNo + '</td>\n\
+                                    <td>' + advances[i].createdDateTime + '</td>\n\
+                                    <td>' + advances[i].adAmount + '</td><td>' + advances[i].adAdjustedAmount + '</td>\n\
+                                    <td>' + advances[i].adRefundedAmount + '</td><td>' + bomboStatus.bosuName + '</td></tr>');
+                            }
+                        }
+                    });
+                });
+                $("#advanceTable").dataTable({"bJQueryUI": false, "bAutoWidth": false, "bDestroy": true});
+                $('.dataTables_filter input').addClass('hidden');
+                $('.dataTables_length select').addClass('form-control');
+            } else {
+                var tables = $.fn.dataTable.fnTables(true);
+                $(tables).each(function () {
+                    $(this).dataTable().fnClearTable();
+                    $(this).dataTable().fnDestroy();
+                });
+                $("#advance_tbody").empty();
+                $("#advanceTable").dataTable({"bJQueryUI": false, "bAutoWidth": false, "bDestroy": true});
+                $('.dataTables_filter input').addClass('hidden');
+                $('.dataTables_length select').addClass('form-control');
+            }
+        });
+    }
+    function refundView(valStatus) {
+        var date = $('#billDateRangeSpan').html().split('-');
+        var searchObj = {"refhFromDate": moment(date[0]), "refhToDate": moment(date[1]).add(1, 'days'), "refhNo": $('#billno').val(), "refhPayerName": $('#cus_name').val()};
+        dcomethealth.RefundResource.searchRefunds(searchObj, function (refunds) {
+            if (!!refunds) {
+                var tables = $.fn.dataTable.fnTables(true);
+                $(tables).each(function () {
+                    $(this).dataTable().fnClearTable();
+                    $(this).dataTable().fnDestroy();
+                });
+                $("#refund_tbody").empty();
+                $.each(refunds, function (i, refund) {
+                    $.each(boStatus, function (idx, bomboStatus) {
+                        if (bomboStatus.bosuIndex === refund.refhStatus) {
+                            if (valStatus === "--Status--") {
+                                $("#refund_tbody").append('<tr ><td><input class="" type="checkbox" name="refund"></td><td onclick="modifyTran(' + refund.id + ',\'refund\',\'' + bomboStatus.bosuName + '\')">' + refund.refhNo + '</td><td onclick="modifyTran(' + refund.id + ',\'refund\',\'' + bomboStatus.bosuName + '\')">' + refund.refhPayerName + '</td><td onclick="modifyTran(' + refund.id + ',\'refund\',\'' + bomboStatus.bosuName + '\')">' + refund.refhPayerNo + '</td>\n\
+                                    <td onclick="modifyTran(' + refund.id + ',\'refund\',\'' + bomboStatus.bosuName + '\')">' + refund.createdDateTime + '</td><td onclick="modifyTran(' + refund.id + ',\'refund\',\'' + bomboStatus.bosuName + '\')">' + refund.refhAmount + '</td><td onclick="modifyTran(' + refund.id + ',\'refund\',\'' + bomboStatus.bosuName + '\')">' + bomboStatus.bosuName + '</td></tr>');
+                            } else if (bomboStatus.bosuName === valStatus) {
+                                $("#refund_tbody").append('<tr ><td><input class="" type="checkbox" name="refund"></td><td onclick="modifyTran(' + refund.id + ',\'refund\',\'' + bomboStatus.bosuName + '\')">' + refund.refhNo + '</td><td onclick="modifyTran(' + refund.id + ',\'refund\',\'' + bomboStatus.bosuName + '\')">' + refund.refhPayerName + '</td><td onclick="modifyTran(' + refund.id + ',\'refund\',\'' + bomboStatus.bosuName + '\')">' + refund.refhPayerNo + '</td>\n\
+                                <td onclick="modifyTran(' + refund.id + ',\'refund\',\'' + bomboStatus.bosuName + '\')">' + refund.createdDateTime + '</td><td onclick="modifyTran(' + refund.id + ',\'refund\',\'' + bomboStatus.bosuName + '\')">' + refund.refhAmount + '</td><td onclick="modifyTran(' + refund.id + ',\'refund\',\'' + bomboStatus.bosuName + '\')">' + bomboStatus.bosuName + '</td></tr>');
+                            }
+                        }
+                    });
+                });
+                $("#refundTable").dataTable({"bJQueryUI": false, "bAutoWidth": false, "bDestroy": true});
+                $('.dataTables_filter input').addClass('hidden');
+                $('.dataTables_length select').addClass('form-control');
+            } else {
+                var tables = $.fn.dataTable.fnTables(true);
+                $(tables).each(function () {
+                    $(this).dataTable().fnClearTable();
+                    $(this).dataTable().fnDestroy();
+                });
+                $("#refund_tbody").empty();
+                $("#refundTable").dataTable({"bJQueryUI": false, "bAutoWidth": false, "bDestroy": true});
+                $('.dataTables_filter input').addClass('hidden');
+                $('.dataTables_length select').addClass('form-control');
+            }
+        });
+    }
+    function beforeExport(val) {
+        var name = "bill";
+        var table = "billsTable";
+        var filename = "Bill";
+        if (parseInt($('#transactionSel').val()) === 2) {
+            filename = "advance";
+            table = "advanceTable";
+        } else if (parseInt($('#transactionSel').val()) === 3) {
+            filename = "receipt";
+            table = "receiptTable";
+        } else if (parseInt($('#transactionSel').val()) === 4) {
+            filename = "refund";
+            table = "refundTable";
+        }
+        if ($('input:checkbox[name=' + name + ']').is(':checked') === true) {
+            var filename = $('#billNo').text();
+            exportExcel(val, filename, "exportTranTable");
+        } else {
+            exportExcel(val, filename, table);
+        }
+    }
+
+    function exportExcel(val, filename, table) {
+        var htmltable = document.getElementById(table);
+        var html = htmltable.outerHTML;
+        if (parseInt(val) === 1) {
+            var a = document.createElement('a');
+            var data_type = 'data:application/vnd.ms-excel';
+            a.href = data_type + ', ' + encodeURIComponent(html);
+            a.download = filename + '.xls';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            //                window.open('data:application/vnd.ms-excel,' + encodeURIComponent(html));
+        }
+        if (parseInt(val) === 2) {
+            //            var myWindow = window.open('data:text/html; charset=iso-8859-1,' + encodeURIComponent(html));
+            var printWindow = window.open();
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        }
+    }
+    function refreshData() {
+    }
+    return {
+        init: init,
+        setData: setData,
+        changeStatus: changeStatus,
+        changeTransaction: changeTransaction,
+        getBoStatus: getBoStatus,
+        billView: billView,
+        receiptView: receiptView,
+        advanceView: advanceView,
+        refundView: refundView,
+        beforeExport: beforeExport,
+        exportExcel: exportExcel,
+        refreshData: refreshData
+
+    };
+}());
+dcomethealth.ViewTransaction.init();

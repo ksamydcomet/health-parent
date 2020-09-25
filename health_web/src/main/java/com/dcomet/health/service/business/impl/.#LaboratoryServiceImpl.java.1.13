@@ -1,0 +1,147 @@
+package com.dcomet.health.service.business.impl;
+
+import com.dcomet.fw.exception.DcometDAOException;
+import com.dcomet.fw.exception.DcometServiceException;
+import com.dcomet.health.caching.CacheUtil;
+import com.dcomet.health.domain.Patient;
+import com.dcomet.health.domain.PatientSearchRequest;
+import com.dcomet.health.service.business.ClinicalService;
+import com.dcomet.health.service.business.LaboratoryService;
+import com.dcomet.module.domain.Entity;
+import com.dcomet.module.laboratory.adapter.DCometLaboratoryAdapter;
+import com.dcomet.module.laboratory.dao.DCometLaboratoryDAO;
+import com.dcomet.module.laboratory.domain.LabResultD;
+import com.dcomet.module.laboratory.domain.LabResultDSearchRequest;
+import com.dcomet.module.laboratory.domain.LabResultH;
+import com.dcomet.module.laboratory.domain.LabResultHSearchRequest;
+import com.dcomet.module.laboratory.service.impl.DCometLaboratoryServiceImpl;
+import com.dcomet.module.master.domain.LabServiceExtn;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.codehaus.jettison.json.JSONObject;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Restrictions;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ *
+ * @author Adhithya
+ */
+@Service("laboratoryService")
+@Transactional(propagation = Propagation.SUPPORTS)
+public class LaboratoryServiceImpl extends DCometLaboratoryServiceImpl implements LaboratoryService {
+
+    @Autowired
+    @Qualifier("laboratoryAdapter")
+    DCometLaboratoryAdapter laboratoryAdapter;
+
+    @Autowired
+    @Qualifier("laboratoryDAO")
+    DCometLaboratoryDAO laboratoryDAO;
+
+    @Autowired
+    @Qualifier("clinicalService")
+    ClinicalService clinicalService;
+
+    @Override
+    public List<LabResultH> getLabResultH(LabResultHSearchRequest labResultHSearchRequest, boolean includeChilds) throws DcometServiceException {
+        List<LabResultH> labResultHs = new ArrayList<>();
+        try {
+            labResultHs = laboratoryAdapter.convertLabResultHDataToLabResultH(laboratoryDAO.getLabResultH(labResultHSearchRequest));
+            if (CollectionUtils.isNotEmpty(labResultHs)) {
+                if (includeChilds) {
+                    for (LabResultH labResultH : labResultHs) {
+                        Patient patient = clinicalService.getPatient(labResultH.getLrhPatientID());
+                        labResultH.setLrhPatientName(patient.getPatName());
+                        labResultH.setLrhPatientMrn(patient.getPatMrnNo());
+
+                        LabResultDSearchRequest labResultDSearchRequest = new LabResultDSearchRequest();
+                        List<Criterion> searchCriterionList = new ArrayList<>();
+                        searchCriterionList.add(Restrictions.eq("lrdHRID", labResultH.getId()));
+                        labResultDSearchRequest.setSearchCriterionList(searchCriterionList);
+                        List<LabResultD> labResultDs = getLabResultD(labResultDSearchRequest);
+                        if (CollectionUtils.isNotEmpty(labResultDs)) {
+                            labResultH.setLabResultDs(labResultDs);
+                        }
+                    }
+                }
+            }
+        } catch (DcometDAOException e) {
+            throw new DcometServiceException(e);
+        } catch (DcometServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new DcometServiceException(e);
+        }
+        return labResultHs;
+    }
+
+    @Override
+    public String getLabServicePrint(LabResultHSearchRequest labResultHSearchRequest) throws DcometServiceException {
+        String string = new String();
+        try {
+            LabResultH labResultH = getLabResultH(labResultHSearchRequest, true).get(0);
+            if (null != labResultH) {
+                for (LabResultD labResultD : labResultH.getLabResultDs()) {
+                    if (!"0".equals(labResultD.getLrdNodes())) {
+                        LabServiceExtn labServiceExtn = labResultD.getServiceMaster().getLabServiceExtnList().get(0);
+                        if (StringUtils.isNotBlank(labServiceExtn.getLsTemplateNode())) {
+                            string = setObjValInTemplate(labServiceExtn.getLsTemplateNode(), labResultD.getLrdNodes());
+                            labServiceExtn.setLsTemplateNode(string);
+                        }
+                    }
+                }
+                string = dataDictionaryService.getReportFromTemplate("LAB_REPORT", labResultH, "lrh", labResultHSearchRequest.getEntityRid());
+
+                Entity entity = CacheUtil.getEntity(labResultHSearchRequest.getEntityRid());
+                string = dataDictionaryService.getReportFromHTML(string, entity, "ent");
+                PatientSearchRequest patientSearchRequest = new PatientSearchRequest();
+                List<Criterion> searchCriterionList = new ArrayList<>();
+                searchCriterionList.add(Restrictions.eq("id", labResultH.getLrhPatientID()));
+                patientSearchRequest.setSearchCriterionList(searchCriterionList);
+                Patient patient = clinicalService.getPatient(patientSearchRequest).get(0);
+                string = dataDictionaryService.getReportFromHTML(string, patient, "pat");
+            }
+        } catch (Exception e) {
+            throw new DcometServiceException(e);
+        }
+        return string;
+    }
+
+    private static String setObjValInTemplate(String template, String result) throws Exception {
+        JSONObject obj = new JSONObject(result);
+        Document htmlNode = Jsoup.parse(template);
+        Elements table = htmlNode.select("table#printTable");
+        for (Element e : table) {
+            Elements td = e.select("td");
+            for (Element t : td) {
+                Elements span = t.select("span");
+                for (Element sp : span) {
+                    String spanId = sp.attr("id");
+                Iterator<String> keys = obj.keys();
+                while (keys.hasNext()) {
+                    String key = (String) keys.next();
+                    String value = (String) obj.get(key);
+                        if ((spanId).equals(key)) {
+                            t.empty();
+                            sp.attr("style", "border:none;font-size: smaller;");
+                            t.append(sp.text(value).toString());
+                    }
+                }
+            }
+        }
+    }
+        return table.html();
+}
+}

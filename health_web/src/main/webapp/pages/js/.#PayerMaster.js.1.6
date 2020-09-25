@@ -1,0 +1,189 @@
+var dcomethealth = dcomethealth || {};
+dcomethealth.PayerMaster = (function () {
+    var id = "PayerMaster";
+    function init() {
+        $("#main_navigation_bar").append('<div id="' + id + '" class="main_container">');
+        $("#" + id).load("pages/html/" + id + ".html", function () {
+            dcomethealth.datatypes.applyDataTypes($("#" + id));
+            fetchPayer();
+            serviceAutoComplete();
+            dcomethealth.DataDictionaryResource.searchDdictValue({}, function (data) {
+                dDictVal = data;
+            });
+            $('.activeStatus').toggles({on: true}, "isActive");
+            $("select.dcomet-c-s_ddict-list", $("#" + id)).each(function (idx, elem) {
+                $.each(dcomethealth.s_ddict, function (pIdx, s_ddict) {
+                    $(s_ddict).each(function () {
+                        if (this.dditCode === "PATIENT_CATEGORY") {
+                            $(this.ddict).each(function (cIdx, ddict) {
+                                $(elem).append('<option value="' + ddict.id + '">' + ddict.ddictValue + '</option>');
+                            });
+                        }
+                    });
+                });
+            });
+            $('#curDate').text(moment().format('DD-MM-YYYY'));
+            $("#edit_User_form").validate({
+                rules: {
+                    category: "required",
+                    pdPayerNo: "required"
+                },
+                messages: {
+                    category: "Enter Valid Category",
+                    pdPayerNo: "Enter Number"
+                },
+                submitHandler: function (form) {
+                    submit();
+                }
+            });
+        });
+    }
+    function serviceAutoComplete() {
+        var ServiceName;
+        $("#" + id + " input[name='psmServiceName']").autocomplete({
+            select: function (event, ui) {
+                ServiceName = ui.item.value;
+                var table = document.getElementById('dyn_table');
+                var table_length = table.rows.length;
+                var y = table_length - 2;
+                for (var i = 0; i < table_length - 1; i++) {
+                    dynTableGetNodeInRow(table.rows[y + 1], 'psmServiceRid').value = ui.item.data.id;
+                    dynTableGetNodeInRow(table.rows[y + 1], 'psmServiceCost').value = ui.item.data.bPrice;
+                    dynTableGetNodeInRow(table.rows[y + 1], 'psmServiceGroup').value = ui.item.data.bsGroup;
+                }
+            },
+            open: function (event, ui) {
+                $(document).tooltip({
+                    position: {
+                        my: "center bottom-20",
+                        at: "right center",
+                        using: function (position, feedback) {
+                            $(this).css(position);
+                        }
+                    }
+                });
+            },
+            close: function () {
+                $(document).tooltip("destroy");
+            },
+            source: function (request, response) {
+                var queryString = request.term;
+                queryString = queryString.trim();
+                var searchParams = {"bsName": queryString};
+                dcomethealth.MasterResource.searchServices(searchParams, function (data) {
+                    response($.grep($.map(data, function (item) {
+                        return {
+                            label: item.bsName || "",
+                            value: item.bsName || "",
+                            name: (item.bsName || "") + (item.bsName && item.id ? " - " : "") + (item.id || ""),
+                            data: item
+                        };
+                    }), function (item, index) {
+                        return index < 10;
+                    }));
+                });
+            },
+            minLength: 1
+        });
+    }
+    function fetchPayer() {
+        var search = {};
+        dcomethealth.MasterResource.searchPayerMaster(search, function (data) {
+            $("#tbody_head").empty();
+            if (!!data) {
+                $.each(dcomethealth.p_pay = data, function (index, p_pay) {
+                    $("#tbody_head").append('<tr onclick="dcomethealth.PayerMaster.showPayerDetail(' + p_pay.pdId + ')" id="tr_head">\n\
+                    <td>' + p_pay.pdPayerNo + '<input type="hidden" value="' + p_pay.pdId + '"/></td>\n\
+                        <td>' + p_pay.pdPayerName + '</td><td>' + p_pay.pdCity + '</td><td>' + p_pay.pdPayerAddress + '</td></tr>');
+                });
+                $("#PayerTable").dataTable();
+                $('.dataTables_filter input').attr('placeholder', 'Search...');
+                $('.dataTables_length select');
+            }
+            else {
+                $("#PayerTable").dataTable();
+                $('.dataTables_filter input').addClass('form-control').attr('placeholder', 'Search...');
+                $('.dataTables_length select').addClass('form-control');
+            }
+        });
+    }
+    function showPayerDetail(val) {
+        $.each(dcomethealth.p_pay, function (index, p_pay) {
+            if (p_pay.pdId === parseInt(val)) {
+                $("#payerMaster").empty();
+                $("#PayerMasterHeader").removeClass("panel panel-primary").addClass("hidden");
+                $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+                populateFields(p_pay);
+            }
+        });
+    }
+    function populateFields(p_pay) {
+        $("#pdPayerNo").val(p_pay.pdPayerNo);
+        $("#pdId").val(p_pay.pdId);
+        $("#pdPayerName").val(p_pay.pdPayerName);
+        $("#pdPayerAddress").val(p_pay.pdPayerAddress);
+        $("#pdCity").val(p_pay.pdCity);
+        $("#isActive").val(p_pay.pdIsActive);
+        $("#payerType").val(p_pay.pdPayerType);
+        $("#payerMaster").empty();
+        $.each(p_pay.payerServiceMap, function (Idx, map) {
+            $("#payerMaster").append('<tr><td width="2%"><i id="minus" class="ace-icon fa fa-minus hidden" onclick="delete_row(this)"></i></td>\n\
+                    <td width="16%"><input type="text" class="col-md-11 col-sm-11 col-xs-11" id="psmServiceName" value="' + map.psmServiceName + '"  name="psmServiceName"/><input type="hidden" id="psmServiceRid" value="' + map.psmServiceRid + '" name="psmServiceRid"/> <input type="hidden" id="psmPdRid" value="' + map.psmPdRid + '" name="psmPdRid"/><input type="hidden" id="psmId" value="' + map.psmId + '" name="psmId"/><input type="hidden" id="psmServiceGroup" value="' + map.psmServiceGroup + '" name="psmServiceGroup"/></td>\n\
+                    <td width="4%"><input id="qtyService" type="text" value = "1" name="qtyService" onkeypress="return dcomethealth.validation.isNumberKey(event)" onBlur="calculation(this)" autocomplete="off" class="col-md-12 col-sm-12 col-xs-12"></td>\n\
+                    <td width="6%"><input type="text" class="col-md-12 col-sm-12 col-xs-12" id="psmServiceCost" value="' + map.psmServiceCost + '" name="psmServiceCost"/></td>\n\
+                    <td width="4%"><input type="text" class="col-md-12 col-sm-12 col-xs-12" id="psmDiscountPercent" onBlur="calculation(this)" value="' + map.psmDiscountPercent + '" name="psmDiscountPercent"/></td>\n\
+                    <td width="6%"><input type="text" class="col-md-12 col-sm-12 col-xs-12" id="psmDiscountVal" value="' + map.psmDiscountVal + '" name="psmDiscountVal"/></td>\n\
+                    <td width="6%"><input type="text" class="col-md-12 col-sm-12 col-xs-12" id="psmDiscountPrice" value="' + map.psmDiscountPrice + '" name="psmDiscountPrice"/></td>\n\
+                    <td width="2%"><i class="ace-icon fa fa-plus red" onclick="insert_row(\'dyn_table\', this)"></i></td></tr>');
+
+        });
+    }
+
+    function submit() {
+        var payer = {};
+        var serviceList = [];
+        if ($('#pdId').val() != "") {
+            payer.pdId = $('#pdId').val();
+        }
+        payer.pdPayerNo = $("#pdPayerNo").val();
+        payer.pdPayerType = $("#payerType").val();
+        payer.pdPayerName = $("#pdPayerName").val();
+        payer.pdPayerAddress = $("#pdPayerAddress").val();
+        payer.pdCity = $("#pdCity").val();
+        payer.pdIsActive = $("#isActive").val();
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var servicedetails = {};
+            if (dynTableGetNodeInRow(table.rows[i + 1], 'psmId').value != "") {
+                servicedetails.psmId = dynTableGetNodeInRow(table.rows[i + 1], 'psmId').value;
+            }
+            servicedetails.psmServiceName = dynTableGetNodeInRow(table.rows[i + 1], 'psmServiceName').value;
+            servicedetails.psmServiceRid = dynTableGetNodeInRow(table.rows[i + 1], 'psmServiceRid').value;
+            servicedetails.psmServiceGroup = dynTableGetNodeInRow(table.rows[i + 1], 'psmServiceGroup').value;
+            servicedetails.psmServiceCost = dynTableGetNodeInRow(table.rows[i + 1], 'psmServiceCost').value;
+            servicedetails.psmDiscountPercent = dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountPercent').value;
+            servicedetails.psmDiscountVal = dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountVal').value;
+            servicedetails.psmDiscountPrice = dynTableGetNodeInRow(table.rows[i + 1], 'psmDiscountPrice').value;
+            serviceList.push(servicedetails);
+        }
+        payer.payerServiceMap = serviceList;
+        dcomethealth.MasterResource.savePayerMaster(payer).done(function (data, textStatus, jqXHR) {
+            alert("Saved");
+            dcomethealth.util.loadpage('PayerMaster');
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            alert("Failed");
+        });
+    }
+    function refreshData() {
+    }
+    return {
+        init: init,
+        serviceAutoComplete: serviceAutoComplete,
+        submit: submit,
+        fetchPayer: fetchPayer,
+        showPayerDetail: showPayerDetail,
+        refreshData: refreshData
+    };
+}());
+dcomethealth.PayerMaster.init();

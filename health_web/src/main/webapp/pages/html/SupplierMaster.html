@@ -1,0 +1,202 @@
+<script>
+    function div_hide() {
+        $("#SupplierHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+        $(':text').val('');
+        $(':checkbox, :radio').prop('checked', false);
+    }
+
+    function div_back() {
+        $("#add_new").removeClass("panel panel-primary").addClass("hidden");
+        $("#SupplierHeader").removeClass("hidden").addClass("panel panel-primary");
+    }
+    function clearAll() {
+        document.getElementById("edit_user_form").reset();
+        $('.activeStatus').toggles({on: true}, "isActive");
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-multiselect/css//multi-select.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-select2/select2.css' />
+<div class="row">
+    <div id="SupplierHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>Supplier Master</h4>
+            <div class="pull-right edit-all-button-container">
+                <a href="#" class="btn btn-primary " onclick="div_hide()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Add New</span></a>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12">
+                <div id="supplierMasterFooter">
+                    <table id="suppliersTable" cellpadding="0" cellspacing="0" border="0" class="table table-responsive table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Supplier Name
+                                </th>
+                                <th>
+                                    Code
+                                </th>
+                                <th>
+                                    Contact No
+                                </th>
+                                <th>
+                                    Contact Person
+                                </th>
+                            </tr>
+                        </thead>            
+                        <tbody id="tbody_head">
+                        </tbody> 
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="add_new" class="hidden"> 
+    <div class="row" id="SupplierMaster">     
+        <div class="panel panel-primary">
+            <form action="#" id="edit_user_form" name="edit_user_form" novalidate="novalidate" class="form-horizontal row-border">
+                <div class="panel-heading"><h4>Supplier Master</h4>
+                    <div class="hidden-print">
+                        <div class="edit-all-button-container pull-right">                            
+                            <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('SupplierMaster');
+                                    dcomethealth.util.base_init();" style="margin-top: 3px; margin-bottom: 3px;"><span id="backsupp" >Back</span></a>
+                            <!--<a href="#" class="btn btn-primary"><span id="savePage4Form" class="edit-all-button">Save</span></a>-->
+                            <input type="submit" class="btn btn-primary" value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>
+                        </div>
+                    </div>
+                </div>
+                <br>
+
+                <div class="panel-body">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <span class="text-primary"><strong>Supplier Info.</strong></span><hr class="btn-danger">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Supplier Code</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input id="supCode" name="supCode" type="text" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Supplier Name</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input id="supName" name="supName" type="text" maxlength="100" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" class="form-control"/>
+                                <input id="supRid" name="supRid" type="hidden" value=""/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Phone</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input id="supMobile" name="supMobile" maxlength="20" onkeypress="return dcomethealth.validation.isNumberKey(event)" type="text" class="form-control"/>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">E-mail</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input id="supEmailID" name="supEmailID" type="text" onchange="return dcomethealth.validation.validateEmail(this)" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Country</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8"> 
+                                <input type="text" id="supCountry" list="patCountry" class="form-control" onchange="call()" onclick="call()"/>
+                                <input type="hidden" id="countryCode"/>
+                                <datalist id="patCountry" class="dcomet-c-s_countries-list" style="display: none;"></datalist>
+                                <!--                                <input type="text" id="supCountry" name="supCountry"  list="supplierCountry" maxlength="25" onkeypress="return dcomethealth.validation.ValidateAlpha(event)"  class="form-control" onchange="call()" onclick="call()"/>
+                                                                <input id="countryCode" type="hidden">
+                                                                <datalist id="supplierCountry" class="dcomet-c-s_countries-list" style="display: none;"></datalist>-->
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Zip Code</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input id="supPin" name="supPin" type="text" maxlength="10" onkeypress="return dcomethealth.validation.isNumberKey(event)" onchange="dcomethealth.SupplierMaster.searchPostalCodes()" class="form-control"/>
+                            </div>
+                        </div>                     
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Province / State</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input id="supState" name="supState" type="text" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" class="form-control dcomet-c-s_ddict_state-list jqueryUIToolTip "/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">City / Place</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input type="hidden" id="City"/>
+                                <datalist id="Cities" class="dcomet-c-s_cities-list" style="display: none;"></datalist>
+                                <input id="supCity" name="supCity" type="text" list="Cities" class="form-control dcomet-c-s_ddict_city-list jqueryUIToolTip col-md-12 col-sm-12 col-xs-12"  title = "City"/> 
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Address</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <textarea id="supAdd" name="supAdd" maxlength="100" class="form-control"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <span class="text-primary"><strong>Contact Person Info.</strong></span><hr class="btn-danger">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Contact Person</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input id="supContactPerson" name="supContactPerson" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" type="text" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Contact Person Ph.</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input id="supContactNumber" name="supContactNumber" maxlength="20" onkeypress="return dcomethealth.validation.isNumberKey(event)" type="text" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">LST / TIN No.</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input id="supTinNumber" name="supTinNumber" type="text" maxlength="20" class="form-control"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">CST No.</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input id="supCstNumber" name="supCstNumber" type="text" maxlength="20" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Credit Period</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input id="supCreditPeriod" name="supCreditPeriod" type="text" maxlength="10" onkeypress="return dcomethealth.validation.isNumberKey(event)" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Is Active</label>
+                            <div class="row col-md-3 col-sm-3 col-xs-3 control-label"> <!--  control-label needed for positioning -->
+                                <div class="activeStatus"></div>
+                            </div>
+                        </div> 
+                    </div>                 
+                    <div class="hidden">
+                        <table id="dyn_table_entity">
+                            <tr><td><input type="text" id="entShortCode" name="entShortCode" value=""/></td></tr>
+                            <tr><td><input type="text" id="entShortCode" name="entShortCode"/></td></tr>
+                        </table>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-select2/select2.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-multiselect/js/jquery.multi-select.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script>

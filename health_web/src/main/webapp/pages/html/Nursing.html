@@ -1,0 +1,1014 @@
+<script>
+    $("#dischargeDate").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    $("#followUpDate").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    function insert_servicerow(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('serviceOrderTable');
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            var serviceName = dynTableGetNodeInRow(table.rows[i + 1], 'serviceName').value;
+        }
+        if (serviceName == "") {
+            alert("Enter Service");
+            return false;
+        }
+        else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "serviceName").value = "";
+            dynTableGetNodeInRow(newRow, "itemRID").value = "";
+            dynTableGetNodeInRow(newRow, "serviceReqDId").value = "";
+            dynTableGetNodeInRow(newRow, "qtyService").value = "";
+            dynTableGetNodeInRow(newRow, "processServiceOn").value = "";
+//            dynTableGetNodeInRow(newRow, "addInstructions").value = "";
+            dynTableGetNodeInRow(newRow, "minus").className = 'ace-icon fa fa-minus';
+            dcomethealth.Nursing.autocompleteService();
+        }
+    }
+    function delete_servicerow(elem) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById('serviceOrderTable');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+    function insert_rxrow(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('rxOrderTable');
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            var matItemName = dynTableGetNodeInRow(table.rows[i + 1], 'matItemName').value;
+        }
+        if (matItemName == "") {
+            alert("Enter DrugName");
+            return false;
+        }
+        else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "matItemName").value = "";
+            dynTableGetNodeInRow(newRow, "matSkuRid").value = "";
+            dynTableGetNodeInRow(newRow, "matIssueHRid").value = "";
+            dynTableGetNodeInRow(newRow, "matIssueDRid").value = "";
+            dynTableGetNodeInRow(newRow, "strength").value = "";
+            dynTableGetNodeInRow(newRow, "strengthSelect").value = ""
+            dynTableGetNodeInRow(newRow, "matOrderQty").value = "";
+            dynTableGetNodeInRow(newRow, "minus").className = 'ace-icon fa fa-minus';
+            dcomethealth.Nursing.autoCompleteDrug();
+        }
+    }
+    function delete_rxrow(elem) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById('rxOrderTable');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+    $('body').on('focus', "#processServiceOn", function () {
+        $(this).datepicker({
+            format: 'dd-mm-yyyy'
+        });
+    });
+    $('.show').click(function () {
+        $('.targetDiv').hide();
+        $('#div' + $(this).attr('target')).slideToggle('').siblings('.targetDiv').hide('');
+//        if ('#div' + $(this).attr('target') == "#div5" || '#div' + $(this).attr('target') == "#div6") {
+        if ('#div' + $(this).attr('target') == "#div5") {
+            $('#container').addClass('hidden');
+        } else {
+            $('#container').removeClass('hidden');
+        }
+    });
+    function checkOverflow() { //For Scrollable View
+        if ($("#pageContent").height() > 64) {
+            $("#pageContent").attr("style", "overflow-y: scroll;height: 250px;");
+        } else {
+            $("#pageContent").attr("style", "");
+        }
+    }
+    function changeDiv(e) {
+        if (e.id == "patHouseKeepingTag") {
+            $('#bedDiv,#dischargeDiv,#maintenanceDiv,#bedTransferDiv').addClass('hidden');
+            $('#houseKeepingDiv').removeClass('hidden');
+        } else if (e.id == "patBedTag") {
+            $('#bedDiv').removeClass('hidden');
+            $('#bedDetails').show();
+            $('#div2').hide();
+            $('#dischargeDiv,#houseKeepingDiv,#maintenanceDiv,#bedTransferDiv').addClass('hidden');
+        } else if (e.id == "patMaintenanceTag") {
+            $('#maintenanceDiv').removeClass('hidden');
+            $('#dischargeDiv,#houseKeepingDiv,#bedDiv,#bedTransferDiv').addClass('hidden');
+        }
+    }
+    function getBedSubGroup(elem) {
+        var subGpID = "", checkTransfer = false;
+        if (elem.id == "bgmBedGroupIndex") {
+            subGpID = "#bgmBedSubGroupIndex";
+        }
+        if (elem.id == "bedGroupIndex") {
+            subGpID = "#bedSubGroupIndex";
+            checkTransfer = true;
+        }
+        $(subGpID).empty();
+        $(subGpID).append('<option value=""></option>');
+        var subGroupVal = "", subGroupText = "", valid = false;
+        $.each(bedGroupData, function (index, bedGroupM) {
+            if (("bgmBedSubGroupIndex" in bedGroupM) && bedGroupM.bgmBedGroupIndex == parseInt($(elem).val())) { //find key is availble in Object
+                $.each(dcomethealth.dDictVal, function (index, val) {
+                    if ((bedGroupM.bgmBedSubGroupIndex == val.id) && (val.ddictParentIndex == bedGroupM.bgmBedGroupIndex)) {
+                        subGroupVal = val.id;
+                        subGroupText = val.ddictValue;
+                    }
+                });
+                $(subGpID).append('<option value="' + subGroupVal + '">' + subGroupText + '</option>');
+                valid = true;
+            }
+        });
+        $("#bedGroupMRid").val($(elem).val());
+        if (valid == true) {
+            $(".servicePointSubGroupDiv").removeClass("hidden");
+        } else {
+            $(".servicePointSubGroupDiv").addClass("hidden");
+            if (checkTransfer) {
+                viewModal();
+            } else {
+                dcomethealth.Nursing.nursingSearch(0);
+            }
+        }
+        $("select" + subGpID).find("option").each(function () { //For remove duplicates
+            $(this).siblings("[value='" + this.value + "']").remove();
+        });
+    }
+    function getBedGroup(elem) {
+        var gpID = "", checkTransfer = false;
+        if (elem.id == "btmServicePointIndex") {
+            gpID = "#bgmBedGroupIndex";
+        }
+        if (elem.id == "bedServicePointIndex") {
+            gpID = "#bedGroupIndex";
+            checkTransfer = true;
+        }
+        if (!!$(elem).val()) {
+            dcomethealth.BedManagementResource.searchBedGroupMaster({"bgmBedServicePointRid": parseInt($(elem).val())}, function (data) {
+                var valid = false;
+                if (!!data) {
+                    $(gpID).empty();
+                    $(gpID).append('<option value=""></option>');
+                    var groupVal = "", groupText = "";
+                    $.each(bedGroupData = data, function (index, bedGroupM) {
+                        if (("bgmBedGroupIndex") in bedGroupM) {
+                            if (!!bedGroupM.bgmBedGroupIndex && bedGroupM.bgmBedGroupIndex != 0) {
+                                $.each(dcomethealth.dDictVal, function (index, val) {
+                                    if (bedGroupM.bgmBedGroupIndex == val.id) {
+                                        groupVal = val.id;
+                                        groupText = val.ddictValue;
+                                    }
+                                });
+                                $(gpID).append('<option value="' + groupVal + '">' + groupText + '</option>');
+                                valid = true;
+                            }
+                        }
+                    });
+                    if (valid) {
+                        $(".servicePointGroupDiv").removeClass("hidden");
+                    } else {
+                        $(".servicePointGroupDiv,.servicePointSubGroupDiv").addClass("hidden");
+                        if (checkTransfer) {
+                            viewModal();
+                        } else {
+                            dcomethealth.Nursing.nursingSearch(0);
+                        }
+                    }
+                    $("select" + gpID).find("option").each(function () { //For remove duplicates
+                        $(this).siblings("[value='" + this.value + "']").remove();
+                    });
+                } else {
+                    $(".servicePointGroupDiv,.servicePointSubGroupDiv").addClass("hidden");
+                }
+            });
+        } else {
+            $(".servicePointGroupDiv,.servicePointSubGroupDiv").addClass("hidden");
+        }
+    }
+    function getServicePoint(elem) {
+        var check = false, spID = "";
+        if (elem.id == "wrdType") {
+            spID = "#btmServicePointIndex";
+        }
+        if (elem.id == "priceType") {
+            spID = "#bedServicePointIndex";
+        }
+        $(spID).empty();
+        $(spID).append('<option value=""></option>');        
+        if (!!$(elem).val()) {
+            $.each(servicePoint, function (index, sPoint) {
+                if (sPoint.wrdType == parseInt($(elem).val())) {
+                    check = true;
+                    $(spID).append('<option value="' + sPoint.wrdRid + '">' + sPoint.wrdName + '</option>');
+                }
+            });
+        } else {
+            $('#nTbody').empty();
+        }
+        if (check) {
+            $(".servicePointDiv").removeClass("hidden");
+        } else {
+            $(".servicePointDiv,.servicePointGroupDiv,.servicePointSubGroupDiv").addClass("hidden");
+            dcomethealth.Nursing.nursingSearch(0);
+        }
+
+    }
+    function divBack() {
+        $('#soCompleteDiv').hide();
+        $('#div3').show();
+    }
+
+    function viewBack() {
+        $('#consultantCheck,#investCheck,#diagnosisCheck,#opCheck,#peCheck,#icuCheck,#tgCheck,#stayCheck,#disTypeCheck,#chCheck,#adviceCheck,#folowUpCheck,#medCheck,#surgeonCheck,#opPerformCheck,#cnCheck,#opNotesCheck,#genExamCheck').prop('checked', false);
+        $("#checkBoxDiv").removeClass("hidden");
+        $("#dischargeEditor").addClass("hidden");
+        $("#disBack,#saveDisTemp,#viewPrint,#saveFinalize").addClass("hidden");
+        $.each(dcomethealth.template, function (indx, template) {
+            $("#disSummaryDiv").html(template.tempNodes);
+        });
+        CKEDITOR.instances.disEditor.setReadOnly(false);
+    }
+    function viewModal() {
+        $("#bedModalDetails").empty();
+        var searchParams = {"bgmBedServicePointRid": parseInt($("#bedServicePointIndex").val())};
+        dcomethealth.BedManagementResource.searchBedGroupMaster(searchParams, function (data) {
+            if (!!data) {
+                $.each(data, function (id, bedGroupM) {
+                    if ("bgmBedGroupIndex" in bedGroupM && bedGroupM.bgmBedGroupIndex != 0) {
+                        if (parseInt($("#bedGroupIndex").val()) == bedGroupM.bgmBedGroupIndex) {
+                            $.each(bedGroupM.bedMasterList, function (id, bedMaster) {
+                                if (bedMaster.bedStatus != 1) {
+                                    $("#bedModalDetails").append('<a href="#btmGroupRid" class="aTag" onclick=""><div class= "col-md-3 col-sm-3 col-xs-3 " style="cursor:pointer"><img src="/health_web/css/images/bedImages/bedOccupy.svg"   width="60" height="55" alt="bed"></img><br/><strong><span class="text-primary">' + bedMaster.bedName + '</span></strong><input value="' + bedMaster.bedRid + '" id="bedRid" type="hidden" /><input value="' + bedMaster.bedBgmRid + '" id="bedBgmRid" type="hidden" /></div></a>');
+                                } else {
+                                    $("#bedModalDetails").append('<a href="#btmGroupRid" class="aTag" onclick="dcomethealth.Nursing.viewBedDetails(' + bedMaster.bedRid + ',\'' + bedMaster.bedName + '\',' + bedMaster.bedBgmRid + ')"><div class= "col-md-3 col-sm-3 col-xs-3 bedCard"  style="cursor:pointer"><img src="/health_web/css/images/bedImages/bedOccupy2.png"   width="65" height="55" alt="bed"></img><br/><strong><span id="bedName" class="text-primary" >' + bedMaster.bedName + '</span></strong><input value="' + bedMaster.bedRid + '" id="bedRid" type="hidden" /><input value="' + bedMaster.bedBgmRid + '" id="bedBgmRid" type="hidden" /></div></a>');
+                                }
+                            });
+                        }
+                    } else {
+                        $.each(bedGroupM.bedMasterList, function (id, bedMaster) {
+                            if (bedMaster.bedStatus != 1) {
+                                $("#bedModalDetails").append('<a href="#btmGroupRid" class="aTag" onclick=""><div class= "col-md-3 col-sm-3 col-xs-3 " style="cursor:pointer"><img src="/health_web/css/images/bedImages/bedOccupy.svg"   width="60" height="55" alt="bed"></img><br/><strong><span class="text-primary">' + bedMaster.bedName + '</span></strong><input value="' + bedMaster.bedRid + '" id="bedRid" type="hidden" /><input value="' + bedMaster.bedBgmRid + '" id="bedBgmRid" type="hidden" /></div></a>');
+                            } else {
+                                $("#bedModalDetails").append('<a href="#btmGroupRid" class="aTag" onclick="dcomethealth.Nursing.viewBedDetails(' + bedMaster.bedRid + ',\'' + bedMaster.bedName + '\',' + bedMaster.bedBgmRid + ')"><div class= "col-md-3 col-sm-3 col-xs-3 bedCard"  style="cursor:pointer"><img src="/health_web/css/images/bedImages/bedOccupy2.png"   width="65" height="55" alt="bed"></img><br/><strong><span id="bedName" class="text-primary" >' + bedMaster.bedName + '</span></strong><input value="' + bedMaster.bedRid + '" id="bedRid" type="hidden" /><input value="' + bedMaster.bedBgmRid + '" id="bedBgmRid" type="hidden" /></div></a>');
+                            }
+                        });
+                    }
+                });
+            } else {
+
+            }
+        });
+        $("#bedModal").modal('show');
+    }
+    function selectAll() {
+        if ($('#consultantCheck,#investCheck,#diagnosisCheck,#opCheck,#peCheck,#icuCheck,#tgCheck,#stayCheck,#disTypeCheck,#chCheck,#adviceCheck,#folowUpCheck,#medCheck,#surgeonCheck,#opPerformCheck,#cnCheck,#opNotesCheck,#genExamCheck').is(':checked')) {
+            $('#consultantCheck,#investCheck,#diagnosisCheck,#opCheck,#peCheck,#icuCheck,#tgCheck,#stayCheck,#disTypeCheck,#chCheck,#adviceCheck,#folowUpCheck,#medCheck,#surgeonCheck,#opPerformCheck,#cnCheck,#opNotesCheck,#genExamCheck').prop('checked', false);
+        } else {
+            $('#consultantCheck,#investCheck,#diagnosisCheck,#opCheck,#peCheck,#icuCheck,#tgCheck,#stayCheck,#disTypeCheck,#chCheck,#adviceCheck,#folowUpCheck,#medCheck,#surgeonCheck,#opPerformCheck,#cnCheck,#opNotesCheck,#genExamCheck').prop('checked', true);
+            $('input[type="checkbox"]').each(function (indx, check) {
+                if (indx > 1) {
+                    $("#disSummaryDiv").find("div." + ($(this).attr("id")).slice(0, -5) + "Div").removeClass('hidden');
+                }
+            });
+        }
+    }
+    function saveFinalize() {
+        dcomethealth.Nursing.saveDischargeSummary();
+        CKEDITOR.instances.disEditor.setReadOnly(true);
+    }
+</script>
+<style>
+    .effect8
+    {
+        position:relative;
+        padding: 10px;
+        background-color: lightgray; 
+        border-radius: 5px;
+        -webkit-box-shadow:0 1px 4px rgba(0, 0, 0, 0.1), 0 0 40px rgba(0, 0, 0, 0.1) ;
+        -moz-box-shadow:0 1px 4px rgba(0, 0, 0, 0.1), 0 0 40px rgba(0, 0, 0, 0.1);
+        box-shadow:0 1px 4px rgba(0, 0, 0, 0.1) , 0 0 40px rgba(0, 0, 0, 0.1);//, 0 0 40px rgba(0, 0, 0, 0.1)
+    }
+    .effect8:hover{
+        border: 1px solid lightgray;
+        background-color: #fff;
+        border-radius: 5px;
+    }
+    /*    a{
+            color: teal;
+            text-decoration: none;
+        }*/
+    .pg{
+        display: inline-block;
+        padding-left: 0;
+        margin: 20px 0;
+        border-radius: 1px;       
+    } 
+    .pg li{
+        float:left;
+        list-style-type: none;
+        padding: 6px;
+        display: inline;
+        color: #0d5d4d;
+        font-size: 12px;
+
+    }
+    .qView{
+        text-decoration: none;
+    }
+    .qView:hover{
+        text-decoration: none;
+    }
+    .divView{
+        padding: 5px 9px;
+    }
+    .divView:hover{
+        background-color: #cfd8dc;
+        cursor: pointer;
+    }
+    .popover{
+        width:180px;
+    }
+</style>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css'/>
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-multiselect/css/multi-select.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-select2/select2.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/jqueryui-timepicker/jquery.ui.timepicker.css' />
+<script type="text/javascript" src="js/plugins/ckeditor/ckeditor.js"></script>
+
+<div class="panel panel-gray " id="frontPanel">
+    <div class="panel-heading"> 
+        <div class="col-md-10"><strong><small><span>Nursing</span></small></strong></div>
+        <!--        <div class="input-group col-md-2 pull-right">
+                    <input id="patSearch" placeholder="Search patient..." class="form-control" type="text">
+                    <input id="patRidSearch" type="hidden"><div class="input-group-addon"><i class="fa fa-search"></i></div>
+                </div>-->
+    </div>
+    <div class="panel-body">
+        <div class="col-md-2 col-sm-2 col-xs-2">
+            <div id="panelOut" class="panel list-group">
+                <!--<a data-parent="#accordion" href="#admitPatients" id="patNursing"  class="list-group-item" onclick="changeDiv(this)"><i class="fa fa-users"></i><small> &nbsp;Admitted Patients</small></a>--> 
+                <a data-parent="#accordion" href="#bedDiv" id="patBedTag"  class="list-group-item" onclick="changeDiv(this)"><i class="fa fa-bed"></i><small> &nbsp;Bed Details</small></a> 
+                <a data-parent="#accordion" href="#houseKeepingDiv" id="patHouseKeepingTag"  class="list-group-item" onclick="changeDiv(this)"><i class="fa fa-recycle"></i><small> &nbsp;House Keeping</small></a> 
+                <a data-parent="#accordion" href="#maintenanceDiv" id="patMaintenanceTag"  class="list-group-item" onclick="changeDiv(this)"><i class="fa fa-wrench"></i><small> &nbsp;Maintenance</small></a> 
+                <!--<a data-parent="#accordion" href="#dischargeDiv" id="patDischargeTag"  class="list-group-item" onclick="changeDiv(this)"><i class="fa fa-medkit"></i><small> &nbsp;Discharge</small></a>--> 
+            </div>
+        </div>
+
+        <div class="col-md-10 col-sm-10 col-xs-10" id="bedDiv">           
+            <div class="panel panel-default"> 
+                <div id="bedDetails" class="" style="margin-top: 5px;">
+                    <div class="row col-md-12">
+                        <div class="col-md-12 col-sm-12 col-xs-12">                                
+                            <div class="col-md-2 col-sm-12 col-xs-12" style="">                                
+                                <span class="row col-md-10 col-sm-10 col-xs-12"><small><strong>Price Type</strong></small></span>
+                                <select id="wrdType" name="wrdType" onchange="getServicePoint(this)" class="dcomet-c-s_ddict_SERVICE_POINT_TYPE-list col-md-8 form-control"><option></option></select>
+                            </div>
+                            <div class="servicePointDiv col-md-2 col-sm-12 col-xs-12 hidden" style="">                                
+                                <span class="row col-md-10 col-sm-2 col-xs-12"><small><strong>Service Point </strong></small></span>
+                                <select id="btmServicePointIndex" name="btmServicePointIndex" onchange="getBedGroup(this)" class=" col-md-8 form-control"><option></option></select>
+                            </div>
+                            <div class="servicePointGroupDiv col-md-2 col-sm-12 col-xs-12 hidden">                                
+                                <span class="row col-md-10 col-sm-2 col-xs-12"><small><strong>Group  </strong></small></span>
+                                <select id="bgmBedGroupIndex" name="bgmBedGroupIndex" onchange="getBedSubGroup(this)" class=" col-md-8 form-control"><option></option></select>
+                            </div>
+                            <div class="servicePointSubGroupDiv col-md-2 col-sm-12 col-xs-12 hidden">                                
+                                <span class="row col-md-10 col-sm-2 col-xs-12"><small><strong>Sub Group </strong></small></span>
+                                <select id="bgmBedSubGroupIndex" name="bgmBedSubGroupIndex" onchange="dcomethealth.Nursing.nursingSearch(0)" class=" col-md-8 form-control"><option></option></select>
+                                <input type="hidden" id="bedBgmRid" name="bedBgmRid"/>
+                            </div>
+                        </div>
+                        <div class="col-md-12 col-sm-12 col-xs-12"> 
+                            <div class="col-md-10 col-sm-7 col-xs-12">                                
+                                <div class="col-md-12 col-sm-12 col-xs-12">
+                                    <div class="row col-md-2 col-sm-2 col-xs-2"><a href="#" id="viewAll" class="" onclick="dcomethealth.Nursing.nursingSearch(0)"><span class="">All:</span><span id="allCount" class=""></span></a></div>
+                                    <div class="row col-md-2 col-sm-2 col-xs-2 "><a href="#" id="viewMale" class=""  onclick="dcomethealth.Nursing.nursingSearch(1)"><span class="">Male:</span><span id="maleCount"></span></a></div>
+                                    <div class="row col-md-2 col-sm-2 col-xs-2 "><a href="#" id="viewFemale" class=""  onclick="dcomethealth.Nursing.nursingSearch(2)"><span class="">Female:</span><span id="femaleCount"></span></a></div>
+                                    <div class="row col-md-2 col-sm-2 col-xs-2 "><a href="#" id="viewOccupied" class=""  onclick="dcomethealth.Nursing.nursingSearch(3)"><span class="">Occupied:</span><span id="occupiedCount"></span></a></div>
+                                    <div class="row col-md-2 col-sm-2 col-xs-2 "><a href="#" id="viewVaccant" class=""  onclick="dcomethealth.Nursing.nursingSearch(4)"><span class="">Vaccant:</span><span id="vacantCount"></span></a></div>
+                                    <div class="row col-md-2 col-sm-2 col-xs-2 "><a href="#" id="viewMaintenance" class=""  onclick="dcomethealth.Nursing.nursingSearch(5)"><span class="">Maintenance:</span><span id="MaintainanceCount"></span></a></div>
+                                    <div class="row col-md-2 col-sm-2 col-xs-2 "><a href="#" id="viewHousekeeping" class=""  onclick="dcomethealth.Nursing.nursingSearch(6)"><span class="">HouseKeeping:</span><span id="hkCount"></span></a></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12 col-sm-12 col-xs-12"><p></p></div>
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <table id="nursingTable" cellpadding="0" cellspacing="0" border="0" class="table ">
+                        <thead>
+                            <tr>
+                                <!--<th>Room No</th>-->
+                                <th>Bed No</th>
+                                <th>Patient No</th>
+                                <th>Patient Name</th>
+                                <th>Consultant Name</th>
+                                <th>Visit No</th>
+                                <th>Payment Type</th>
+                                <th>Rooms Type</th>
+                                <th>Options</th>
+                            </tr>
+                        </thead>
+                        <tbody id="nTbody"></tbody> 
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-10 col-sm-10 col-xs-10 hidden" id="houseKeepingDiv">           
+            <div class="panel panel-default"> 
+                <div id="hkDetails" class="" style="margin-top: 5px;">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <table id="hkTable" cellpadding="0" cellspacing="0" border="0" class="table ">
+                            <thead>
+                                <tr>
+                                    <th>Bed No</th>
+                                    <th>Bed Name</th>
+                                    <th>Price Type</th>
+                                    <!--<th>Service Point</th>-->
+                                    <th>Group</th>
+                                    <th>Sub Group</th>                                                                       
+                                    <th>Bed Status Change</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="hkTbody"></tbody> 
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-10 col-sm-10 col-xs-10 hidden" id="maintenanceDiv">
+            <div class="panel panel-default"> 
+                <div id="mDetails" class="" style="margin-top: 5px;">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <table id="mTable" cellpadding="0" cellspacing="0" border="0" class="table ">
+                            <thead>
+                                <tr>
+                                    <th>Bed No</th>
+                                    <th>Bed Name</th>
+                                    <th>Price Type</th>
+                                    <!--<th>Service Point</th>-->
+                                    <th>Group</th>
+                                    <th>Sub Group</th>                                                                       
+                                    <th>Bed Status Change</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="mTbody"></tbody> 
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-10 col-sm-10 col-xs-10 hidden" id="bedTransferDiv">
+            <div class="col-md-12 col-sm-12 col-xs-12 pull-right">
+                <button type="button" id="divBack" class="btn btn-aris col-md-offset-10" onclick="dcomethealth.util.loadpage('Nursing');">Back</button>
+                <button type="button" id="bedTransfer" class="btn btn-aris pull-right" onclick="dcomethealth.Nursing.saveBedTransfer()">Transfer</button>
+            </div>
+            <div id="selectTypeDiv" class="col-md-12 col-sm-12 col-xs-12">
+                <div class="col-md-2 col-sm-12 col-xs-12" style="">                                
+                    <span class="row col-md-10 col-sm-10 col-xs-12"><small><strong>Price Type</strong></small></span>
+                    <select id="priceType" name="priceType" onchange="getServicePoint(this)" class="dcomet-c-s_ddict_SERVICE_POINT_TYPE-list col-md-8 form-control"><option></option></select>
+                </div>
+                <div class="servicePointDiv col-md-2 col-sm-12 col-xs-12 hidden" style="">                                
+                    <span class="row col-md-10 col-sm-2 col-xs-12"><small><strong>Service Point</strong></small></span>
+                    <select id="bedServicePointIndex" name="bedServicePointIndex" onchange="getBedGroup(this)" class=" col-md-8 form-control"><option></option></select>
+                </div>
+                <div class="servicePointGroupDiv col-md-2 col-sm-12 col-xs-12 hidden">                                
+                    <span class="row col-md-10 col-sm-2 col-xs-12"><small><strong>Group</strong></small></span>
+                    <select id="bedGroupIndex" name="bedGroupIndex" onchange="getBedSubGroup(this)" class=" col-md-8 form-control"><option></option></select>
+                    <input type="hidden" id="bedGroupMRid" name="bedGroupMRid"/>
+                </div>
+                <div class="servicePointSubGroupDiv col-md-2 col-sm-12 col-xs-12 hidden">                                
+                    <span class="row col-md-10 col-sm-2 col-xs-12"><small><strong>Sub Group </strong></small></span>
+                    <select id="bedSubGroupIndex" name="bedSubGroupIndex" onchange="viewModal()" class=" col-md-8 form-control"><option></option></select>
+                    <input type="hidden" id="bedSubGroupMRid" name="bedSubGroupMRid"/>
+                    <input type="hidden" id="bedGpRid" name="bedGpRid"/>
+                </div>
+                <!--                <div class="col-md-2 col-sm-6 col-xs-6">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12 text-primary"><strong>Price Type</strong></label>
+                                    <select id="btmGroupRid" class="col-md-4 dcomet-c-s_ddict_bed_group-list form-control">
+                                        <option value="0">--Select--</option>
+                                    </select>
+                
+                                </div>
+                                <div class="col-md-2 col-sm-6 col-xs-6">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12 text-primary"><strong>Rooms Selection</strong></label>
+                                    <select id="btmRoomType" onchange="viewModal()" class="col-md-4  form-control">
+                                        <option value="0">--Select--</option>
+                                    </select>
+                                </div>-->
+            </div>
+            <div class="col-md-12 col-sm-12 col-xs-12"><p></p></div>
+            <div id="selectedBedDiv" class="col-md-12 col-sm-12 col-xs-12 hidden">
+                <div class="col-md-3 col-sm-3 col-xs-3">
+                    <label class="row col-md-12 text-primary"><strong>Exist Bed Name</strong></label>
+                    <span id="btmName" class="row col-md-12"></span>
+                    <input type="hidden" id="bedBgmRID"/>
+                    <input type="hidden" id="newBedRid"/>
+                    <input type="hidden" id="existBocRid"/>
+                    <input type="hidden" id="bocPrimaryDoctor"/>
+                    <input type="hidden" id="bocSecondaryDoctor"/>
+                </div>
+                <div class="col-md-3 col-sm-3 col-xs-3">
+                    <label class="row col-md-12 text-primary"><strong>New Bed Name</strong></label>
+                    <span id="newBedName" class="row col-md-12"></span>
+                </div>
+                <!--                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <label class="row col-md-12 text-primary"><strong>Bed Charge</strong></label>
+                                    <span id="btmCharge" class="row col-md-12"></span>
+                                </div>-->
+                <div class="col-md-3 col-sm-3 col-xs-3">
+                    <label class="row col-md-12 text-primary"><strong>Reason</strong></label>
+                    <textarea id="btmReason" cols="30"></textarea>
+                    <input type="hidden" id="existBtmRid"/>
+                    <input type="hidden" id="existBtmName"/>
+                    <input type="hidden" id="existBtmPatRid"/>
+                    <input type="hidden" id="existBtmVisitRid"/>
+                    <input type="hidden" id="existBedType"/>
+                    <input type="hidden" id="existBedBgmRID"/>                    
+                </div>
+            </div>
+        </div>
+        <div class="col-md-10 col-sm-10 col-xs-10 hidden" id="alterDiv"></div>
+    </div>
+</div>
+<!--<div class="panel panel-gray " id="frontPanel">
+    <div class="panel-heading"> 
+        <div class="col-md-10"><strong><small><span id="patName1">Nursing</span></small></strong></div>
+                <div class="input-group col-md-2 pull-right">
+                    <input id="patSearch" placeholder="Search patient..." class="form-control" type="text">
+                    <input id="patRid1" type="hidden"><div class="input-group-addon"><i class="fa fa-search"></i></div>
+                </div>
+    </div>
+    <div class="panel-body">
+        <div class="col-md-2 col-sm-2 col-xs-2">
+            <div class="panel list-group">
+                <a data-parent="#accordion" href="#" id="patNursing"  class="view list-group-item" onclick=""><i class="fa fa-female"></i><small> &nbsp; Nursing</small></a> 
+                <a  data-parent="#accordion" href="#patAppointment" id="patAppointment" class="list-group-item" onclick="dcomethealth.FrontOffice.changeScreen(this)"><i class="fa fa-spinner"></i><small> &nbsp;</small><span class="badge badge-warning"> </span></a>dcomethealth.Nursing.getNursingDetails() 
+            </div>
+        </div>
+        <div class="col-md-10 col-sm-10 col-xs-10"></div>-->            
+<div class="panel panel-gray hidden" id="backPanel" style="">
+    <div class="panel-heading"> 
+        <div class="col-md-10">
+            <strong><small><span id="patName">Patient Name!</span></small></strong>
+            <span id="patDemoInfo" class="text-primary" style="font-size: small"></span>
+            <!--<span class="text-primary pull-right" style="font-size: small">Link to medical history</span>-->
+            <!--<input id="completedPatRid" type="hidden">-->
+            <input id="visitTempRID" type="hidden" value=""/>
+            <input id="patMRN" type="hidden" value=""/>
+            <input id="activeVisitRid" type="hidden" value=""/>
+            <input id="activeVisitDate" type="hidden" value=""/>
+            <input id="activeSpecialityIndex" type="hidden" value=""/>
+            <input id="patRid" type="hidden"/>
+            <input id="patAge" type="hidden"/>
+            <span id="docName" class="hidden"></span>
+        </div>
+        <div class="col-md-2 pull-right"><button type="button" class="btn-aris" style="margin-top: -3px;margin-left: 140px;" onclick="dcomethealth.util.loadpage('Nursing');">Back</button> 
+            <!--<button type="button" class="btn-aris pull-right" style="margin-top: 5px;" onclick="dcomethealth.Nursing.setCompleted()">Complete</button> </div> <i class="fa fa-check"></i>-->
+            <!--        <div class="input-group col-md-2 pull-right">
+                        <input id="patSearch" placeholder="Search patient..." class="form-control" type="text">
+                        <input id="patRid" type="hidden"/>
+                        <input id="visitTempRID" name="visitTempRID" type="hidden" value=""/>            
+                        <div class="input-group-addon"><i class="fa fa-search"></i></div>
+                    </div>-->
+        </div>
+    </div>
+    <div class="panel-body panel-gray" style="">        
+        <div class="col-md-2 col-sm-2 col-xs-2">
+            <div id="panelIn" class="panel list-group">
+                <a id="vitals" class="show list-group-item" target="1"><i class="fa fa-heartbeat"></i><small> Vitals</small></a> 
+                <a id="drug" class="show list-group-item" target="2"><i class="fa fa-edit"></i><small> Drug Order/Receive</small></a> 
+                <a id="service" class="show list-group-item" target="3"><i class="fa fa-flag-o"></i><small> Service Order Request</small></a>
+                <a id="oT" class="show list-group-item" target="4"><i class="fa fa-calendar-o"></i><small> OT Schedule</small></a> 
+                <a id="dischge" class="show list-group-item" target="5"><i class="fa fa-medkit"></i><small> &nbsp;Discharge</small></a>
+                <a id="disSummary" class="show list-group-item" target="6"><i class="fa fa-list-alt"></i><small> Discharge Summary</small></a> 
+            </div>
+        </div>
+        <div class="col-md-10 col-sm-10 col-xs-10">
+            <div id="pageContent" class="panel panel-body" style="overflow-y: scroll;height: 450px;"> 
+                <div id="container">
+                    <ul class="pg" id="patientVisitTab" style="margin-top: -10px;margin-bottom: 0;">
+                    </ul> 
+                </div>
+                <!-- VITALS -->
+                <div class="panel panel-default"> 
+                    <div id="div1" class="targetDiv"  style="margin-top: -15px;">
+                        <div class="row col-md-12"><div class="pull-right"><button type="button" id="saveVitals" onclick="dcomethealth.Nursing.submit();" class="btn-aris btn-aris-sm jqueryUIToolTip" title="Save"><i class="fa fa-floppy-o"></i></button></div></div>
+                        <div class="row col-md-12"><hr></div>
+                        <div class="col-md-2">
+                            <label id="height" class="row col-md-12 col-sm-12 col-xs-12">Height</label>
+                            <div class="input-group">
+                                <input type="text" id="od_vital_height" maxlength="3" class="form-control" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" placeholder="height"/>
+                                <input type="hidden" id="visitVitalId"/>
+                                <div class="input-group-btn">
+                                    <select id="od_vital_height_unit" class="dcomet-c-s_ddict_height-list input-group-addon form-control"></select>
+                                </div>
+                            </div>
+                            <!--<span class="text-primary"><small>BMI:</small></span>-->
+                        </div>
+                        <div class="col-md-2"> 
+                            <label id="weight" class="row col-md-12 col-sm-12 col-xs-12">Weight</label>
+                            <div class="input-group">
+                                <input type="text" id="od_vital_weight" maxlength="3" class="form-control" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" placeholder="weight"/>
+                                <div class="input-group-btn">
+                                    <select id="od_vital_weight_unit" class="dcomet-c-s_ddict_weight-list input-group-addon form-control"></select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label id="blood" class="row col-md-12 col-sm-12 col-xs-12">Blood Pressure</label>
+                            <div class="input-group">
+                                <input type="text" id="od_vital_blood_pressure" maxlength="6" class="form-control" placeholder="blood pressure"/>
+                                <div class="input-group-btn">
+                                    <select id="od_vital_blood_pressure_unit" class="dcomet-c-s_ddict_blood_pressure-list input-group-addon form-control"></select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label id="heart" class="row col-md-12 col-sm-12 col-xs-12">Heart Rate</label>
+                            <div class="input-group">
+                                <input type="text" id="od_vital_heart_rate" class="form-control" maxlength="3" placeholder="heart rate" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" />
+                                <div class="input-group-btn">
+                                    <select id="od_vital_heart_rate_unit" class="dcomet-c-s_ddict_heart_rate-list row input-group-addon form-control"></select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label id="respiratory" class="row col-md-12 col-sm-12 col-xs-12">Respiratory Rate</label>
+                            <div class="input-group">
+                                <input type="text" id="od_vital_resporatory_rate" class="form-control" maxlength="3" placeholder="respiratory rate" onkeypress="return dcomethealth.validation.isNumberKey(event, this)"/>
+                                <div class="input-group-btn">
+                                    <select id="od_vital_resporatory_rate_unit" class="dcomet-c-s_ddict_respiratory_rate-list row input-group-addon form-control"></select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label id="bodyTemp" class="row col-md-12 col-sm-12 col-xs-12">Body Temperature</label>
+                            <div class="input-group">
+                                <input type="text" id="od_vital_body_temp" class="form-control" maxlength="6" placeholder="body temperature" onkeypress="dcomethealth.validaion.isDecimalKey(this)"/>
+                                <div class="input-group-btn">
+                                    <select id="od_vital_body_temp_unit" class="dcomet-c-s_ddict_body_temperature-list row input-group-addon form-control"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--DRUG/MATERIAL ORDER/RECEIVE -->
+                <div class="panel panel-default"> 
+                    <div id="div2" class="targetDiv"  style="margin-top: -15px;">
+                        <div class="row col-md-12">
+                            <div class="pull-right">
+                                <!--<button type="button" class="btn-aris btn-aris-sm">Print Rx.</button>-->
+                                <button type="button" id="saveRxOrder" onclick="dcomethealth.Nursing.submitRxOrder();" class="btn-aris btn-aris-sm jqueryUIToolTip" title="Save"><i class="fa fa-floppy-o"></i></button></div>
+                        </div>
+                        <input type="hidden" id="matIssueRid"/>
+                        <input type="hidden" id="serviceId"/>
+                        <table id="rxOrderTable" class="table table-condensed table-hover col-md-7">
+                            <thead>
+                                <tr>
+                                    <td width="5%"></td>
+                                    <td width="25%"><b><small>Drug Name</small></b></td>
+                                    <td width="10%"><b><small>Strength</small></b></td>
+                                    <td width="20%"></td>
+                                    <td width="30%"><b><small>Qty</small></b></td>
+                                    <td width="2%"></td>
+                                </tr>
+                            </thead>
+                            <tbody id="rxOrderTbody">
+                                <tr>
+                                    <td><i id="minus" class="ace-icon fa fa-minus hidden" onclick="delete_rxrow(this)"></i></td>
+                                    <td><input type="text" id="matItemName" name="matItemName" class="row col-md-12"/><input type="hidden" id="matSkuRid" name="matSkuRid"/><input type="hidden" id="matIssueHRid" name="matIssueHRid"/><input type="hidden" id="matIssueDRid" name="matIssueDRid"/><br></td> <!--<span><small><a href="#">add Notes</a></small></span>-->
+                                    <td><input type="text" id="strength" class="row col-md-12"/></td>
+                                    <td><select id="strengthSelect" class="row col-md-12"><option>mg</option></select></td>
+                                    <td><input type="text" id="matOrderQty" class="row col-md-9"/></td>
+                                    <td><i class="row pull-left ace-icon fa fa-plus red" onclick="insert_rxrow('rxOrderTable', this)"></i></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- SERVICE ORDER REQUEST/COMPLETED -->
+                <div class="panel panel-default" style="">
+                    <div id="div3" class="targetDiv"  style="margin-top: -15px;">
+                        <div class="pull-right">
+                            <button type="button" id="serviceCompleted" class="btn-aris btn-aris-sm" onclick="dcomethealth.Nursing.searchCompleted();">Completed</button>
+                        </div>
+                        <div class="pull-right">
+                            <button type="button" id="saveService" class="btn-aris btn-aris-sm jqueryUIToolTip" onclick="dcomethealth.Nursing.submitService();"  title="Save"><i class="fa fa-floppy-o"></i></button>&nbsp;
+                        </div>
+                        <table id="serviceOrderTable" class="table table-condensed table-hover">
+                            <thead>
+                                <tr>
+                                    <td></td>
+                                    <td width="30%"><b><small>Service Name</small></b></td>
+                                    <td width="10%"><b><small>Qty</small></b></td>
+                                    <td width="15%"><b><small>Process on</small></b></td>
+                                    <td width="45%"></td>
+                                    <td></td>
+                                </tr>
+                            </thead>
+                            <tbody id="serviceOrderTbody">
+                                <tr>
+                                    <td><i id="minus" class="ace-icon fa fa-minus hidden" onclick="delete_servicerow(this)"></i>
+                                    </td>
+                                    <td><input type="text" id="serviceName" name="serviceName" class="col-md-12"/><input type="hidden" id="itemRID" value=""/><input type="hidden" id="serviceReqDId" value=""/><br></td> <!--<span><small><a href="#">show Teeth</a></small></span>-->
+                                    <td><input type="text" id="qtyService" class="col-md-12"/></td>
+                                    <td><input type="text" id="processServiceOn" class="col-md-12"/></td>
+                                    <!--<td><span id="addInstructions"><small><a href="#">add Instructions</a></small></span></td>-->
+                                    <td><i class="ace-icon fa fa-plus red" onclick="insert_servicerow('serviceOrderTable', this)"></i></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- SERVICE ORDER COMPLETED -->
+                <div class="panel panel-default">
+                    <div id="soCompleteDiv" class="targetDiv"  style="margin-top: -15px;">
+                        <div class="row col-md-12">
+                            <div class="pull-right">
+                                <button type="button" class="btn-aris btn-aris-sm" style="margin-top: -3px;margin-left: 140px;" onclick="divBack()">Back</button> 
+                            </div>
+                        </div>
+                        <div class="row col-md-12"><hr></div>
+                        <div class="row col-md-12">
+                            <table id="treatTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Service Name</th>
+                                        <th>Date</th>
+                                        <th>Print</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="treatTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!-- ADMITTED PATIENTS -->
+                <div class="panel panel-default">
+                    <div id="div4" class="targetDiv" style="margin-top: -15px;">
+                        <div class="row col-md-12"><a href="#" id="saveAdmtPatient" class="btn btn-aris btn-aris-sm pull-right jqueryUIToolTip" title="Save"><i class="fa fa-floppy-o"></i></a></div>
+                        <div class="row col-md-12"><hr></div>
+                        <div class="row col-md-12">
+                            <span><small><b>OT Schedule</b></small></span>
+                            <textarea id="nursing" maxlength="100" class="col-md-12 col-sm-12 col-xs-12"></textarea>
+                        </div>
+                    </div>
+                </div> 
+                <!---DISCHARGE--->
+                <div class="panel panel-default">
+                    <div id="div5" class="targetDiv" style="margin-top: -15px;">
+                        <!--<div class="col-md-10 col-sm-10 col-xs-10 hidden" id="dischargeDiv">-->
+                        <div class="col-md-12 col-sm-12 col-xs-12" id="viewDischarge">
+                            <div class="col-md-12 col-sm-12 col-xs-12 pull-right">
+                                <button type="button" id="saveDischarge" class="btn btn-aris pull-right" onclick="dcomethealth.Nursing.saveDischarge()">Discharge</button>
+                            </div>
+                            <div class="col-md-12 col-sm-12 col-xs-12"><p></p></div>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="row col-md-2">
+                                    <label class="row col-md-12">Room No:</label>
+                                    <span id="bedNumber" class="row col-md-6"></span>
+                                </div>
+                                <div class="row col-md-3">
+                                    <label class="row col-md-12">Discharge Date/Time:</label>
+                                    <span id="dischargeDateTime" class=""></span>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="row col-md-12">Follow-up Date</label>
+                                    <input class="form-control jqueryUIToolTip" title="DD-MM-YYYY Format" type="text" id="followUpDate" name="followUpDate" maxlength="10" onkeypress="return dcomethealth.validation.ValidateDateEntry(event)" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="row col-md-12">Discharge Type</label>
+                                    <div class="col-md-12">
+                                        <select id="disType" class="row dcomet-c-s_ddict_discharge_type-list form-control">
+                                            <option value="0">--Select--</option>                               
+                                        </select>
+                                        <input type="hidden" id="disBtmPrice" />
+                                        <input type="hidden" id="bedBgmRid" />
+                                        <input type="hidden" id="disBtmRoomType" />
+                                        <input type="hidden" id="disBedRid" />
+                                        <input type="hidden" id="disDateTime" />
+                                    </div>
+                                </div>
+                                <div class="row col-md-2">
+                                    <label class="row col-md-12">Bed Status</label>
+                                    <select id="disBedStatus" class="row form-control">
+                                        <option value="1">House Keeping</option>
+                                        <option value="2">Maintenance</option>
+                                        <!--<option value="3">Ready to Occupy</option>-->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <label class="row col-md-12">Notes</label>
+                                <div class="row col-md-12">
+                                    <textarea name="disNotes" id="disNotes" class="col-md-12"></textarea>
+                                </div>                    
+                            </div>
+                            <div class="row col-md-12"><p></p></div>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="row col-md-4"><label class="col-md-12">Discharge By:&nbsp;<span id="dischargedBy" class="text-primary"></span><input type="hidden" id="disUserRid"/></label></div>
+                                <div class="row col-md-6">
+                                    <input type="checkbox" id="disAccept" class="row col-md-1 pull-left"/>
+                                    <label class="row col-md-11">Yes, I am sure Discharge the patient</label>                            
+                                </div>
+                                <div class="row col-md-2">
+                                    <input type="checkbox" id="disAcceptSms" class="row col-md-1 pull-left"/>
+                                    <label class="col-md-11">Followup SMS</label>                            
+                                </div>                    
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+                <!-- DISCHARGE SUMMARY -->
+                <div class="panel panel-default">
+                    <div id="div6" class="targetDiv" style="margin-top: -15px;">
+                        <div class="row col-md-12"><hr style="margin-top: 10px;margin-bottom: 20px;"></div>
+                        <!--                        <div id="selectAllDiv" class="row col-md-12 col-sm-12 col-xs-12 pull-right">
+                                                    <div class="row col-md-10 col-sm-2 col-xs-2 pull-left"></div>
+                                                    <div class="row col-md-2 col-sm-2 col-xs-2 pull-right">
+                                                        <button type="button" id="selectAll" class="btn btn-aris btn-aris-sm jqueryUIToolTip"  title="Select All / Remove All" onclick="selectAll()"><i class="fa fa-list-alt"></i></button> 
+                                                    </div>                            
+                                                </div>-->
+                        <div id="checkBoxDiv" class="row col-md-12 col-sm-12 col-xs-12">
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <div class="row col-md-2 col-sm-2 col-xs-2 pull-right">
+                                    <button type="button" id="selectAll" class="btn btn-aris btn-aris-sm jqueryUIToolTip"  title="Select All / Remove All" onclick="selectAll()"><i class="fa fa-list-alt"></i></button> 
+                                </div> 
+                                <div class="row col-md-1 col-sm-3 col-xs-3 pull-right">
+                                    <button type="button" id="editorBtn" class="btn btn-aris btn-aris-sm jqueryUIToolTip" title="View" onclick="dcomethealth.Nursing.viewEditor()">view</button>
+                                </div>
+                            </div>                        
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="consultantCheck" name="consultantCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)" />
+                                    <label class="col-md-11">Consultant</label>
+                                </div>
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="investCheck" name="investCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Investigations</label>
+                                </div> 
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="diagnosisCheck" name="diagnosisCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Diagnosis</label>
+                                </div> 
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="opCheck" name="opCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Operation Details</label>
+                                </div>
+                            </div>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="peCheck" name="peCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Physical Examinations</label>
+                                </div>
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="icuCheck" name="icuCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">CT-ICU</label>
+                                </div> 
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="tgCheck" name="tgCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Treatment Given</label>
+                                </div> 
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="stayCheck" name="stayCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Stay in Hospital</label>
+                                </div>
+                            </div>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="disTypeCheck" name="disTypeCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Discharge Type</label>
+                                </div>
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="chCheck" name="chCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Course in Hospital</label>
+                                </div> 
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="adviceCheck" name="adviceCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Advice on Discharge</label>
+                                </div> 
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="folowUpCheck" name="folowUpCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Follow Up</label>
+                                </div>
+                            </div>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="medCheck" name="medCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Medicine Details</label>
+                                </div>
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="surgeonCheck" name="surgeonCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Surgeon</label>
+                                </div> 
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="opPerformCheck" name="opPerformCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Operation Performed</label>
+                                </div> 
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="cnCheck" name="cnCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Consultant Notes</label>
+                                </div>
+                            </div>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="opNotesCheck" name="opNotesCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">Operation Notes</label>
+                                </div>
+                                <div class="col-md-3 col-sm-3 col-xs-3">
+                                    <input type="checkbox" id="genExamCheck" name="genExamCheck" class="col-md-1" onclick="dcomethealth.Nursing.isChecked(this)"/>
+                                    <label class="col-md-11">General Examination</label>
+                                </div> 
+                                <div class="col-md-3 col-sm-3 col-xs-3"></div> 
+                                <div class="col-md-3 col-sm-3 col-xs-3"></div>
+                            </div> 
+                        </div>
+                        <div class="col-md-12 col-sm-12 col-xs-12 hidden" id="dischargeEditor">
+                            <div class="col-md-9 col-sm-9 col-xs-9">
+                                <textarea name="disEditor" id="disEditor" rows="100" cols="100"></textarea>
+                                <input type="hidden" id="disId"/>
+                                <input type="hidden" id="disPatId"/>
+                                <script>
+                                    CKEDITOR.replace('disEditor');</script>    
+                            </div>
+                            <div class="col-md-3 col-sm-3 col-xs-3">
+                                <a href="#" id="disBack" class="btn btn-aris btn-aris-sm jqueryUIToolTip hidden " title="Back" onclick="viewBack()"><i class="fa fa-arrow-left"></i></a>
+                                <a href="#" id="saveDisTemp" class="btn btn-aris btn-aris-sm jqueryUIToolTip hidden" title="Save" onclick="dcomethealth.Nursing.saveDischargeSummary()"><i class="fa fa-floppy-o"></i></a>
+                                <a href="#" id="saveFinalize" class="btn btn-aris btn-aris-sm jqueryUIToolTip hidden" title="Finalize" onclick="saveFinalize()"><i class="fa fa-gavel"></i></a>
+                                <a href="#" id="viewPrint" class="btn btn-aris btn-aris-sm jqueryUIToolTip hidden" title="Print" onclick="dcomethealth.Nursing.viewPrint()"><i class="fa fa-print"></i></a>
+                            </div> 
+                        </div>
+                    </div>
+                </div> 
+            </div> 
+        </div>
+        <div id="disSummaryDiv" class="col-md-12 col-sm-12 col-xs-12 hidden"></div>
+    </div> 
+</div>
+<div class="modal fade" id="doctorModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" >
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times"></i></button>
+                <h4 class="modal-title">Add Doctor</h4> 
+                <span class="col-md-2"> </span>
+            </div> 
+            <div  class="modal-body" >
+                <div id="secDoctorDiv" class="row col-md-12 col-sm-12 col-xs-12">
+                    <div class="col-md-3">
+                        <label class="col-md-12 col-sm-12 col-xs-12">Doctor Name</label>
+                    </div>
+                    <div class="col-md-6">
+                        <select id="doctorName" multiple style="width:100%;" class=""></select>
+                        <input type="hidden" id="bocRid" />
+                        <input type="hidden" id="patientRid" />
+                        <input type="hidden" id="patientVisitRid" />
+                        <input type="hidden" id="patPrimaryDoctor" />
+                        <input type="hidden" id="patBedRid" />
+                    </div>                    
+                </div>              
+            </div>
+            <div class="modal-footer" style="border-top: 0px;"> 
+                <button type="button" id="add" class="btn btn-aris jqueryUIToolTip" title="Save" onclick="dcomethealth.Nursing.addSecondaryDoctor()"><i class="fa fa-floppy-o"></i></button>
+            </div>
+        </div> 
+    </div>
+</div>
+<div class="modal fade" id="bedModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" >
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times"></i></button>
+                <h4 class="modal-title">Bed Selection</h4> 
+                <span class="col-md-offset-9">Occupied Bed <img src="/health_web/css/images/bedImages/bedOccupy.svg" alt="bedOccupied" width="20" height="20" /></span><!--<span class="badge badgeColor"> </span>-->
+            </div> 
+            <div  class="modal-body" >
+                <div id="bedModalDetails" class="row col-md-12 col-sm-12 col-xs-12"></div>              
+            </div>
+            <div class="modal-footer" style="border-top: 0"></div> <!--<button type="button" class="btn btn-default" data-dismiss="modal">Add</button>-->
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="js/plugins/form-toggle/toggle.min.js"></script>
+<script type='text/javascript' src="js/plugins/form-daterangepicker/daterangepicker.min.js"></script>
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script>
+<script type='text/javascript' src='js/plugins/form-select2/select2.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-multiselect/js/jquery.multi-select.min.js'></script>
+<script type='text/javascript' src='js/plugins/jqueryui-timepicker/jquery.ui.timepicker.min.js'></script> 

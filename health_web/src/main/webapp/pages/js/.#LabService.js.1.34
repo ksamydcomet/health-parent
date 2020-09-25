@@ -1,0 +1,546 @@
+var dcomethealth = dcomethealth || {};
+dcomethealth.LabServExtn = {};
+dcomethealth.template = null;
+dcomethealth.LabService = (function () {
+    var id = "LabService", labResult = {}, labHRid;
+    function init() {
+        $("#main_navigation_bar").append('<div id="' + id + '" class="main_container">');
+        $("#" + id).load("pages/html/" + id + ".html", function () {
+            dcomethealth.datatypes.applyDataTypes($("#" + id));
+            var start = moment().startOf('month'), end = moment().endOf('month');
+            $('#labDateRangeSpan').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+            searchSOByDate();
+            $('#labDateRange').daterangepicker({
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
+                    'Last 7 Days': [moment().subtract('days', 6), moment()],
+                    'Last 30 Days': [moment().subtract('days', 29), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+                },
+                opens: 'left',
+                startDate: moment().subtract('days', 29),
+                endDate: moment()
+            },
+            function (start, end) {
+                $('#labDateRange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                searchSOByDate();
+            });
+            $('#labComDateRangeSpan').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+            $('#labComDateRange').daterangepicker({
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
+                    'Last 7 Days': [moment().subtract('days', 6), moment()],
+                    'Last 30 Days': [moment().subtract('days', 29), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+                },
+                opens: 'left',
+                startDate: moment().subtract('days', 29),
+                endDate: moment()
+            },
+            function (start, end) {
+                $('#labComDateRange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                searchCompleted();
+            });
+
+            searchDoctor();
+            dcomethealth.LaboratoryResource.searchLabServiceExtn({}, function (data) {
+                dcomethealth.LabServExtn = data;
+            });
+//            var searchObj = {"tempType": "Lab"};
+//            dcomethealth.ClinicalResource.searchTemplate(searchObj, function (data) {
+//                dcomethealth.template = data;
+//            });
+            $("#labSave").off("click").on("click", function () {
+                saveLabServices();
+            });
+        });
+    }
+    function searchCompleted() {
+        $("#labDateRange").hide();
+        $("#labComDateRange").show();
+        $("#labDateRangeSpan").addClass("hidden");
+        $("#labComDateRangeSpan").removeClass("hidden");
+        $("#apTbody").empty();
+        var date = $('#labComDateRangeSpan').html().split('-');
+        var searchParam = {"lrhFromDate": moment(date[0]), "lrhToDate": moment(date[1]).add(1, 'days')};
+        var tables = $.fn.dataTable.fnTables(true);
+        $(tables).each(function () {
+            $(this).dataTable().fnClearTable();
+            $(this).dataTable().fnDestroy();
+        });
+        dcomethealth.LaboratoryResource.searchLabResults(searchParam, function (data) {
+            $.each(labResult = data, function (Idx, lab) {
+                $("#labResultId").val(lab.id);
+                $("#PatientRid").val(lab.lrhPatientID);
+                $("#PatientVisitRid").val(lab.lrhPatientVisitID);
+                var searchParams = {"id": lab.lrhPatientID};
+                dcomethealth.PatientResource.searchPatient(searchParams, function (data) {
+                    $.each(data, function (pIdx, pat) {
+                        var stateVal = "Completed";
+                        var Print = '<a class="btn btn-success hidden-xs" onclick="dcomethealth.LabService.check(' + lab.id + ')"><i class="fa fa-print"></i></a>';
+                        var mrn = '<a href="#" onclick="dcomethealth.LabService.showCompltedResult( ' + pat.id + ',' + lab.id + ')">' + pat.patMrnNo + '</a>';
+                        $("#apTbody").append('<tr><td>' + mrn + '<input type="hidden" id="apPatRid" value="' + lab.lrhPatient + '"/></td>\n\
+                                        <td><output id="service">' + pat.patFullName + '</output></td>\n\
+                                        <td><output id="serDate">' + moment(lab.createdDateTime, "DD-MM-YYYY HH:mm:ss").format('DD-MM-YYYY') + '</output></td>\n\
+                                        <td><output id="serviceStatus">' + stateVal + '</output><td>' + Print + '</td></td></tr>');
+                    });
+                    $("#dyn_table_pat").dataTable({"bJQueryUI": false, "bAutoWidth": false, "bDestroy": true});
+                    $('.dataTables_filter input').addClass('form-control').attr('placeholder', 'Search...');
+                    $('.dataTables_length select').addClass('form-control');
+                });
+            });
+
+        });
+    }
+    function showCompltedResult(val, id) {
+        $("#LabServiceHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+        var searchParams = {"id": val};
+        dcomethealth.PatientResource.searchPatient(searchParams, function (data) {
+            $.each(data, function (pIdx, pat) {
+                $("#patMRN").val(pat.patMrnNo);
+                $("#PatientName").text(pat.patFullName);
+                $("#patName").val(pat.patName);
+                var c = pat.patDob.split('-');
+                $('#patAge').val(Math.floor((new Date() - new Date(new Date(c[2], c[1] - 1, c[0]))) / (365.25 * 24 * 60 * 60 * 1000)));
+                $('#PatGender').val(pat.patGenderIndex);
+                if (parseInt(pat.patGenderIndex) === 1) {
+                    $('#PatientGend').val('Male');
+                } else if (parseInt(pat.patGenderIndex) === 2) {
+                    $('#PatientGend').val('Female');
+                } else {
+                    $('#PatientGend').val('Transgender');
+                }
+            });
+        });
+
+        $.each(labResult, function (Idx, lab) {
+            if (parseInt(id) == parseInt(lab.id)) {
+                $("#visitRidIn").val(lab.lrhPatientVisitID);
+                $("#patRidIn").val(lab.lrhPatientID);
+                $("#patRemarks").val(lab.lrhRemarks);
+                $("#patDoc").val(lab.lrhSignBy);
+                $.each(lab.labResultDs, function (Idx, labD) {
+                    $("#ls_table").find("th:empty").remove();
+                    $("#soTbody").append('<tr id="model2"><td width="20%"><b><input type="text" id="patService" value= "' + labD.lrdNServName + '" class="col-md-11" readonly style="border: none"/><input type="hidden" id="labResultDId" value="' + labD.id + '"/></b>\n\
+                                    </td><td><input type="hidden" id="lsServiceRid" value="' + labD.lrdServiceRid + '"><input type="text" id="lsResultValue" name="lsResultValue" style="width: 88%;" onblur="dcomethealth.LabService.calResult(this)" class="col-md-11" placeholder="Enter result value" value="' + labD.lrdNR + '"/><input type="hidden" id="itemRidIn" value="' + labD.lrdServiceRid + '"/></td>\n\
+                                    <td><input type="text" id="lsDescription" name="lsDescription" class="col-md-11" style="border: none" value="' + labD.lrdNServRange + '"/></td>\n\
+                                    <td><input type="text" id="lsUom" name="lsUom" class="col-md-11" style="border: none" value="' + labD.lrdNServUnit + '"/></td>\n\
+                                    <td><input type="text" id="lsState" name="lsState" class="col-md-11" style="border: none"/></td></tr>');
+                    $("#visitRidIn").val(lab.lrhPatientVisitID);
+                    $("#patRidIn").val(lab.lrhPatientID);
+                });
+            }
+        });
+    }
+
+    function searchSOByDate() {
+        $("#labDateRange").show();
+        $("#labComDateRange").hide();
+        $("#labDateRangeSpan").removeClass("hidden");
+        $("#labComDateRangeSpan").addClass("hidden");
+        $("#apTbody").empty();
+        var date = $('#labDateRangeSpan').html().split('-');
+        var searchParamsSO = {"soFromDate": moment(date[0]), "soToDate": moment(date[1]).add(1, 'days'), "soState": 2, "soAgainstUnitRID": 4, "sortOrder": ["soState"], "sortDesc": "desc"};
+        var tables = $.fn.dataTable.fnTables(true);
+        $(tables).each(function () {
+            $(this).dataTable().fnClearTable();
+            $(this).dataTable().fnDestroy();
+        });
+        dcomethealth.CreateOPBilltResource.searchPendingServiceOrders(searchParamsSO, function (data) {
+            if (!!data) {
+                $.each(dcomethealth.soData = data, function (index, value) {
+                    var mrn = '<a href="#" onclick="dcomethealth.LabService.showResult(' + value.id + ',this)">' + value.patMrnNo + '</a>';
+                    var Print = "";
+                    var stateVal = "Pending";
+                    $("#apTbody").append('<tr><td>' + mrn + '<input type="hidden" id="apPatRid" value="' + value.id + '"/></td>\n\
+                                        <td><output id="service">' + value.patFullName + '</output></td>\n\
+                                        <td><output id="serDate">' + moment(value.createdDateTime, "DD-MM-YYYY HH:mm:ss").format('DD-MM-YYYY') + '</output></td>\n\
+                                        <td><output id="serviceStatus">' + stateVal + '</output><td>' + Print + '</td></td></tr>');
+
+                });
+            }
+            $("#dyn_table_pat").dataTable({"bJQueryUI": false, "bAutoWidth": false, "bDestroy": true});
+            $('.dataTables_filter input').addClass('form-control').attr('placeholder', 'Search...');
+            $('.dataTables_length select').addClass('form-control');
+        });
+    }
+    function searchDoctor() {
+        dcomethealth.MasterResource.searchStaff({}, function (data) {
+            var targetContainer = targetContainer || document;
+            $("datalist.dcomet-c-s_doctors-list", targetContainer).each(function (idx, elem) {
+                $.each(data, function (pIdx, s_staff) {
+                    $(s_staff).each(function () {
+                        if (s_staff.staffCategory === 237) {
+                            $(elem).append('<option value="' + s_staff.staffName + '">' + s_staff.staffCode + '</option>');
+                        }
+                    });
+                });
+            });
+        });
+    }
+    function showResult(val, row) {
+        $("#LabServiceHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+        var i = 0;
+        $.each(dcomethealth.soData, function (pIdx, pat) {
+            if (parseInt(pat.id) == parseInt(val)) {
+                $("#patMRN").val(pat.patMrnNo);
+                $("#PatientName").text(pat.patFullName);
+                $("#patName").val(pat.patName);
+                var c = pat.patDob.split('-');
+                $('#patAge').val(Math.floor((new Date() - new Date(new Date(c[2], c[1] - 1, c[0]))) / (365.25 * 24 * 60 * 60 * 1000)));
+                $('#PatGender').val(pat.patGenderIndex);
+                if (parseInt(pat.patGenderIndex) === 1) {
+                    $('#PatientGend').val('Male');
+                } else if (parseInt(pat.patGenderIndex) === 2) {
+                    $('#PatientGend').val('Female');
+                } else {
+                    $('#PatientGend').val('Transgender');
+                }
+                $("#soTbody").empty();
+                $.each(pat.serviceOrders, function (pIdx, soFiltered) {
+                    if (soFiltered.soPatientRID === val) {
+                        var lsDescription = "", lsGroupName = "", lsUOM = "", labSerTempRid = 0;
+                        $.each(dcomethealth.LabServExtn, function (pIdx, lService) {
+                            if (parseInt(lService.lsServiceRID) === parseInt(soFiltered.soItemID)) {
+                                if (parseInt(lService.lsAgeMinValue) <= parseInt($('#patAge').val()) && parseInt($('#patAge').val()) <= parseInt(lService.lsAgeMaxValue)) {
+                                    if (parseInt((lService.lsGenderType)) === (parseInt($('#PatGender').val()))) {
+                                        lsDescription = lService.lsDescription;
+                                        lsGroupName = lService.lsGroupName;
+                                        lsUOM = lService.lsUom;
+                                    } else if (parseInt((lService.lsGenderType)) !== '1' && parseInt((lService.lsGenderType)) !== '2') {
+                                        lsDescription = lService.lsDescription;
+                                        lsGroupName = lService.lsGroupName;
+                                        lsUOM = lService.lsUom;
+                                    }
+                                }
+                                labSerTempRid = lService.lsTemplateRID;
+                            }
+                        });
+                        $("#visitRidIn").val(soFiltered.soVisitRID);
+                        $("#patRidIn").val(soFiltered.soPatientRID);
+                        if (parseInt(labSerTempRid) !== 0) {
+                            $.each(dcomethealth.template, function (idx, template) {
+                                if (labSerTempRid == template.id) {
+                                    $("#soTbody").append('<tr id="model' + pIdx + '"><td><b><input type="text" id="patService" value= "' + soFiltered.soItemName + '" class="col-md-11" readonly style="border: none"/></b>\n\
+                                                <input type="hidden" id="soRidIn" value="' + soFiltered.id + '"/><input type="hidden" id="itemRidIn" value="' + soFiltered.soItemID + '"/>\n\
+                                                <input type="hidden" id="lsResultValue" name="lsResultValue" class="col-md-11"/>\n\
+                                                <input type="hidden" id="lsDescription" name="lsDescription" class="col-md-11" style="border: none" value=""/>\n\
+                                                <input type="hidden" id="lsUom" name="lsUom" class="col-md-11" style="border: none" value=""/>\n\
+                                                <input type="hidden" id="lsState" name="lsState" class="col-md-11" style="border: none"/>\n\
+                                                <input type="hidden" id="lsGroupName" name="lsGroupName" value=""/><input type="hidden" id="soDate" name="soDate" value=""/></td></tr>');
+                                    $("#model" + pIdx).append(template.tempNodes);
+                                    $('#itemIdIn').eq(i).attr('id', soFiltered.soItemID);
+                                    $('#form-main').eq(i).attr('id', soFiltered.soItemID);
+                                    setLabValue(soFiltered.id, soFiltered.soItemID);
+                                    return;
+                                }
+                            });
+                        } else {
+                            $("#ls_table").find("th:empty").remove();
+                            $("#soTbody").append('<tr id="model2"><td width="20%"><b><input type="text" id="patService" value= "' + soFiltered.soItemName + '" class="col-md-11" readonly style="border: none"/></b>\n\
+                                    <input type="hidden" id="soRidIn" value="' + soFiltered.id + '"/><input type="hidden" id="itemRidIn" value="' + soFiltered.soItemID + '"/></td><td><input type="text" id="lsResultValue" name="lsResultValue" style="width: 88%;" onblur="dcomethealth.LabService.calResult(this)" class="col-md-11" placeholder="Enter result"/></td>\n\
+                                    <td><input type="text" id="lsDescription" name="lsDescription" class="col-md-11" style="border: none" value="' + lsDescription + '"/></td>\n\
+                                    <td><input type="text" id="lsUom" name="lsUom" class="col-md-11" style="border: none" value="' + lsUOM + '"/></td>\n\
+                                    <td><input type="text" id="lsState" name="lsState" class="col-md-11" style="border: none"/><input type="hidden" id="lsGroupName" name="lsGroupName" value="' + lsGroupName + '"/><input type="hidden" id="soDate" name="soDate" value="' + dynTableGetNodeInRow(row, 'serDate').value + '"/></td></tr>');
+                            $("#visitRidIn").val(soFiltered.soVisitRID);
+                            $("#patRidIn").val(soFiltered.soPatientRID);
+
+                        }
+                    }
+                });
+            }
+        });
+
+    }
+    function check(val) {
+        dcomethealth.ServiceOrderResource.getLabPrint({"id": val}, function (data) {
+            if (!!data) {
+                exportExcel(data);
+            }
+        });
+
+    }
+    function calResult(row) {
+        var searchParams = {"lsServiceRID": parseInt(dynTableGetNodeInRow(row, 'itemRidIn').value)};
+        dcomethealth.LaboratoryResource.searchLabServiceExtn(searchParams, function (data) {
+            $.each(data, function (pIdx, lService) {
+                if (parseInt(lService.lsAgeMinValue) <= parseInt($('#patAge').val()) && parseInt($('#patAge').val()) <= parseInt(lService.lsAgeMaxValue)) {
+                    if (parseInt((lService.lsGenderType)) === (parseInt($('#PatGender').val()))) {
+                        if (parseFloat(lService.lsRangeMinValue) <= parseFloat(dynTableGetNodeInRow(row, 'lsResultValue').value) && parseFloat(dynTableGetNodeInRow(row, 'lsResultValue').value) <= parseFloat(lService.lsRangeMaxValue)) {
+                            dynTableGetNodeInRow(row, 'lsState').value = "Normal Range";
+                        } else if (parseFloat(dynTableGetNodeInRow(row, 'lsResultValue').value) < parseFloat(lService.lsRangeMinValue)) {
+                            dynTableGetNodeInRow(row, 'lsState').value = "Low Range";
+                        } else if (parseFloat(dynTableGetNodeInRow(row, 'lsResultValue').value) > parseFloat(lService.lsRangeMaxValue)) {
+                            dynTableGetNodeInRow(row, 'lsState').value = "High Range";
+                        }
+                    } else if (parseInt((lService.lsGenderType)) !== 1 && parseInt((lService.lsGenderType)) !== 2) {
+                        if (parseFloat(lService.lsRangeMinValue) <= parseFloat(dynTableGetNodeInRow(row, 'lsResultValue').value) && parseFloat(dynTableGetNodeInRow(row, 'lsResultValue').value) <= parseFloat(lService.lsRangeMaxValue)) {
+                            dynTableGetNodeInRow(row, 'lsState').value = "Normal Range";
+                        } else if (parseFloat(dynTableGetNodeInRow(row, 'lsResultValue').value) < parseFloat(lService.lsRangeMinValue)) {
+                            dynTableGetNodeInRow(row, 'lsState').value = "Low Range";
+                        } else if (parseFloat(dynTableGetNodeInRow(row, 'lsResultValue').value) > parseFloat(lService.lsRangeMaxValue)) {
+                            dynTableGetNodeInRow(row, 'lsState').value = "High Range";
+                        }
+                    }
+                }
+            });
+        });
+    }
+    function setLabValue(soRid, itemRID) {
+//        var form = $('form#' + itemRID);
+//        var f = form.serializeArray();
+//        $.each(dcomethealth.sodata, function (aIdx, data) {
+//            if (parseInt(data.id) == parseInt(soRid)) {
+//                $.each(data.labResultDList, function (pIdx, labResultd) {
+//                    if (parseInt(soRid) == parseInt(labResultd.lrdHRID)) {
+//                        var obj = jQuery.parseJSON(labResultd.lrdNodes);
+//                        $.each(obj, function (idx, val) {
+//                            $.each(f, function () {
+//                                if (this.name == idx) {
+//                                    $('#' + this.name).val(val);
+//                                }
+//                            });
+//                        });
+//                    }
+//                });
+//            }
+//        });
+    }
+    function getLabValue(itmRID) {
+//        var form = $('form#' + itmRID);
+//        var o = {};
+//        var a = form.serializeArray();
+//        if (a.length != 0) {
+//            $.each(a, function () {
+//                if (o[this.name]) {
+//                    !o[this.name].push ? o[this.name] = [o[this.name]] : o[this.name].push(this.value || null);
+//                } else {
+//                    !!this.value ? o[this.name] = this.value || null : null;
+//                }
+//            });
+//            return o;
+//        } else {
+//            return undefined;
+//        }
+    }
+    function saveLabServices() {
+        if ($('#patDoc').val() === "") {
+            alert("Select Doctor Name");
+            return false;
+        }
+        if ($("#labResultId").val() == "") {
+            var serviceOrderList = [], labREsultH = {};
+            labREsultH.lrhRemarks = $("#patDoc").val();
+            labREsultH.lrhSignBy = $("#patRemarks").val();
+            var tablels = document.getElementById('ls_table');
+            for (var i = 0; i < tablels.rows.length - 1; i++) {
+                if (dynTableGetNodeInRow(tablels.rows[i + 1], 'lsResultValue').value != "") {
+                    var serviceOrder = {}, labService = {};
+                    var labResultDList = [];
+                    serviceOrder.id = dynTableGetNodeInRow(tablels.rows[i + 1], 'soRidIn').value;
+                    serviceOrder.soPatientRID = $("#patRidIn").val();
+                    !!$("#visitRidIn").val() ? serviceOrder.soVisitRID = $("#visitRidIn").val() : null;
+                    serviceOrder.soOrderingUnitRID = dcomethealth.selectedunit;
+                    serviceOrder.soOrderType = 1;
+                    serviceOrder.soItemID = dynTableGetNodeInRow(tablels.rows[i + 1], 'itemRidIn').value;
+                    serviceOrder.soItemName = dynTableGetNodeInRow(tablels.rows[i + 1], 'patService').value;
+                    serviceOrder.soQty = 1;
+                    serviceOrder.soProcessingUnitRID = dcomethealth.selectedunit;
+                    serviceOrder.soProcessedBY = $("#patDoc").val();
+                    serviceOrder.soRemarks = $("#patRemarks").val();
+                    var itemRID = dynTableGetNodeInRow(tablels.rows[i + 1], 'itemRidIn').value;
+                    var labNode = !!dynTableGetNodeInRow(tablels.rows[i + 1], 'itemRidIn').value ? JSON.stringify(getLabValue(itemRID)) : null;
+                    labService.lrdNodes = !!labNode ? labNode : null;
+
+//            labService.id = !!dynTableGetNodeInRow(tablels.rows[i + 1], 'itemRidIn').value ? dynTableGetNodeInRow(tablels.rows[i + 1], 'itemRidIn').value : null;
+                    labService.lrdNServName = !!dynTableGetNodeInRow(tablels.rows[i + 1], 'patService').value ? dynTableGetNodeInRow(tablels.rows[i + 1], 'patService').value : null;
+                    labService.lrdNR = !!dynTableGetNodeInRow(tablels.rows[i + 1], 'lsResultValue').value ? dynTableGetNodeInRow(tablels.rows[i + 1], 'lsResultValue').value : null;
+                    labService.lrdNServUnit = !!dynTableGetNodeInRow(tablels.rows[i + 1], 'lsUom').value ? dynTableGetNodeInRow(tablels.rows[i + 1], 'lsUom').value : null;
+                    labService.lrdNServRange = !!dynTableGetNodeInRow(tablels.rows[i + 1], 'lsDescription').value ? dynTableGetNodeInRow(tablels.rows[i + 1], 'lsDescription').value : null;
+                    labResultDList.push(labService);
+
+                    serviceOrder.labResultDList = labResultDList;
+                    serviceOrderList.push(serviceOrder);
+                }
+            }
+            dcomethealth.ServiceOrderResource.saveServiceOrderResult(serviceOrderList).done(function (data, textStatus, jqXHR) {
+                if (confirm("Data Saved Proced to Print")) {
+                    $.each(data, function (idx, ser) {
+                        $.each(ser.labResultDList, function (idx, lab) {
+                            labHRid = lab.lrdHRID;
+                        });
+                    });
+                    dcomethealth.LabService.check(labHRid);
+                    dcomethealth.util.loadpage('LabService');
+                    dcomethealth.util.base_init();
+                } else {
+                    dcomethealth.util.loadpage('LabService');
+                    dcomethealth.util.base_init();
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                alert("Failed to Save");
+            });
+        } else {
+            var labResultH = {}, labresultDList = [];
+            labResultH.id = $("#labResultId").val();
+            labResultH.lrhPatientID = $("#PatientRid").val();
+            labResultH.lrhSignBy = $("#patDoc").val();
+            !!$("#visitRidIn").val() ? labResultH.lrhPatientVisitID = $("#visitRidIn").val() : null;
+            labResultH.lrhRemarks = $("#patRemarks").val();
+            var tablels = document.getElementById('ls_table');
+            for (var i = 0; i < tablels.rows.length - 1; i++) {
+                var labresultD = {};
+                labresultD.id = dynTableGetNodeInRow(tablels.rows[i + 1], 'labResultDId').value;
+//                labresultD.lrdSORID = dynTableGetNodeInRow(tablels.rows[i + 1], 'itemRidIn').value;
+                labresultD.lrdNR = dynTableGetNodeInRow(tablels.rows[i + 1], 'lsResultValue').value;
+                labresultD.lrdNServRange = dynTableGetNodeInRow(tablels.rows[i + 1], 'lsDescription').value;
+                labresultD.lrdNServName = dynTableGetNodeInRow(tablels.rows[i + 1], 'patService').value;
+                labresultD.lrdServiceRid = dynTableGetNodeInRow(tablels.rows[i + 1], 'lsServiceRid').value;
+                labresultD.lrdNServUnit = dynTableGetNodeInRow(tablels.rows[i + 1], 'lsUom').value;
+
+                labresultDList.push(labresultD);
+            }
+            labResultH.labResultDs = labresultDList;
+            dcomethealth.LaboratoryResource.modifyLabResults(labResultH).done(function (data, textStatus, jqXHR) {
+                if (confirm("Data Saved Proced to Print")) {
+                    dcomethealth.LabService.check($("#labResultId").val());
+                dcomethealth.util.loadpage('LabService');
+                dcomethealth.util.base_init();
+                } else {
+                    dcomethealth.util.loadpage('LabService');
+                    dcomethealth.util.base_init();
+                }
+
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                alert("Failed to Save");
+            });
+        }
+    }
+
+
+
+
+
+
+
+//    function generatePageByGroupName(groupName) {
+//        var tablels = document.getElementById('ls_table');
+//        var table_length = tablels.rows.length;
+//        var a = 0, itemRID = null, soRID = null;
+//        $("#ExportHeamatologyTable").append('<tr id="trTable"><td><table id="' + groupName + '" width="100%"><tr> <td> <table width="100%"> <tr> <td width="18%"><img src="#" alt="Logo" style="max-height: 180px; max-width: 100px; visibility:hidden;" id="entityImagePath' + groupName + '"/></td><td width="69%"> <p><strong><span style="visibility:hidden;" id="entityName' + groupName + '"> </span></strong><strong><br/></strong><small> <span style="visibility:hidden;" id="entityDisplayName' + groupName + '"></span><br/><span style="visibility:hidden;">Telefone: </span><span  style="visibility:hidden;" id="entityPhone' + groupName + '"></span><br/><span  style="visibility:hidden;">Email:</span> <span id="entityEmail' + groupName + '" style="visibility:hidden;"></span><span style="visibility:hidden;">Website:</span> <span style="visibility:hidden;" id="entityWebSite' + groupName + '"></span></small> </p></td><td width="13%" style="visibility:hidden;"><small>Original</small></td></tr></table> </td></tr><tr> <td></td></tr><tr > <td> <p align="center" style="background-color: #FF9900 !important;-webkit-print-color-adjust: exact; border: 1px solid #FF9900; padding:5px; visibility:hidden;"><small>REPORT</small></p></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr> <td> <tr> <td> <table style="float: left;" width="60%"><tr><td width="20%"><span style="visibility:hidden;"><small>Name</small></span></td><td style="visibility:hidden;"></td><td width="78%"><small><span style="margin-left:70px;" id="PatientName' + groupName + '" ></span></small></td></tr><tr><td></td></tr><tr> <td width="20%" style="visibility:hidden;"><small>Age</small></td><td style="visibility:hidden;">:</td><td width="78%"><small> <span style="margin-left:70px;" id="PatientAge' + groupName + '"></span><span> / </span><span id="PatientGender' + groupName + '"></span></small></td></tr><tr> <td width="20%" style="visibility:hidden;"><small>Gender</small> </td><td style="visibility:hidden;">:</td><td width="78%"></td></tr><tr> <td width="20%" ><span style="visibility:hidden;"><small>Corporate</small></span></td><td style="visibility:hidden;">:</td><td width="78%"><small><span id="corporate"></span></small></td></tr></table> <table style="float: right;" width="40%"> <tr> <td width="25%" style="visibility:hidden;"><small>Uhid</small></td><td style="visibility:hidden;">:</td><td width="78%"><small><span id="uhid' + groupName + '"></span></small></td></tr><tr> <td width="25%" style="visibility:hidden;"><small>Reg No</small></td><td style="visibility:hidden;">:</td><td width="78%"><small> <span id="regNo"></span></small></td></tr><tr> <td width="25%" style="visibility:hidden;"><small>Reg Date</small></td><td style="visibility:hidden;">:</td><td width="78%"><small><span id="RegOn' + groupName + '"></span></small></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr> <td width="30%" style="visibility:hidden;"><small>Collected On</small></td><td style="visibility:hidden;">:</td><td style="text-align: left;" width="68%"><small><span id="ColOn">' + moment().format('DD-MM-YYYY') + '</span></small></td></tr><tr> <td width="30%" style="visibility:hidden;"><small>Reported On</small></td><td style="visibility:hidden;">:</td><td style="text-align: left;" width="68%"><small><span id="RepOn">' + moment().format('DD-MM-YYYY') + '</span></small></td></tr></table> </td></tr><table><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr></table><tr><td><table width="100%" style="margin-top: -50px;"> <tr> <td></td></tr><tr> <td> <table width="100%"> <tr> <td> <table style="border-style: none;" border="0" width="100%" cellspacing="0" cellpadding="0"> <thead> <caption id="groupName' + groupName + '" style="background-color: #FF9900 !important;-webkit-print-color-adjust: exact;font-size: 12px;border: 1px solid #FF9900;padding: 4px;border-radius:15px;margin-bottom: 10px;visibility:hidden;"><small></small></caption> <tr> <th style="font-size: 12px;background-color: #FF9900 !important; -webkit-print-color-adjust: exact; text-align: center; border: 1px solid #FF9900;padding: 2px;border-radius:15px;visibility:hidden;" width="37%">Test Name</th> <th style="font-size: 12px;background-color: #FF9900 !important; -webkit-print-color-adjust: exact;text-align: center; border: 1px solid #FF9900;padding: 2px; border-radius:15px;visibility:hidden;" width="15%">Result</th> <th style="font-size: 12px;background-color: #FF9900 !important; -webkit-print-color-adjust: exact; text-align: center; border: 1px solid #FF9900;padding: 2px;border-radius:15px;visibility:hidden;" width="14%">Units</th> <th style="font-size: 12px;background-color: #FF9900 !important; -webkit-print-color-adjust: exact;text-align: center; border: 1px solid #FF9900;padding: 2px;border-radius:15px;visibility:hidden;" width="22%">Biological Reference Intervals</th </tr></thead> <tbody id="exp_H_tbody' + groupName + '" ></tbody> </table> </td></tr><br><tr> <td> <p style="padding: 5px;visibility:hidden;" align="left"> <small>Impression :</small> <br/> </td></tr><tr> <td width="75%"> <p id="descriptionReport"></p></td></tr><br/> <tr> <td> <p align="center" style="visibility:hidden;"><small>------End Of Report------</small></p></td></tr></table></td></tr></table></td></tr></td></tr></table></td></tr>');
+//        $('#entityName' + groupName + '').text(dcomethealth.userEntityName);
+//        $('#entityDisplayName' + groupName + '').text(dcomethealth.userEntityDisplayAddress);
+//        $('#entityEmail' + groupName + '').text(dcomethealth.userEntityMail);
+//        $('#entityPhone' + groupName + '').text(dcomethealth.userEntityPhone);
+//        $('#entityImagePath' + groupName + '').prop('src', dcomethealth.userEntityPath);
+//        $('#entityWebSite' + groupName + '').text(dcomethealth.userEntityWebSite);
+//        $('#PatientName' + groupName + '').text($('#patName').val());
+//        $('#PatientGender' + groupName + '').text($('#PatientGend').val());
+//        $('#PatientAge' + groupName + '').text($('#patAge').val());
+//        $('#uhid' + groupName + '').text($('#patMRN').val());
+//        $('#groupName' + groupName).text(groupName);
+//        for (var i = 0; i < table_length - 1; i++) {
+//            itemRID = dynTableGetNodeInRow(tablels.rows[i + 1], 'itemRidIn').value;
+//            soRID = dynTableGetNodeInRow(tablels.rows[i + 1], 'soRidIn').value;
+//            $.each(dcomethealth.sodata, function (aIdx, data) {
+//                if (parseInt(data.id) == parseInt(soRID)) {
+//                    $.each(data.labResultDList, function (pIdx, labResultD) {
+//                        if (!!labResultD.lrdNodes) {
+//                            $.each(dcomethealth.template, function (pIdx, template) {
+//                                if (parseInt(itemRID) == parseInt(template.tempRID)) {
+//                                    $("#exp_H_tbody" + groupName).append('<tr style="margin-top: 200px;"><td style="border-style: none !important; padding: 5px; font-size: 12px; white-space: nowrap;" >' + dynTableGetNodeInRow(tablels.rows[i + 1], 'patService').value + '</td></small></tr>');
+//                                    $("#exp_H_tbody" + groupName).append(template.tempNodes);
+//                                    $('#form-main').eq(a).attr('id', itemRID);
+//                                    $("#exp_H_tbody :input").css({"border": "0", "text-align": "right"});
+////                                    $("#exp_H_tbody :input").css({"border": "0","text-align": "right"});
+//                                    var obj = jQuery.parseJSON(labResultD.lrdNodes);
+//                                    $.each(obj, function (idx, val) {
+//                                        $('table#itemIdIn tr td').each(function (inx, td) {
+//                                            var inputId = $(td).find("input[type='text']").attr("id");
+//                                            if (inputId == idx) {
+////                                                var sliceID = inputId.slice(-6);
+////                                                if (inputId.slice(-5) == "State") {
+////                                                    $('#' + inputId).remove();
+////                                                } else {
+//                                                $('#' + inputId).attr("value", val);
+////                                                }
+////                                                if (sliceID == "Result") {
+////                                                    $('#' + inputId).css({"margin-left": "25px","text-align": "right"});
+////                                                }
+////                                                $("#exp_H_tbody input#cabcResult").css({"text-align": "right", "margin-left": "31px"});
+//
+//                                            }
+//                                        });
+//                                    });
+//                                }
+//                            });
+//                        } else {
+//                            $("#exp_H_tbody" + groupName).append('<tr style="margin-top: 200px;"><td style="border-style: none !important; padding: 5px; font-size: 12px;" width="40%">' + dynTableGetNodeInRow(tablels.rows[i + 1], 'patService').value + '</td></small><small><td style="border-style: none !important;font-size: 12px;text-align: center;" width="15%">' + dynTableGetNodeInRow(tablels.rows[i + 1], 'lsResultValue').value + '</td></small><small><td style="border-style: none !important;text-align: center;font-size: 12px;" width="15%">' + dynTableGetNodeInRow(tablels.rows[i + 1], 'lsUom').value + '</td></small><small><td style="border-style: none !important;text-align: center;font-size: 12px;"width="30%">' + dynTableGetNodeInRow(tablels.rows[i + 1], 'lsDescription').value + '</td></small></tr>');
+//                        }
+//                    });
+//                }
+//            });
+//
+////            if ((dynTableGetNodeInRow(tablels.rows[i + 1], 'lsGroupName').value).toUpperCase() === groupName) {
+////            $('#RegOn' + groupName + i).text((dynTableGetNodeInRow(tablels.rows[i + 1], 'soDate').value).toUpperCase());
+////            $("#exp_H_tbody" + groupName).append('<tr style="margin-top: 200px;"><td style="border-style: none !important; padding: 5px; font-size: 12px;" width="40%">' + dynTableGetNodeInRow(tablels.rows[i + 1], 'patService').value + '</td></small><small><td style="border-style: none !important;font-size: 12px;text-align: center;" width="15%">' + dynTableGetNodeInRow(tablels.rows[i + 1], 'lsResultValue').value + '</td></small><small><td style="border-style: none !important;text-align: center;font-size: 12px;" width="15%">' + dynTableGetNodeInRow(tablels.rows[i + 1], 'lsUom').value + '</td></small><small><td style="border-style: none !important;text-align: center;font-size: 12px;"width="30%">' + dynTableGetNodeInRow(tablels.rows[i + 1], 'lsDescription').value + '</td></small></tr>');
+////                if (parseInt(i + 1) < parseInt(table_length - 1)) {
+////                    document.getElementById(i + 1).style.pageBreakAfter = "always";
+////                }
+////                grpNameOld = dynTableGetNodeInRow(tablels.rows[i + 1], 'lsGroupName').value;
+////            }
+////            if (dynTableGetNodeInRow(tablels.rows[i + 1], 'lsGroupName').value !== groupName) {
+////                document.getElementById(i + 1).style.pageBreakAfter = "always";
+////            }
+//        }
+//    }
+    function exportExcel(html) {
+//        var groupNames = [];
+//        $("#exp_H_tbody").empty();
+//        var tablels = document.getElementById('ls_table');
+//        var table_length = tablels.rows.length;
+//        for (var i = 0; i < table_length - 1; i++) {
+//            var lsGroupName = dynTableGetNodeInRow(tablels.rows[i + 1], 'lsGroupName').value;
+//            if ($.inArray(lsGroupName, groupNames) <= -1) {
+//                groupNames.push(lsGroupName);
+//        var name = "";
+//        generatePageByGroupName(name);
+//        document.getElementById(totalTable).style.pageBreakAfter = "avoid";
+//        var htmltable = document.getElementById('ExportHeamatologyTable');
+//        var html = htmltable.outerHTML;
+        var printWindow = window.open('', '_blank');
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+        dcomethealth.util.loadpage('LabService');
+        dcomethealth.util.base_init();
+    }
+    function refreshData() {
+    }
+    return {
+        init: init,
+        searchSOByDate: searchSOByDate,
+        searchDoctor: searchDoctor,
+        searchCompleted: searchCompleted,
+        showCompltedResult: showCompltedResult,
+        showResult: showResult,
+        check: check,
+        calResult: calResult,
+        getLabValue: getLabValue,
+        setLabValue: setLabValue,
+        saveLabServices: saveLabServices,
+//        generatePageByGroupName: generatePageByGroupName,
+        exportExcel: exportExcel,
+        refreshData: refreshData
+    };
+}());
+dcomethealth.LabService.init();
+

@@ -1,0 +1,220 @@
+<script>
+    $('body').on('focus', "#osdExpiryDate", function () {
+        $(this).datepicker({
+            format: 'mm/yyyy',
+            viewMode: "months",
+            minViewMode: "months"
+        });
+    });
+    function dateValidation() {
+        var a = moment();
+        var b = moment($("#osdExpiryDate").val(), 'MM/YYYY');
+        if (b.isBefore(a)) {
+            alert("Enter Valid date");
+            return false;
+        }
+    }
+    function clearAll() {
+        document.getElementById("edit_user_form").reset();
+    }
+    function leadingZero(value) {
+        if (value < 10) {
+            return "0" + value.toString();
+        }
+        return value.toString();
+    }
+
+    var date = new Date();
+    var current = leadingZero(date.getDate()) + "-" + leadingZero(date.getMonth() + 1) + "-" + date.getFullYear();
+    $("#osDate").text(current);
+
+    function calculate_rows_qty() {
+        var table = document.getElementById('dyn_table');
+        var qty_count = 0;
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            var tempqty = 0;
+            tempqty = dynTableGetNodeInRow(table.rows[i + 1], 'osdQty').value;
+            if (tempqty == "") {
+                tempqty = 0;
+            }
+            qty_count = parseInt(qty_count) + parseInt(tempqty);
+        }
+        document.getElementById('row_count').value = i;
+        document.getElementById('total_qty').value = qty_count;
+    }
+
+    function delete_row(elem) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+    function mrpValidation(tableid, elem)
+    {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var mrp = dynTableGetNodeInRow(table.rows[i + 1], 'osdMrp').value;
+            var rate = dynTableGetNodeInRow(table.rows[i + 1], 'osdRate').value;
+            if (parseFloat(mrp) == 0 || mrp == '') {
+                alert("Enter mrp");
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'osdMrp').focus();
+                }, 1);
+            } else if (parseFloat(rate) == 0 || rate == '') {
+                alert("Enter rate");
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'osdRate').focus();
+                }, 1);
+                return  false;
+            } else if (parseFloat(rate) > parseFloat(mrp)) {
+                alert("MRP is less");
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'osdMrp').focus();
+                }, 1);
+                return  false;
+            }
+        }
+    }
+    function insert_row(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var total = dynTableGetNodeInRow(table.rows[i + 1], 'osdRate').value;
+            var itemName = dynTableGetNodeInRow(table.rows[i + 1], "item_name").value;
+            var Qty = dynTableGetNodeInRow(table.rows[i + 1], "osdQty").value;
+        }
+        if (itemName == "") {
+            alert("Enter Item Name");
+            return false;
+        } else if (total == "" || parseInt(total) == 0) {
+            alert("Enter Rate");
+            return false;
+        } else if (Qty == "" || parseInt(Qty) == 0) {
+            alert("Enter Qty");
+            return false;
+        }
+        else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, 'del').className = "ace-icon fa fa-minus";
+            dynTableGetNodeInRow(newRow, "SkuRID").value = 0;
+            dynTableGetNodeInRow(newRow, "item_name").value = "";
+            dynTableGetNodeInRow(newRow, "osdBatchNo").value = "";
+            dynTableGetNodeInRow(newRow, "osdExpiryDate").value = "";
+            dynTableGetNodeInRow(newRow, "osdRate").value = "";
+            dynTableGetNodeInRow(newRow, "osdMrp").value = "";
+            dynTableGetNodeInRow(newRow, "osdQty").value = "";
+            dcomethealth.OpeningStock.autoComplete();
+        }
+    }
+
+</script>
+<div class="row" id="OpeningStock">     
+    <div class="panel panel-primary">
+        <form action="#" id="edit_user_form" name="edit_user_form" novalidate="novalidate" class="form-horizontal row-border">
+            <div class="panel-heading"><h4>Opening Stock</h4>
+                <div class="hidden-print">
+                    <div class="edit-all-button-container pull-right">                      
+                        <!--<a href="#" class="btn btn-primary"><span id="osSave" class="edit-all-button">Save</span></a>-->
+                        <a class="btn btn-primary" onclick="dcomethealth.util.loadpage('OpeningStock');
+                                dcomethealth.util.base_init();" style="margin-top: 3px; margin-bottom: 3px;"><span id="reset" class="">Clear Form</span></a>
+                        <input type="submit" class="btn btn-primary" value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>                    
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="clearfix">
+                                <div class="row">
+                                    <div class="pull-right">
+                                        <ul class="text-right list-unstyled">
+                                            <li><strong>Date:</strong>
+                                                <a title="" data-original-title="" href="#" id="osDate" data-type="date" data-viewformat="dd-mm-yyyy" data-pk="1" data-placement="left"></a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <span class="text-primary"><strong>Item Info.</strong></span><hr class="btn-danger">
+                                <div class="row table-responsive">
+                                    <table id="dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>Item Name</th>
+                                                <th>Batch No</th>
+                                                <th>Expiry Date</th>
+                                                <th>Rate (<span class="dcomet-c-s_currCode"></span>)</th>
+                                                <th>Mrp (<span class="dcomet-c-s_currCode"></span>)</th>
+                                                <th>Quantity</th>
+                                                <th>Uom</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td width="2%">
+                                                    <i id="del" class="ace-icon fa fa-minus hidden" onclick="delete_row(this)"></i>
+                                                </td>
+                                                <td id="itemaNameTd" width="24%">
+                                                    <input type="text" id="item_name" name="item_name" class="col-md-11 col-sm-11 col-xs-11"/>
+                                                    <input type="hidden" id="osdRID" name="osdRID" value=""/>
+                                                    <input type="hidden" id="SkuRID" name="SkuRID" value=""/>
+                                                </td>
+                                                <td id="batch_td" width="8%">
+                                                    <input id="osdBatchNo" name="osdBatchNo" class="col-md-12 col-sm-12 col-xs-12" />
+                                                </td>
+                                                <td id="expDate_td" width="8%">
+                                                    <input id="osdExpiryDate" name="osdExpiryDate" maxlength="10" class="col-md-12 col-sm-12 col-xs-12 jqueryUIToolTip" title="YYYY/MM Format"/>
+                                                </td>
+                                                <td width="8%">
+                                                    <input id="osdRate" name="osdRate" class="col-md-12 col-sm-12 col-xs-12" maxlength="9" onkeypress="return dcomethealth.validation.isDecimalKey(event)"/>
+                                                </td>
+                                                <td width="8%">
+                                                    <input type="text" id="osdMrp" name="osdMrp" maxlength="9" onkeypress="return dcomethealth.validation.isDecimalKey(event)" onBlur="mrpValidation('dyn_table', this)" class="col-md-12 col-sm-12 col-xs-12"/>
+                                                </td>
+                                                <td width="8%">
+                                                    <input type="text" id="osdQty" name="osdQty" maxlength="10" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" class="col-md-12 col-sm-12 col-xs-12" onBlur="calculate_rows_qty()"/>
+                                                </td>
+                                                <td width="8%">
+                                                    <select id="uom_name" name="uom_name" class="dcomet-c-s_ddict_uom-list col-md-10 col-sm-10 col-xs-10 jqueryUIToolTip" title="Select UOM">
+                                                    </select>
+                                                </td>
+                                                <td width="1%">                                
+                                                    <i class="ace-icon fa fa-plus red" onclick="insert_row('dyn_table', this)"></i>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>                   
+                                </div>
+                                <hr class="btn-danger">
+                                <div class="row">
+                                    <div class="col-md-6 col-sm-6 col-xs-6 pull-right">
+                                        <div class="row">
+                                            <label class="col-md-6 col-sm-6 col-xs-12 control-label">No.of Rows :</label>
+                                            <input id="row_count" name="row_count" value="0" type="text" class="col-md-4 col-sm-6 col-xs-12 readonlytext" readonly/><br>
+                                        </div><br>
+                                        <div class="row">  
+                                            <label class="col-md-6 col-sm-6 col-xs-12 control-label">Total Qty. :</label>
+                                            <input type="text" id="total_qty" name="total_qty" class="col-md-4 col-sm-6 col-xs-12 readonlytext" readonly value="0"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

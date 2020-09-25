@@ -1,0 +1,979 @@
+<script type="text/javascript">
+    var advanceOpen = 0;
+    function delete_row(elem) {
+        checkMinusCostPrice = 0;
+        var x = dynTableRow(elem);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+                if (!!dynTableGetNodeInRow(table.rows[1], 'serviceReqDRid').value && dynTableGetNodeInRow(table.rows[1], 'serviceReqDRid').value != "undefined") {
+                    dynTableGetNodeInRow(table.rows[1], 'minus').className = "";
+                } else {
+                    dynTableGetNodeInRow(table.rows[1], 'minus').className = "dct-icon fa fa-minus-circle";
+                }
+                dynTableGetNodeInRow(table.rows[1], "plus").className = "dct-icon fa fa-plus-square red";
+                checkMinusCostPrice = 1;
+                calculation();
+            }
+        }
+    }
+    $("#cheqdate").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    $("#expdate").datepicker({
+        format: 'yyyy/mm',
+        viewMode: "months",
+        minViewMode: "months"
+    });
+    function clearAll() {
+        document.getElementById("mrnSearch").value = '';
+        document.getElementById("PatientName").value = '';
+        document.getElementById("PatientAge").value = '';
+        document.getElementById("patientMobile").value = '';
+        document.getElementById("serviceName").value = '';
+        document.getElementById("qtyService").value = '';
+        document.getElementById("serviceDisc").value = '';
+        document.getElementById("MRP").value = '';
+        document.getElementById("netAmount").value = '';
+        document.getElementById("serviceGrossAmount").value = '';
+        document.getElementById("serviceDiscountAmount").value = '';
+        document.getElementById("round_off_amount").value = '';
+        document.getElementById("pmd_amount").value = '';
+        document.getElementById("total_pmd").value = '';
+    }
+    function insert_row(tableid, elem, val) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var serv = dynTableGetNodeInRow(table.rows[i + 1], 'serviceName').value;
+            var servQty = dynTableGetNodeInRow(table.rows[i + 1], 'qtyService').value;
+            if (serv == "") {
+                alert("Enter service name");
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'serviceName').focus();
+                }, 1);
+                return false;
+            }
+            if (servQty == "" || servQty == 0) {
+                alert("Enter qty");
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'qtyService').focus();
+                }, 1);
+                return false;
+            }
+        }
+        var newRow = dynTableAppendRow(tableid);
+        if (val == 0) {
+            dynTableGetNodeInRow(table.rows[1], "serviceName").readOnly = false;
+            dynTableGetNodeInRow(table.rows[1], "serviceDisc").readOnly = false;
+            dynTableGetNodeInRow(table.rows[1], "serviceReqDRid").value = '';
+            dynTableGetNodeInRow(table.rows[1], "serReqItemPrice").value = '';
+            dynTableGetNodeInRow(table.rows[1], "qtyService").disabled = false;
+            dynTableGetNodeInRow(table.rows[1], "MRP").disabled = false;
+        }
+        if (!!dynTableGetNodeInRow(table.rows[1], 'serviceReqDRid').value && dynTableGetNodeInRow(table.rows[1], 'serviceReqDRid').value != "undefined") {
+            dynTableGetNodeInRow(table.rows[1], 'minus').className = "";
+            dynTableGetNodeInRow(newRow, 'minus').className = "dct-icon fa fa-minus-circle";
+        } else {
+            dynTableGetNodeInRow(table.rows[1], 'minus').className = "dct-icon fa fa-minus-circle";
+        }
+        dynTableGetNodeInRow(newRow, "plus").className = "";
+        dynTableGetNodeInRow(table.rows[1], "serviceName").value = "";
+        dynTableGetNodeInRow(table.rows[1], "qtyService").value = 1;
+        dynTableGetNodeInRow(table.rows[1], "serReqItemPrice").value = '';
+        dynTableGetNodeInRow(table.rows[1], "serviceDisc").value = "";
+        dynTableGetNodeInRow(table.rows[1], "serviceRID").value = '0';
+        dynTableGetNodeInRow(table.rows[1], "bdGroupRID").value = '0';
+        dynTableGetNodeInRow(table.rows[1], "netAmount").value = "";
+        dynTableGetNodeInRow(table.rows[1], 'MRP').value = 0.00;
+        dcomethealth.CreateOPBill.autocomplete();
+    }
+    function isPercentaged(input) {
+        if (input.value < 0)
+            input.value = 0;
+        if (input.value > 100)
+            input.value = 100;
+    }
+    function popup() {
+        document.getElementById('discType').value = "";
+        document.getElementById('discName').value = "";
+        document.getElementById('discVal').value = "";
+        document.getElementById('DiscPercent').value = "";
+    }
+    function ClearName(row) {
+        if (dynTableGetNodeInRow(row, 'serviceName').value == "") {
+            dynTableGetNodeInRow(row, 'serviceRID').value = 0;
+        }
+    }
+    function tabKeyPress(e, event) {
+        var keyCode = event.keyCode || event.which;
+        if (keyCode == 9) {
+            insert_row('dyn_table', e, 0)
+        }
+    }
+    function calculation() {
+        var check = false, checkCostPrice = 0;
+        var due = 0;
+        var eligibleAmt = parseFloat($("#bhEligibleAmount").val());
+        var payerPaidAmount = !!$('#payerPaidAmount').val() ? $('#payerPaidAmount').val() : 0;
+        var paidAmount = !!$('#billHPaidAmount').val() ? $('#billHPaidAmount').val() : 0;
+        var gross = 0, net = 0, disc_total = 0;
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var item_name = dynTableGetNodeInRow(table.rows[i + 1], 'serviceName').value;
+            var qty_row = dynTableGetNodeInRow(table.rows[i + 1], 'qtyService').value;
+            var mrp = dynTableGetNodeInRow(table.rows[i + 1], 'MRP').value;
+            var serviceDisc = dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').value;
+            if (parseInt(qty_row) <= 0) {
+                alert("Enter positive qty");
+                dynTableGetNodeInRow(table.rows[i + 1], 'qtyService').value = 1;
+                return false;
+            }
+            if (!!item_name) {
+                if (mrp == '') {
+                    check = true;
+                    mrp = "";
+                }
+            }
+            if (qty_row == '') {
+                qty_row = 0;
+            }
+            if (mrp == '') {
+                mrp = 0;
+            }
+
+            if (serviceDisc == '') {
+                serviceDisc = 0;
+            }
+            var gross_row = parseFloat(qty_row) * parseFloat(mrp);
+            var disc_calc = 0, disTotalPercent = 0
+            disc_calc = parseFloat(gross_row) * (parseFloat(serviceDisc) / 100)
+            disc_total = parseFloat(disc_total) + parseFloat(disc_calc);
+            gross = parseFloat(gross) + parseFloat(gross_row);
+            var net_row = parseFloat(gross_row) - parseFloat(disc_calc);
+            if (net_row == "NaN") {
+                dynTableGetNodeInRow(table.rows[i + 1], 'netAmount').value = 0;
+            }
+            else {
+                dynTableGetNodeInRow(table.rows[i + 1], 'netAmount').value = net_row.toFixed(2);
+            }
+            net = parseFloat(net) + parseFloat(net_row);
+            var netRound = parseInt(net.toFixed(0)) - parseFloat(net);
+            if (dynTableGetNodeInRow(table.rows[i + 1], 'netAmount').value == "NaN") {
+                dynTableGetNodeInRow(table.rows[i + 1], 'netAmount').value = "";
+                dynTableGetNodeInRow(table.rows[i + 1], 'serviceName').value = "";
+            }
+            due = net - eligibleAmt - payerPaidAmount - paidAmount;
+            var dueRound = parseInt(due.toFixed(0)) - parseFloat(due);
+            var round = netRound + dueRound;
+        }
+        if (gross.toString() === "NaN") {
+            document.getElementById('serviceGrossAmount').value = "";
+        } else {
+            document.getElementById('serviceGrossAmount').value = gross.toFixed(2);
+        }
+        if (disc_total.toString() === "NaN") {
+            document.getElementById('serviceDiscountAmount').value = "";
+        } else {
+            document.getElementById('serviceDiscountAmount').value = disc_total.toFixed(2);
+        }
+        if (round.toString() === "NaN") {
+            document.getElementById('round_off_amount').value = "";
+        } else {
+            document.getElementById('round_off_amount').value = round.toFixed(2);
+        }
+        if (net.toString() === "NaN") {
+            document.getElementById('serviceNetAmount').value = "";
+        } else {
+            document.getElementById('serviceNetAmount').value = net.toFixed(0);
+        }
+        if (due.toString() === "NaN") {
+            document.getElementById('serviceDueAmount').value = "";
+        } else {
+            document.getElementById('serviceDueAmount').value = due.toFixed(0);
+        }
+        if (eligibleAmt.toString() === "NaN") {
+            document.getElementById('serviceEligibleAmount').value = "";
+        } else {
+            document.getElementById('serviceEligibleAmount').value = eligibleAmt;
+        }
+        if (check == true && checkCostPrice == 0 && checkMinusCostPrice != 1) {
+            checkCostPrice = 1;
+            checkMinusCostPrice = 0;
+            alert('Enter cost price');
+            return false;
+        }
+        checkMinusCostPrice = 0;
+    }
+    function Modepayment(val) {
+        var tab_id = document.getElementById('pmd_table');
+        var tab_length = tab_id.rows.length;
+        if (val == 1) {
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').value = 27;
+        } else if (val == 2) {
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').value = 28;
+        } else {
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').value = 29;
+        }
+    }
+    function insertRowPay(id, elem) {
+        var table = document.getElementById('pmd_table');
+        var table_length = table.rows.length;
+        if (dynTableGetNodeInRow(elem, 'pmd_amount').value == "" || dynTableGetNodeInRow(elem, 'pmd_amount').value == 0) {
+            alert("Enter amount");
+            return false;
+        }
+        var total = 0;
+        for (var i = 0; i < table_length; i++) {
+            total = total + dynTableGetNodeInRow(table.rows[i], 'pmd_amount').value;
+        }
+
+        if (total != "" && parseInt(total) != 0) {
+            var x = dynTableRow(elem);
+            dynTableCloneRow(id, x);
+            var newRow = dynTableAppendRow(id);
+            dynTableGetNodeInRow(newRow, "pmd_amount").value = 0;
+            dynTableGetNodeInRow(newRow, "cheqno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(newRow, "bankname").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(newRow, "cheqdate").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(newRow, "branchname").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(newRow, "cardtype").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(newRow, "approvalno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(newRow, "cardno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(newRow, "expdate").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(newRow, "approvalno").value = "";
+            dynTableGetNodeInRow(newRow, "bankname").value = "";
+            dynTableGetNodeInRow(newRow, "cardno").value = "";
+            dynTableGetNodeInRow(newRow, "expdate").value = "";
+            dynTableGetNodeInRow(newRow, "mobileno").value = "";
+            dynTableGetNodeInRow(newRow, "cheqno").value = "";
+            dynTableGetNodeInRow(newRow, "cheqdate").value = "";
+            dynTableGetNodeInRow(newRow, "branchname").value = "";
+            dynTableGetNodeInRow(newRow, "del").className = 'ace-icon fa fa-minus';
+        } else {
+            alert("Enter Valid Amount");
+            return false;
+        }
+    }
+    function deleterowPay(elem) {
+        var x = dynTableRow(elem);
+        dynTableDeleteRow(x);
+        pmdPaid(elem);
+    }
+    function changeDisc() {
+        var discValue = 0, net = 0, roundDisc = 0;
+        if ($('#DiscValue').val() == '' && $('#DiscPercent').val() == '') {
+            $('#DiscPercent').removeAttr('disabled');
+            $('#DiscValue').removeAttr('disabled');
+            var table = document.getElementById('dyn_table');
+            var table_length = table.rows.length;
+            for (var i = 0; i < table_length - 1; i++) {
+                dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').value = 0;
+                dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').readOnly = false;
+            }
+            calculation();
+        } else {
+            if ($('#DiscPercent').val() == '' && $('#DiscValue').val() != '') {
+                $('#DiscPercent').attr('disabled', 'disabled');
+                discValue = parseFloat($('#DiscValue').val());
+                if (discValue > parseFloat($('#serviceGrossAmount').val())) {
+                    alert("Entered amount is greater than Gross amount");
+                    $('#DiscValue').val("");
+                    return false;
+                } else {
+                    var table = document.getElementById('dyn_table');
+                    var table_length = table.rows.length;
+                    for (var i = 0; i < table_length - 1; i++) {
+                        dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').value = 0;
+                        dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').readOnly = true;
+                    }
+                    net = parseFloat($('#serviceGrossAmount').val()) - parseFloat($('#DiscValue').val());
+                    document.getElementById('serviceNetAmount').value = net.toFixed(0);
+                    document.getElementById('serviceDiscountAmount').value = parseFloat($('#DiscValue').val()).toFixed(0);
+                }
+            } else if ($('#DiscValue').val() == '' && $('#DiscPercent').val() != '') {
+                var table = document.getElementById('dyn_table');
+                var table_length = table.rows.length;
+                for (var i = 0; i < table_length - 1; i++) {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').value = 0;
+                    dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').readOnly = true;
+                }
+                $('#DiscValue').attr('disabled', 'disabled');
+                discValue = parseFloat($('#serviceGrossAmount').val()) * (parseFloat($('#DiscPercent').val()) / 100);
+                discValue = discValue.toFixed(2);
+                net = parseFloat($('#serviceGrossAmount').val()) - discValue;
+                $('#serviceNetAmount').val(net.toFixed(0));
+                $('#serviceDiscountAmount').val(discValue);
+            }
+        }
+    }
+    function advPaid(elem) {
+        if (parseFloat(dynTableGetNodeInRow(elem, 'adjustedAmt').value) > parseFloat(dynTableGetNodeInRow(elem, 'balanceAmt').value)) {
+            alert("Enter correct amount");
+            dynTableGetNodeInRow(elem, 'adjustedAmt').value = "";
+            setTimeout(function () {
+                dynTableGetNodeInRow(elem, 'adjustedAmt').focus();
+            }, 1);
+            var table1 = document.getElementById('pmd_table');
+            var table_length = table1.rows.length;
+            var payAmnt = 0;
+            for (var i = 0; i < table_length; i++) {
+                if (dynTableGetNodeInRow(table1.rows[i], 'pmd_amount').value != "") {
+                    payAmnt = parseInt(payAmnt) + parseInt(dynTableGetNodeInRow(table1.rows[i], 'pmd_amount').value);
+                }
+            }
+            document.getElementById('total_pmd').value = payAmnt;
+        }
+//        document.getElementById('total_pmd').value = 0.00;
+        var adv_amount_c = 0.00;
+        var table = document.getElementById('adv_table');
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            if (dynTableGetNodeInRow(table.rows[i + 1], 'adjustedAmt').value != "") {
+                adv_amount_c += parseFloat(dynTableGetNodeInRow(table.rows[i + 1], 'adjustedAmt').value);
+            }
+            if (parseFloat(adv_amount_c) > parseFloat($("#billHDueAmount").val())) {
+                alert("Due amount is less");
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'adjustedAmt').focus();
+                }, 1);
+                dynTableGetNodeInRow(table.rows[i + 1], 'adjustedAmt').value = "";
+                return false;
+            }
+        }
+        var table1 = document.getElementById('pmd_table');
+        var table_length = table1.rows.length;
+        var pmd_amount1 = 0;
+        var pmd_amount_c = 0;
+        for (var i = 0; i < table_length; i++) {
+            if (dynTableGetNodeInRow(table1.rows[i], 'pmd_amount').value != "NaN" && dynTableGetNodeInRow(table1.rows[i], 'pmd_amount').value != "") {
+                pmd_amount1 = dynTableGetNodeInRow(table1.rows[i], 'pmd_amount').value;
+                var curRid = dynTableGetNodeInRow(table1.rows[i], 'pay_mode_currency').value;
+                if (curRid != dcomethealth.sCurrencyRid) {
+                    $.each(currencyExchange, function (idx, cur) {
+                        if (cur.cerDispCurRid == curRid) {
+                            pmd_amount1 = dynTableGetNodeInRow(table1.rows[i], 'pmd_amount').value * cur.cerBaseToDispFactor;
+                            pmd_amount_c = parseInt(pmd_amount_c) + parseInt(pmd_amount1);
+                        }
+                    });
+                } else {
+                    pmd_amount_c = parseInt(pmd_amount_c) + parseInt(pmd_amount1);
+                }
+            }
+        }
+        var amyt = adv_amount_c + pmd_amount_c;
+        document.getElementById('total_pmd').value = (amyt).toFixed(2);
+        if (parseFloat($("#total_pmd").val()) > parseFloat($("#billHDueAmount").val())) {
+            alert("Due amount is less");
+            $("#total_pmd").val((pmd_amount_c.toFixed(2)));
+            setTimeout(function () {
+                dynTableGetNodeInRow(elem, 'adjustedAmt').focus();
+            }, 1);
+            dynTableGetNodeInRow(elem, 'adjustedAmt').value = "";
+//            return false;
+        }
+        var dueAmount = (!$("#billHDueAmount").val() || isNaN($("#billHDueAmount").val()) ? 0 : $("#billHDueAmount").val());
+        var totPaidAmount = (!$("#total_pmd").val() || isNaN($("#total_pmd").val()) ? 0 : $("#total_pmd").val());
+        var remainAmount = parseFloat(dueAmount) - parseFloat(totPaidAmount);
+        $("#remainAmount").val(remainAmount);
+    }
+    function openAdvance() {
+        advanceOpen = 1;
+        $('#viewAdvance').removeClass('hidden');
+        $('#openAdvance').addClass('hidden')
+        $('#closeAdvance').removeClass('hidden')
+    }
+    function closeAdvance() {
+        advanceOpen = 0;
+        $('#viewAdvance').addClass('hidden');
+        $('#openAdvance').removeClass('hidden');
+        $('#closeAdvance').addClass('hidden');
+        var table = document.getElementById('adv_table');
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            dynTableGetNodeInRow(table.rows[i + 1], 'adjustedAmt').value = 0.00;
+        }
+        pmdPaid(0);
+    }
+    function pmdPaid(elem) {
+        var checkvalue = 0
+        var tab_id = document.getElementById('pmd_table');
+        var tab_length = tab_id.rows.length;
+        var pmd_amount = 0, elemCheck = false;
+        if (elem != 0) {
+            elemCheck = true;
+            pmd_amount = dynTableGetNodeInRow(elem, 'pmd_amount').value;
+        } else {
+            pmd_amount = dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pmd_amount').value;
+        }
+        if (pmd_amount == 0) {
+            if (checkvalue == 0) {
+                checkvalue = 1;
+                if (parseFloat($("#total_pmd").val()) != parseFloat($("#billHDueAmount").val())) {
+                    alert("Enter amount");
+                    setTimeout(function () {
+                        if (elemCheck) {
+                            dynTableGetNodeInRow(elem, 'pmd_amount').focus();
+                        } else {
+                            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pmd_amount').focus();
+                        }
+                    }, 1);
+//                    return false;
+                }
+            }
+        }
+        var adjustAmountCheck = false;
+        if (parseInt(advanceOpen) == 1) {
+            var table = document.getElementById('adv_table');
+            var adv_amount_c = 0;
+            for (var i = 0; i < table.rows.length - 1; i++) {
+                if (dynTableGetNodeInRow(table.rows[i + 1], 'adjustedAmt').value != "") {
+                    adjustAmountCheck = true;
+                    adv_amount_c += parseFloat(dynTableGetNodeInRow(table.rows[i + 1], 'adjustedAmt').value);
+                }
+            }
+        } else {
+            adv_amount_c = 0;
+        }
+        var pmd_amount_c = adv_amount_c;
+        var table = document.getElementById('pmd_table');
+        var table_length = table.rows.length;
+        var pmd_amount1 = 0;
+        for (var i = 0; i < table_length; i++) {
+            pmd_amount1 = dynTableGetNodeInRow(table.rows[i], 'pmd_amount').value;
+            var curRid = dynTableGetNodeInRow(table.rows[i], 'pay_mode_currency').value;
+            if (curRid != dcomethealth.sCurrencyRid) {
+                $.each(currencyExchange, function (idx, cur) {
+                    if (cur.cerDispCurRid == curRid) {
+                        pmd_amount1 = dynTableGetNodeInRow(table.rows[i], 'pmd_amount').value * cur.cerBaseToDispFactor;
+                        pmd_amount_c = parseInt(pmd_amount_c) + parseInt(pmd_amount1);
+                    }
+                });
+            } else {
+                if (isNaN(pmd_amount1) || pmd_amount1 == "") {
+                    pmd_amount1 = 0;
+                }
+                pmd_amount_c = parseInt(pmd_amount_c) + parseInt(pmd_amount1);
+            }
+        }
+        var exCheck = false;
+        for (var i = 0; i < table_length; i++) {
+            var pmdAmount = dynTableGetNodeInRow(table.rows[i], 'pmd_amount').value;
+            if (!!dynTableGetNodeInRow(table.rows[i], 'pmd_amount').value) {
+                if (parseFloat(dynTableGetNodeInRow(elem, 'pmd_amount').value) == parseFloat(pmdAmount)) {
+                    if (parseFloat(pmdAmount) > parseFloat($("#billHDueAmount").val())) {
+                        exCheck = true;
+                        pmd_amount_c = pmd_amount_c - parseFloat(pmdAmount);
+                        $("#total_pmd").val("");
+                        dynTableGetNodeInRow(table.rows[i], 'pmd_amount').value = "";
+                        setTimeout(function () {
+                            dynTableGetNodeInRow(table.rows[i], 'pmd_amount').focus();
+                        }, 1);
+                    }
+                }
+            }
+            if (!adjustAmountCheck && dynTableGetNodeInRow(table.rows[i], 'pmd_amount').value == "") {
+//                $("#total_pmd").val("");
+            }
+        }
+        if (pmd_amount_c != 0) {
+            $("#total_pmd").val(pmd_amount_c);
+        }
+        if (parseFloat($("#total_pmd").val()) > parseFloat($("#billHDueAmount").val()) || exCheck) {
+            alert("Due amount is less");
+            if (!dynTableGetNodeInRow(elem, 'pmd_amount').value || isNaN(dynTableGetNodeInRow(elem, 'pmd_amount').value)) {
+                dynTableGetNodeInRow(elem, 'pmd_amount').value = 0;
+            }
+            if (isNaN(pmd_amount_c) || pmd_amount_c == "") {
+                pmd_amount_c = 0;
+            }
+            pmd_amount_c = parseFloat(pmd_amount_c) - parseFloat(dynTableGetNodeInRow(elem, 'pmd_amount').value);
+            dynTableGetNodeInRow(elem, 'pmd_amount').value = "";
+            $("#total_pmd").val(pmd_amount_c);
+            if (parseFloat($("#total_pmd").val()) > parseFloat($("#billHDueAmount").val())) {
+                $("#total_pmd").val("");
+                $("#remainAmount").val($("#billHDueAmount").val());
+            }
+            return false;
+        }
+        var checkPmd = false;
+        if (pmd_amount_c.toString() == 'NaN') {
+            checkPmd = true;
+            document.getElementById('total_pmd').value = "";
+        } else {
+            document.getElementById('total_pmd').value = pmd_amount_c.toFixed(2);
+        }
+        if (!checkPmd) {
+            var dueAmount = (!$("#billHDueAmount").val() || isNaN($("#billHDueAmount").val()) ? 0 : $("#billHDueAmount").val());
+            var totPaidAmount = (!$("#total_pmd").val() || isNaN($("#total_pmd").val()) ? 0 : $("#total_pmd").val());
+            var remainAmount = parseFloat(dueAmount) - parseFloat(totPaidAmount);
+            $("#remainAmount").val(remainAmount);
+        }
+        $("#total_pmd").val() == 0 ? $("#remainAmount").val($("#billHDueAmount").val()) : $("#remainAmount").val();
+    }
+    function openCardInfo(val) {
+        var tab_id = document.getElementById('pmd_table');
+        var tab_length = tab_id.rows.length;
+        if (dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').options.item(dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').selectedIndex).text == 'Card') {
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname").className = "col-md-12 col-sm-12 col-xs-12 jqueryUIToolTip";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname").title = "Bank Name";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname1").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqdate").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "branchname").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "mobileno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardtype").className = "col-md-12 col-sm-12 col-xs-12 jqueryUIToolTip";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardtype").title = "Card Type";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "approvalno").className = "col-md-12 col-sm-12 col-xs-12 jqueryUIToolTip";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "approvalno").title = "Approval No.";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardno").className = "col-md-12 col-sm-12 col-xs-12 jqueryUIToolTip";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardno").title = "Card No.";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "expdate").className = "col-md-12 col-sm-12 col-xs-12 jqueryUIToolTip";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "expdate").title = "Expired Date";
+        }
+        else if (dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').options.item(dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').selectedIndex).text == 'Cheque') {
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqno").className = "col-md-12 col-sm-12 col-xs-12";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname1").className = "col-md-12 col-sm-12 col-xs-12";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqdate").className = "col-md-12 col-sm-12 col-xs-12";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "branchname").className = "col-md-12 col-sm-12 col-xs-12";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "expdate").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardtype").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "approvalno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "mobileno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+        }
+        else if (dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').options.item(dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').selectedIndex).text == 'M-pesa') {
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqdate").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "branchname").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "expdate").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardtype").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "approvalno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "mobileno").className = "col-md-12 col-sm-12 col-xs-12";
+        } else {
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname1").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqdate").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "branchname").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardtype").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "approvalno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "expdate").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "mobileno").className = "col-md-12 col-sm-12 col-xs-12 hidden";
+        }
+    }
+    function openPayerInfo() {
+        var val = document.getElementById('patRefType').value;
+        if (parseInt(val) != 31) {
+            $("#payerInfo").removeClass("hidden").addClass("");
+        } else {
+            $("#payerInfo").removeClass("").addClass("hidden");
+        }
+    }
+    function eligibleAmountCalculation() {
+        if (!!$("#serviceNetAmount").val()) {
+            if ($("#bhEligibleAmount").val().match("%")) {
+                var amt = $("#bhEligibleAmount").val().replace('%', '');
+                if (amt > 100) {
+                    alert("Enter the valid percent");
+                    $("#bhEligibleAmount").val('');
+                    calculation();
+                    return false;
+                }
+                $("#bhEligibleAmount").val('');
+                var amtVal = parseFloat($("#serviceNetAmount").val()) * (parseFloat(amt) / 100);
+                $("#bhEligibleAmount").val(amtVal.toFixed(2));
+                calculation();
+            } else {
+                if (parseFloat($("#bhEligibleAmount").val()) > parseFloat($("#serviceNetAmount").val())) {
+                    alert('Eligible amount is greater than Net Amount');
+                    $("#bhEligibleAmount").val("");
+                    calculation();
+                } else {
+                    calculation();
+                }
+            }
+        }
+    }
+    function viewDiscount(value) {
+        if (value == 1) {
+            $("#discountHeader").addClass("hidden");
+            $("#viewDiscount").removeClass("hidden");
+        }
+        if (value == 2) {
+            $("#discountHeader").removeClass("hidden");
+            $("#viewDiscount").addClass("hidden");
+            $("#DiscType").val('');
+            $("#DiscValue").val('');
+            $("#DiscValue").val('');
+            $("#DiscName").val('');
+            calculation();
+        }
+    }
+</script>
+<div id="CreateOpBillHeader" class="panel panel-primary">
+    <div class="panel-heading"><h4 id="head_OP">Create OP Bill</h4>
+        <!--<div class="hidden-print">-->
+        <div class="pull-right edit-all-button-container" id="btns_state">
+            <a class="btn btn-primary" style="margin-top: 3px; margin-bottom: 3px;" onclick="dcomethealth.util.loadpage('CreateOPBill');
+                    dcomethealth.util.base_init()">Clear Form</a> <!--<span id="reset" class=""></span>-->
+            <a href="#" class="btn btn-primary" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" class="edit-all-button">Save</span></a>
+        </div>
+        <!--</div>-->
+    </div>
+    <br>
+    <div class="panel panel-default">
+        <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+            <div class="clearfix">
+                <div class="row col-md-6 col-sm-6 col-xs-6">
+                    <div>
+                        <input id="mrnSearch" type="text" name="mrnSearch" class="col-md-6 col-sm-6 col-xs-6 form-control" placeholder="UHID / Mobile No."/>
+                        <input id="billHRID" type="hidden" value=""/>
+                        <input id="patientRID" type="hidden" value=""/>
+                        <input id="receiptRID" type="hidden" value="0"/>
+                        <input id="receiptDRID" type="hidden" value="0"/>
+                        <input id="visitRID" type="hidden" value=""/>
+                        <input id="visitType" type="hidden" value=""/>
+                        <input id="advanceRID" type="hidden" value=""/>
+                        <input id="billNo" type="hidden" value=""/>
+                        <input id="bhPrintableBillNo" type="hidden" value=""/>
+                        <input id="bhPrefix" type="hidden" value=""/>
+                        <input id="bhType" type="hidden"/>
+                        <input id="bhIsDraft" type="hidden"/>
+                        <input id="serReqhProcedureRid" type="hidden"/>
+                        <input type="hidden" id="serReqhOpCheck" name="serReqhOpCheck" value=""/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <span class="text-primary"><strong>Patient Info</strong></span>
+                        <div class="row">
+                            <div class="row col-md-12 col-sm-12 col-xs-12">                              
+                                <div class="row col-md-4 col-sm-4 col-xs-4">
+                                    <span class="text-primary col-md-3 col-sm-3 col-xs-3">Name</span>
+                                    <input type="text" id="PatientName" name="PatientName" class="col-md-9 col-sm-9 col-xs-9" readonly="readonly" style="border: none"/>
+                                </div>
+                                <div class="row col-md-2 col-sm-2 col-xs-2">
+                                    <span class="text-primary col-md-4 col-sm-4 col-xs-4">Age</span>
+                                    <input type="text" id="PatientAge" name="PatientAge" class="col-md-8 col-sm-8 col-xs-8" readonly="readonly" style="border: none"/>
+                                </div>
+                                <div class="row col-md-3 col-sm-3 col-xs-3">
+                                    <span class="text-primary col-md-5 col-sm-5 col-xs-5">Gender</span>
+                                    <input id="PatientGender" name="PatientGender"  readonly="readonly" class="col-md-7 col-sm-7 col-xs-7 dcomet-c-s_ddict_gender-list jqueryUIToolTip" style="border: none"> 
+                                </div>
+                                <div class="row col-md-3 col-sm-3 col-xs-3">
+                                    <span class="text-primary col-md-5 col-sm-5 col-xs-5">Mobile</span>
+                                    <input type="text" id="patientMobile" name="patientMobile" class="col-md-7 col-sm-7 col-xs-7" readonly="readonly" style="border: none"/>
+                                </div>
+                            </div>
+                        </div><br>    
+                        <span class="text-primary"><strong>Payer Info</strong></span><hr class="btn-danger"> 
+                        <div class="row col-md-12 col-sm-12 col-xs-12">
+                            <div class=" row col-md-2 col-sm-4 col-xs-8">
+                                <label>Type</label>
+                                <div>
+                                    <select id="patRefType" name="patRefType" class=" form-control dcomet-c-s_ddict_payer_type-list jqueryUIToolTip col-md-12 col-sm-12 col-xs-12" title="Payer Type" onchange="dcomethealth.CreateOPBill.payerChange()">                                       
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="payerInfo" class="hidden"> 
+                                <div class="col-md-2 col-sm-4 col-xs-8">
+                                    <label>Payer Name</label>
+                                    <div><select class="col-md-12 col-sm-12 col-xs-12 form-control" id="payerName" name="payerName" onchange="dcomethealth.CreateOPBill.payerNameChange(1);"></select></div>
+                                </div>          
+                                <div id ="eAmountDiv" class="hidden col-md-2 col-sm-4 col-xs-8">
+                                    <label>Eligible Amt/Percentage</label>
+                                    <div><input class="col-md-12 col-sm-12 col-xs-12 form-control" id="bhEligibleAmount" onchange="eligibleAmountCalculation()" onkeypress="return dcomethealth.validation.isNumberKeyAndPercentage(event)" name="bhEligibleAmount"/></div>
+                                </div>          
+                                <div id ="approvalnoDiv" class="hidden col-md-2 col-sm-4 col-xs-8">
+                                    <label>Approval Number</label>
+                                    <div><input class="col-md-12 col-sm-12 col-xs-12 form-control" id="bhApprovalNo" name="bhApprovalNo"/></div>
+                                </div>          
+                            </div>
+                            <div id="doctorName" class=""> 
+                                <div class="col-md-2 col-sm-4 col-xs-8 pull-right">
+                                    <label>Doctor Name</label>
+                                    <div><select class="col-md-12 col-sm-12 col-xs-12 form-control"  onchange="dcomethealth.CreateOPBill.doctorChange()"  id="VDName" name="VDName"><option value="0"></option></select></div>
+                                </div>          
+                            </div>                    
+                        </div>
+                        <span class="text-primary"><strong>Service Info</strong></span><hr class="btn-danger"> 
+                        <div id="CustomerTable" class="col-md-12 col-sm-12 col-xs-12">
+                            <table id="dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Service Name</th>
+                                        <th>Qty</th>
+                                        <th id="discHead">Disc (%)</th>
+                                        <th>Cost (<span class="dcomet-c-s_currCode"></span>)</th>
+                                        <th>Nett (<span class="dcomet-c-s_currCode"></span>)</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="so_tbody"> 
+                                    <tr >
+                                        <td width="5%"><i id="minus" class="dct-icon fa fa-minus-circle " onclick="delete_row(this)"></i></td>
+                                        <td width="40%">
+                                            <input type="text" id="serviceName" name="serviceName" onchange="dcomethealth.CreateOPBill.autoIdSet(this)" onBlur="ClearName(this)"  onkeypress="return dcomethealth.validation.ValidateAlpha(event)" class="col-md-11 col-sm-11 col-xs-11"/><!--onBlur="calculation()"-->
+                                            <input type="hidden" id="serviceRID" name="serviceRID" value="0"/>
+                                            <input type="hidden" id="serviceReqDRid" name="serviceReqDRid" value="0"/>
+                                            <input type="hidden" id="bdGroupRID" name="bdGroupRID" value=""/>
+                                            <input type="hidden" id="serviceOrderRID" name="serviceOrderRID" value=""/>
+                                            <input type="hidden" id="serReqItemPrice" name="serReqItemPrice" value="">
+                                            <input type="hidden" id="packageItemRid" name="packageItemRid" value="0">
+                                            <input type="hidden" id="bdIsItemPackage" name="packageItemRid" value="0">
+                                            <input id="billDRID" type="hidden" value=""/>
+                                        </td>
+                                        <td width="10%">
+                                            <input id="qtyService" type="text" value = "1" maxlength="10" name="qtyService" onkeypress="return dcomethealth.validation.isNumberKey(event)" onchange="calculation()" autocomplete="off" class="col-md-12 col-sm-12 col-xs-12">
+                                        </td>
+                                        <td width="10%">
+                                            <input type="text" id="serviceDisc" name="serviceDisc" style="text-align:right;" onkeypress="return dcomethealth.validation.isDecimalKey(event)" onchange="calculation()" onblur="dcomethealth.validation.isPercentaged(this)" class="col-md-12 col-sm-12 col-xs-12"/>
+                                        </td>
+                                        <td width="10%">
+                                            <input type="text" id="MRP" name="MRP" maxlength="9" style="text-align:right;" onkeypress="return dcomethealth.validation.isDecimalKey(event)" onchange="calculation()" class="col-md-12 col-sm-12 col-xs-12"/>
+                                        </td>
+                                        <td width="20%">
+                                            <input type="text" id="netAmount" readonly="readonly" style="text-align:right;" name="netAmount" onBlur="calculation()" class="col-md-12 col-sm-12 col-xs-12"/>
+                                        </td>
+                                        <td width="5%"><i id="plus" class="dct-icon fa fa-plus-square red " onclick="insert_row('dyn_table', this, 1)"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>                           
+                        </div><br>
+                        <div id="discountHeader" class="row col-md-12 col-sm-12 col-xs-12">     
+                            <a data-toggle="modal">
+                                <label onclick="viewDiscount(1)" style="cursor: pointer">View Discount</label>
+                            </a>
+                        </div>
+                        <div id="viewDiscount" class="alert alert-success col-md-12 col-sm-12 col-xs-12 hidden">
+                            <button type="button"  id="closeDiscount" class="close"  onclick="viewDiscount(2);">&times;</button>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Discount Type</label>
+                                <select id="DiscType" name="DiscType" class='dcomet-c-s_ddict_discount_type-list jqueryUIToolTip' title="Discount Type"></select>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Discount Name</label>
+                                <input id="DiscName" name="DiscName"/>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Discount Value (or)</label>
+                                <input id="DiscValue" name="DiscValue"  onkeypress="return dcomethealth.validation.isNumberKey(event, this)" onchange="changeDisc()"/> 
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Discount Percentage</label>
+                                <input id="DiscPercent" name="DiscPercent" maxlength="3" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" onBlur="changeDisc()" onchange="dcomethealth.validation.isPercentaged(this)"/>
+                            </div>
+                        </div>                           
+                        <div id="billInformation" class="alert alert-info pull-right col-md-12 col-sm-12 col-xs-12">                                
+                            <div id="normalPaymentDiv" class="row">
+                                <div class="col-md-2 col-sm-2 col-xs-2">
+                                    <div class=""><strong>Gross </strong>(<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <input type="hidden" id="row_count_lens" name="row_count_lens" />
+                                        <input type="hidden" id="total_qty_lens" name="total_qty_lens" />
+                                        <output id="serviceGrossAmount" name="serviceGrossAmount" class="col-md-6 col-sm-6 col-xs-6"/>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 col-sm-2 col-xs-2">
+                                    <div class=""><strong>Discount </strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <output id="serviceDiscountAmount" name="serviceDiscountAmount" class="col-md-6 col-sm-6 col-xs-6"/>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 col-sm-2 col-xs-2">
+                                    <div class=""><strong>Round Off </strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <output id="round_off_amount" name="round_off_amount" class="col-md-6 col-sm-6 col-xs-6"/>
+                                    </div>
+                                </div>
+                                <div class="col-md-2  col-sm-2 col-xs-2">
+                                    <div class=""><strong>Nett </strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <output id="serviceNetAmount" name="serviceNetAmount" class="col-md-6 col-sm-6 col-xs-6"/>
+                                    </div>
+                                </div>     
+                                <div id= "eligibleAmtDiv" class="hidden row col-md-2 col-sm-2 col-xs-2">
+                                    <div class="row"><strong>Payer Amount </strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <output id="serviceEligibleAmount" name="serviceEligibleAmount" class="col-md-6 col-sm-6 col-xs-6"/>
+                                        <input type="hidden" id="payerPaidAmount"/>
+                                    </div>
+                                </div>                               
+                                <div id="dueAmtDiv" class="hidden col-md-2  col-sm-2 col-xs-2">
+                                    <div class=""><strong>Patient Due </strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <output id="serviceDueAmount" name="serviceDueAmount" class="col-md-6 col-sm-6 col-xs-6"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--                            <div id="payerPaymentDiv" class="row hidden">
+                                                            <div class="col-md-2  col-sm-2 col-xs-2">
+                                                                <div class=""><strong>Gross </strong>(<span class="dcomet-c-s_currCode"></span>)</div>
+                                                                <div class="">
+                                                                    <input type="hidden" id="row_count_lens" name="row_count_lens" />
+                                                                    <input type="hidden" id="total_qty_lens" name="total_qty_lens" />
+                                                                    <output id="serviceGrossAmount" name="serviceGrossAmount" class="col-md-6 col-sm-6 col-xs-6"/>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-2  col-sm-2 col-xs-2">
+                                                                <div class=""><strong>Discount </strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                                                <div class="">
+                                                                    <output id="serviceDiscountAmount" name="serviceDiscountAmount" class="col-md-6 col-sm-6 col-xs-6"/>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-2  col-sm-2 col-xs-2">
+                                                                <div class=""><strong>Round Off </strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                                                <div class="">
+                                                                    <output id="round_off_amount" name="round_off_amount" class="col-md-6 col-sm-6 col-xs-6"/>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-2  col-sm-2 col-xs-2">
+                                                                <div class=""><strong>Nett </strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                                                <div class="">
+                                                                    <output id="serviceNetAmount" name="serviceNetAmount" class="col-md-6 col-sm-6 col-xs-6"/>
+                                                                </div>
+                                                            </div>                               
+                                                            <div class="col-md-2  col-sm-2 col-xs-2">
+                                                                <div class=""><strong>Eligible </strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                                                <div class="">
+                                                                    <output id="serviceEligibleAmount" name="serviceEligibleAmount" class="col-md-6 col-sm-6 col-xs-6"/>
+                                                                </div>
+                                                            </div>                               
+                                                            <div class="col-md-2  col-sm-2 col-xs-2">
+                                                                <div class=""><strong>Due </strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                                                <div class="">
+                                                                    <output id="serviceDueAmount" name="serviceDueAmount" class="col-md-6 col-sm-6 col-xs-6"/>
+                                                                </div>
+                                                            </div>                               
+                                                        </div>-->
+                        </div>
+                    </div>
+                    <div id="paymentDiv" class="">
+                        <div class="row col-md-12 col-sm-12 col-xs-12">
+                            <a data-toggle="modal">
+                                <label id="openAdvance" style="cursor:pointer" class="hidden" onclick="openAdvance()">Adjust Advance</label>
+                                <label id="closeAdvance" style="cursor:pointer" class="hidden" onclick="closeAdvance();">Close Adjust Advance </label>                                
+                            </a>
+                        </div>
+                        <div id="viewAdvance" class="col-md-12 col-sm-12 col-xs-12 hidden">                            
+                            <!--<div class="col-md-12 col-sm-12 col-xs-12">-->
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+
+                                <table id="adv_table" class="table " width="100%" border="0" cellspacing="0" cellpadding="0">
+                                    <thead>
+                                        <tr>                                            
+                                            <th>Advance No.</th>
+                                            <th>Adjust Amount</th>
+                                            <th>Advance Amount</th>
+                                            <th>Balance Amount</th>
+                                            <th id="adjustAmount">Adjusted Amount</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead> 
+                                    <tbody id="advance_tbody"> </tbody>
+                                </table>
+
+
+
+                                <!--<div class="panel panel-danger">-->
+                                <!--<div class="panel-heading">-->
+                                <!--                                    <h4>Advance Details</h4>
+                                                                    <div class="options">
+                                                                        <a href="#"><i class="fa fa-cogs"></i></a>
+                                                                    </div>-->
+                                <!--</div>-->                     
+                                <!--                                <div class="panel-body">
+                                                                    <div id="accordioninpanel" class="">
+                                                                    </div>
+                                                                </div>                                              -->
+                                <!--</div>--> 
+                            </div>
+                            <!--</div>-->
+                        </div>
+                        <div id="paymentHeaderDiv" class="">
+                            <span class="text-primary"><strong>Payment Details</strong></span>
+                        </div><br>
+                        <div id="paymentDetailsDiv" class="alert alert-info pull-right col-md-12 col-sm-12 col-xs-12">
+                            <div class="">
+                                <div id="paidDiv" class="col-xs-4 col-md-4 col-sm-4 hidden">
+                                    <span class=""><strong>Paid</strong> (<span class="dcomet-c-s_currCode"></span>)</span>                                   
+                                    <input id="billHPaidAmount" name="billHPaidAmount" readonly style="border: none;text-align:right;">
+                                    <input type="hidden" id="billHPaidAmt" name="billHPaidAmt" style="border: none">
+                                </div>
+                                <div id="dueDiv" class="col-xs-4 col-md-3 col-sm-4 hidden">
+                                    <span class=""><strong>Due</strong> (<span class="dcomet-c-s_currCode"></span>)</span>                                    
+                                    <input id="billHDueAmount" name="billHDueAmount" readonly style="border: none;text-align:right;">                            
+                                </div>
+                                <div class="col-xs-1 col-md-1 col-sm-1 hidden"><p></p></div>
+                                <div id="remainAmountDiv" class="row col-xs-4 col-md-4 col-sm-4 hidden">
+                                    <span class=""><strong>Remaining Balance</strong> (<span class="dcomet-c-s_currCode"></span>)</span>                                    
+                                    <input id="remainAmount" class="row pull-right" name="remainAmount" readonly style="border: none;text-align:right;">                            
+                                </div>
+                                <div class="col-md-12 col-sm-12 col-xs-12">                                
+                                    <div id="paymentMode" class="row col-md-12 col-sm-12 col-xs-12">
+                                        <!--                                       <hr class="btn-danger">-->
+                                        <table id="pmd_table" class="table table-condensed table-hover" width="100%" border="0" cellspacing="0" cellpadding="0">
+                                            <tr>
+                                                <td width="2%"><i id="del" class="ace-icon fa fa-minus hidden" onclick="deleterowPay(this)"></i></td>
+                                                <td width="5%" onclick="">
+                                                    <div class="btn-group">
+                                                        <select id="pay_mode_ddict" name="pay_mode_ddict" class="dcomet-c-s_ddict_payment_mode-list" onchange="openCardInfo(this)" >
+                                                        </select>
+                                                    </div>
+                                                </td>
+                                                <td width="8%" id="td_1"><select id="cardtype" name="cardtype" class="dcomet-c-s_ddict_credit_card_type-list col-md-12 col-sm-12 col-xs-12 hidden" ></select><input class="col-md-12 col-sm-12 col-xs-12 hidden" id="cheqno" name="cheqno" maxlength="20" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" placeholder="Cheque No"/></td>
+                                                <td width="7%" id="td_2"><input class="col-md-12 col-sm-12 col-xs-12 hidden" id="bankname" name="bankname" placeholder="Bank Name" onkeypress="return dcomethealth.validation.ValidateAlpha(event)"/> <input class="col-md-12 col-sm-12 col-xs-12 hidden" id="bankname1" name="bankname1" placeholder="Bank Name" maxlength="30" onkeypress="return dcomethealth.validation.ValidateAlpha(event)"/></td>
+                                                <td width="10%" id="td_3"><input class="col-md-12 col-sm-12 col-xs-12 hidden" id="approvalno" name="approvalno" placeholder="Approval No." maxlength="20" onkeypress="return dcomethealth.validation.isNumberKey(event)"/><input class="col-md-12 col-sm-12 col-xs-12 hidden jqueryUIToolTip"  title="DD-MM-YYYY Format" id="cheqdate" name="cheqdate" placeholder="Cheque Date" maxlength="10" onkeypress="dcomethealth.validation.ValidateDateEntry(event)"/></td>
+                                                <td width="10%" id="td_4"><input class="col-md-12 col-sm-12 col-xs-12 hidden" id="cardno" name="cardno" placeholder="Card No" maxlength="20" onkeypress="return dcomethealth.validation.isNumberKey(event, this)"/><input class="col-md-12 col-sm-12 col-xs-12 hidden" id="branchname" name="branchname" placeholder="Branch Name" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" /></td>
+                                                <td width="8%" id="td_5"><input class="col-md-12 col-sm-12 col-xs-12 hidden jqueryUIToolTip"  title="YYYY-MM Format" id="expdate" name="expdate" placeholder="Exp Date" maxlength="9" onkeypress="return dcomethealth.validation.ValidateDateEntry(event)"/></td>
+                                                <td width="8%" id="td_6"><input class="col-md-12 col-sm-12 col-xs-12 hidden" id="mobileno" name="mobileno" maxlength="12" onkeypress="return dcomethealth.validation.isNumberKey()(this)" placeholder="Mobile No"/><input class="col-md-12 col-sm-12 col-xs-12 hidden" id="mobileno" name="mobileno" maxlength="10" onkeypress="return dcomethealth.validation.validateAlpha()" placeholder="Mobile No"/></td>
+                                                <td width="5%" onclick=""><div class="btn-group">
+                                                        <select id="pay_mode_currency" name="pay_mode_currency" onchange="pmdPaid(this)" >
+                                                        </select></div>
+                                                </td>
+                                                <td width="15%"><input class="input-small width-100" id="pmd_amount" name="pmd_amount" maxlength="9" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" type="text" style="text-align: right" onchange="pmdPaid(this)"/></td>
+                                                <td width="2%"><i class="ace-icon fa fa-plus" onclick="insertRowPay('pmd_table', this)"></i></td>
+                                            </tr>
+                                        </table>
+                                    </div>                     
+                                </div>
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <table class="table table-condensed table-hover" width="100%" border="0" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td width="1%"></td>
+                                            <td width="4%"></td>
+                                            <td width="7%"></td>
+                                            <td width="7%"></td>
+                                            <td width="10%"></td>
+                                            <td width="10%"></td>
+                                            <td width="6%"></td>
+                                            <td width="8%"></td>
+                                            <td width="10%"> <span class=""><strong>Total</strong> (<span class="dcomet-c-s_currCode"></span>)</span></td>
+                                            <td width="15%"><input id="total_pmd" class="" name="total_pmd" readonly style="border: none;text-align:right;"/></td>
+                                            <td width="2%"></td>
+                                        </tr>
+                                    </table>
+                                </div>                                              
+                            </div> 
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

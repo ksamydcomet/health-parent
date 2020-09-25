@@ -1,0 +1,425 @@
+package com.dcomet.health.service.business.impl;
+
+import com.dcomet.module.billing.service.impl.DCometBillingServiceImpl;
+import com.dcomet.module.billing.dao.data.BillDData;
+import com.dcomet.module.billing.dao.data.BillHData;
+import com.dcomet.module.domain.AutoNumber;
+import com.dcomet.fw.domain.Base;
+import com.dcomet.module.billing.domain.BillH;
+import com.dcomet.module.billing.domain.ReceiptH;
+import com.dcomet.module.billing.domain.ReceiptHSearchRequest;
+import com.dcomet.health.domain.SalesH;
+import com.dcomet.health.domain.ServiceOrder;
+import com.dcomet.fw.exception.DcometDAOException;
+import com.dcomet.fw.exception.DcometServiceException;
+import com.dcomet.health.caching.CacheUtil;
+import com.dcomet.health.domain.HealthBillH;
+import com.dcomet.health.domain.Patient;
+import com.dcomet.health.domain.PatientSearchRequest;
+import com.dcomet.health.domain.PayerMaster;
+import com.dcomet.health.domain.PayerMasterSearchRequest;
+import com.dcomet.health.domain.ServiceOrderSearchRequest;
+import com.dcomet.module.billing.domain.AdvanceDetails;
+import com.dcomet.module.billing.domain.BillD;
+import com.dcomet.health.service.business.AdvanceDetailsService;
+import com.dcomet.health.service.business.BillingService;
+import com.dcomet.health.service.business.ClinicalService;
+import com.dcomet.health.service.business.DataDictionaryService;
+import com.dcomet.health.service.business.MasterService;
+import com.dcomet.health.service.business.PharmacyService;
+import com.dcomet.health.service.business.ReceiptService;
+import com.dcomet.health.service.business.ServiceOrderService;
+import com.dcomet.health.service.business.ServiceRequestService;
+import com.dcomet.module.billing.dao.data.PaymentModeDetailsData;
+import com.dcomet.module.billing.domain.BillHSearchRequest;
+import com.dcomet.module.billing.domain.PaymentModeDetails;
+import com.dcomet.module.billing.domain.PaymentModeSearchRequest;
+import com.dcomet.module.domain.Ddict;
+import com.dcomet.module.domain.DdictSearchRequest;
+import com.dcomet.module.domain.Entity;
+import com.dcomet.module.domain.User;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.apache.commons.collections.CollectionUtils;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ *
+ * @author KS
+ */
+@Service("billingService")
+@Transactional(propagation = Propagation.SUPPORTS)
+public class BillingServiceImpl extends DCometBillingServiceImpl implements BillingService {
+
+    @Autowired
+    @Qualifier("advanceDetailsService")
+    AdvanceDetailsService advanceDetailsService;
+
+    @Autowired
+    @Qualifier("clinicalService")
+    ClinicalService clinicalService;
+
+    @Autowired
+    @Qualifier("pharmacyService")
+    PharmacyService pharmacyService;
+
+    @Autowired
+    @Qualifier("receiptService")
+    ReceiptService receiptService;
+
+    @Autowired
+    @Qualifier("serviceOrderService")
+    ServiceOrderService serviceOrderService;
+
+    @Autowired
+    @Qualifier("serviceRequestService")
+    ServiceRequestService serviceRequestService;
+
+    @Autowired
+    @Qualifier("dataDictionaryService")
+    private DataDictionaryService dataDictionaryService;
+
+    @Autowired
+    @Qualifier("masterService")
+    public MasterService masterService;
+
+    /**
+     *
+     * @param billH
+     * @return
+     */
+    private AutoNumber generateAutoNumber(BillH billH) {
+        AutoNumber autoNumber = null;
+        if (billH.getId() == null) {
+
+            String billcategory = "";
+            if (billH.getBhType() == 1) {
+                billcategory = "OP";
+            } else if (billH.getBhType() == 2) {
+                billcategory = "IP";
+            } else if (billH.getBhType() == 3) {
+                billcategory = "PHA";
+            }
+//                    else if (Objects.equals(billH.getBhType(), OpBill)) {
+//                        billcategory = "DRAFT/OP";
+//                    } else if (Objects.equals(billH.getBhType(), IpBill)) {
+//                        billcategory = "DRAFT/IP";
+//                    } else if (Objects.equals(billH.getBhType(), pharmacy)) {
+//                        billcategory = "DRAFT/PHA";
+//                    }
+            autoNumber = dataDictionaryService.getAutoNumberByCategory(billcategory, billH.getEntityRid());
+            dataDictionaryService.saveAutoNumberIncrement(billcategory, billH.getEntityRid());
+        }
+        return autoNumber;
+    }
+
+    /**
+     *
+     * @param billH
+     * @param billHData
+     * @param billD
+     * @param billDData
+     */
+    private void createServiceOrder(BillH billH, BillHData billHData, List<BillDData> billDDataList) {
+        Integer soState = 0;
+        for (BillDData billDData : billDDataList) {
+            ServiceOrder serviceOrder = new ServiceOrder();
+            serviceOrder.setCurrentObject(billH);
+            serviceOrder.setSoAgainstUnitRID(billH.getUnitRid());
+            serviceOrder.setSoOrderingUnitRID(billH.getUnitRid());
+            serviceOrder.setSoPatientRID(billHData.getBhPatientRID());
+            serviceOrder.setSoVisitRID(billHData.getBhPatientVisitRID());
+            serviceOrder.setSoItemID(billDData.getBdItemRID());
+            serviceOrder.setSoItemName(billDData.getBdItemName());
+            serviceOrder.setSoQty(billDData.getBdQty());
+
+            ServiceOrderSearchRequest serviceOrderSearchRequest = new ServiceOrderSearchRequest();
+            List<Criterion> criterionList = new ArrayList<>();
+            criterionList.add(Restrictions.eq("id", billDData.getBdItemOrderRID()));
+            serviceOrderSearchRequest.setSearchCriterionList(criterionList);
+            List<ServiceOrder> serviceOrderList = serviceOrderService.getServiceOrder(serviceOrderSearchRequest, false);
+            if (CollectionUtils.isNotEmpty(serviceOrderList)) {
+                soState = serviceOrderList.get(0).getSoState();
+            }
+            if (soState != 2) {
+                if (billDData.getBdItemOrderRID() != null) {
+                    serviceOrder.setId(billDData.getBdItemOrderRID());
+                    serviceOrderService.save(serviceOrder, billDData.getBdItemOrderRID(), "SERVICE_ORDER", "BUILTIN_ACTION");
+                } else {
+                    Integer soRid = serviceOrderService.save(serviceOrder, IDRAFT, "SERVICE_ORDER", "BUILTIN_ACTION");
+                    if (CollectionUtils.isNotEmpty(billH.getReceiptH())) {
+                        serviceOrder.setId(soRid);
+                        serviceOrderService.save(serviceOrder, soRid, "SERVICE_ORDER", "BUILTIN_ACTION");
+                    }
+                    billDData.setBdItemOrderRID(soRid);
+                    billingDAO.saveBillD(Arrays.asList(new BillDData[]{billDData}));
+                }
+            }
+        }
+    }
+
+    private void cancelServiceOrder(BillH billH, BillH dbBillH, BillD billD) {
+        ServiceOrder serviceOrder = new ServiceOrder();
+        serviceOrder.setCurrentObject(billH);
+        serviceOrder.setSoOrderingUnitRID(billH.getUnitRid());
+
+        serviceOrder.setSoPatientRID(dbBillH.getBhPatientRID());
+        serviceOrder.setSoVisitRID(dbBillH.getBhPatientVisitRID());
+        serviceOrder.setId(billD.getBdItemOrderRID());
+        serviceOrder.setSoItemID(billD.getBdItemRID());
+        serviceOrder.setSoItemName(billD.getBdItemName());
+        serviceOrder.setSoQty(billD.getBdQty());
+        serviceOrderService.save(serviceOrder, serviceOrder.getId(), "SERVICE_ORDER", "CANCEL_SERVICE_ORDER");
+    }
+
+    private void cancelReceipt(BillH billH, BillHData billHData) {
+        Float totalPaidAmt = 0.00f;
+        if (billHData.getBhPaidAmount() == null) {
+            billHData.setBhPaidAmount(0.00f);
+        }
+        if (CollectionUtils.isNotEmpty(billH.getReceiptH())) {
+            for (ReceiptH receiptH : billH.getReceiptH()) {
+                if (receiptH.getId() != null) {
+                    totalPaidAmt = receiptH.getRhPaidAmount();
+                    receiptH.setCurrentObject(billH);
+                    receiptService.save(receiptH, receiptH.getId(), "RECEIPT", "CANCEL_RECEIPT");
+                    billHData.setBhPaidAmount(billHData.getBhPaidAmount() - totalPaidAmt);
+                    saveBillHByCondtion(billHData);
+                }
+            }
+        } else {
+            Integer currentState = getCurrentState(billHData.getId());
+            Integer nxtConState = getBOStateTransitionConfig("Bill_Cancelled", currentState).getBostcBostToStateIndex();
+            billHData.setBhState(nxtConState);
+            billHData.setBhStatus(nxtConState);
+            billHData.setBhDueAmount(0.00f);
+            billingDAO.saveBillH(Arrays.asList(billHData));
+
+            ReceiptHSearchRequest receiptHSearchRequest = new ReceiptHSearchRequest();
+            receiptHSearchRequest.setSearchCriterionList(Arrays.asList(new Criterion[]{Restrictions.eq("rhBhRID", billH.getId())}));
+            List<ReceiptH> receiptHList = getReceiptH(receiptHSearchRequest, false);
+
+            if (CollectionUtils.isNotEmpty(receiptHList)) {
+                for (ReceiptH receiptH : receiptHList) {
+                    receiptH.setCurrentObject(billH);
+                    totalPaidAmt += receiptH.getRhPaidAmount();
+                    receiptService.save(receiptH, receiptH.getId(), "RECEIPT", "CANCEL_RECEIPT");
+                }
+            }
+        }
+        if (totalPaidAmt != 0) {
+            createAdvance(billH, billHData, totalPaidAmt);
+        }
+
+    }
+
+    private void createAdvance(BillH billH, BillHData billHData, Float totalPaidAmt) {
+        // -----CreateAdvance-------
+        AdvanceDetails advanceDetails = new AdvanceDetails();
+        advanceDetails.setAdType(0);
+        advanceDetails.setAdRegDate(billH.getCurrentDateByUTZ());
+        advanceDetails.setAdRefRID(billHData.getId());
+        advanceDetails.setAdPayerRID(billHData.getBhPatientRID());
+        advanceDetails.setAdPayerName(billHData.getBhPatientName());
+        advanceDetails.setAdPayerNo(billHData.getBhPatientNo());//PayerRID or PatientRID
+        advanceDetails.setAdAmount(totalPaidAmt);
+        advanceDetails.setAdAdjustedAmount(0f);
+        advanceDetails.setAdRefundedAmount(0f);
+        advanceDetails.setAdBalanceAmount(totalPaidAmt);
+        advanceDetails.setAdCreationMode(1);
+        advanceDetails.setCurrentObject(billH);
+        advanceDetailsService.save(advanceDetails, IDRAFT, "ADVANCE", "CREATE_ADVANCE");
+    }
+
+    /**
+     *
+     * @param billH
+     * @param billHData
+     */
+    private void createOrCancelReceipt(BillH billH, BillHData billHData) {
+        for (ReceiptH receiptH : billH.getReceiptH()) {
+            receiptH.setCurrentObject(billH);
+            receiptH.setRhPayerRID(billHData.getBhPayerRID());
+            if (receiptH.getId() != null) {
+                receiptService.save(receiptH, receiptH.getId(), "RECEIPT", "CANCEL_RECEIPT");
+                saveBillHByCondtion(billHData);
+            } else if (billH.getBhPaidAmount() != 0) {
+                for (int i = 0; i < receiptH.getReceiptD().size(); i++) {
+                    receiptH.getReceiptD().get(i).setRdBillRID(billHData.getId());
+                }
+                receiptH.setRhBhRID(billHData.getId());
+                receiptService.save(receiptH, 0, "RECEIPT", "BUILTIN_ACTION");
+                saveBillHByCondtion(billHData);
+            }
+        }
+    }
+
+    /**
+     *
+     * @param billH
+     * @param billHData
+     */
+    private void saveSalesH(BillH billH, BillHData billHData) {
+        HealthBillH healthBillH = (HealthBillH) billH;
+        if (CollectionUtils.isNotEmpty(healthBillH.getSalesH())) {
+            for (SalesH salesH : healthBillH.getSalesH()) {
+                salesH.setSalBhRID(billHData.getId());
+                salesH.setSalBillNo(billHData.getBhBillNo());
+                salesH.setSalBillDate(billH.getCreatedDateTime());
+                salesH.setSalDueAmount(billHData.getBhDueAmount());
+                salesH.setCurrentObject(billH);
+                pharmacyService.saveSalesH(salesH, true);
+            }
+        }
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public Integer save(Base object, Integer nextState, String actionCode) {
+        BillH billH = (BillH) object;
+        BillHData billHData = new BillHData();
+        try {
+            if (null != actionCode) {
+                switch (actionCode) {
+                    case "BUILTIN_ACTION":
+                    case "COLLECT_PAYMENT":
+                        // Generate Auto Number
+                        AutoNumber autoNumber = generateAutoNumber(billH);
+                        if (autoNumber != null) {
+                            billH.setBhBillNo(autoNumber.getAutoNumber());
+                            billH.setBhPrefix(autoNumber.getAutoPrefix());
+                            billH.setBhPrintableBillNo(autoNumber.getAutoNumber());
+                            billH.setBhBillDate(billH.getCurrentDateByUTZ());
+
+                        }
+                        if ("BUILTIN_ACTION".equals(actionCode)) {
+                            billH.setBhState(nextState);
+                            billH.setBhStatus(nextState);
+                        } else {
+                            billH.setBhState(getCurrentState(billH.getId()));
+                            billH.setBhStatus(getCurrentState(billH.getId()));
+                        }
+                        billH.setBhDueAmount(billH.getBhNetAmount() - billH.getBhPaidAmount());
+                        // Save H
+                        billHData = billingAdapter.convertBillHToBillHData(billH);
+                        billingDAO.saveBillH(Arrays.asList(billHData));
+                        billH.setId(billHData.getId());
+
+                        // ServiceOrder + BillDList<BillDData> billDDataList = new ArrayList<>();
+                        // Save D
+                        if (CollectionUtils.isNotEmpty(billH.getBillD())) {
+                            List<BillDData> billDDataList = billingAdapter.convertBillDToBillDData(billH.getBillD());
+                            for (BillDData billDData : billDDataList) {
+                                billDData.setBillHData(billHData);
+                            }
+                            createServiceOrder(billH, billHData, billDDataList);
+                            billingDAO.saveBillD(billDDataList);
+                        }
+                        saveSalesH(billH, billHData);
+                        if (CollectionUtils.isNotEmpty(billH.getReceiptH())) {
+                            createOrCancelReceipt(billH, billHData);
+                        }
+                        break;
+                    case "CANCEL_BILL":
+                        BillH dbBillH = getBillH(billH.getId(), true);
+                        for (BillD billD : dbBillH.getBillD()) {
+                            cancelServiceOrder(billH, dbBillH, billD);
+                        }
+                        billHData = billingAdapter.convertBillHToBillHData(dbBillH);
+                        cancelReceipt(billH, billHData);
+                        return dbBillH.getId();
+                }
+            }
+        } catch (DcometDAOException e) {
+            throw new DcometServiceException(e);
+        } catch (DcometServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new DcometServiceException(e);
+        }
+        return billHData.getId();
+    }
+
+    private void saveBillHByCondtion(BillHData billHData) {
+        String bostcCondtion = billHData.getBhNetAmount().equals(billHData.getBhPaidAmount()) ? "Bill_amount=Collected_amount" : "Bill_amount>Collected_amount";
+        Integer nxtConState = getBOStateTransitionConfig(bostcCondtion, billHData.getBhState()).getBostcBostToStateIndex();
+        billHData.setBhState(nxtConState);
+        billHData.setBhStatus(nxtConState);
+        billingDAO.saveBillH(Arrays.asList(billHData));
+    }
+
+    @Override
+    public Integer getCurrentState(Integer boRID) {
+        BillH billH = getBillH(boRID);
+        return billH != null ? billH.getBhState() : 0;
+    }
+
+    @Override
+    public String buildBODescriptor(String[] fieldSpec, Integer boRID) {
+        BillH billH = getBillH(boRID);
+        return billH != null ? new StringBuilder(billH.getBhBillNo()).append("&").append(billH.getBhPatientName()).append("&").append(billH.getBhNetAmount()).toString() : null;
+    }
+
+    @Override
+    public String getTransactionReport(BillHSearchRequest billHSearchRequest) throws DcometServiceException {
+        String string = new String();
+        try {
+            BillH billH = getBillH(billHSearchRequest, true).get(0);
+            if (Integer.parseInt(billH.getBhPayerType()) != 31) {
+                string = dataDictionaryService.getReportFromTemplate("TRAN_REPORT", billH, "bill", billHSearchRequest.getEntityRid());
+
+                PayerMasterSearchRequest PayerMasterSearchRequest = new PayerMasterSearchRequest();
+                List<Criterion> searchCriterionList = new ArrayList<>();
+                searchCriterionList.add(Restrictions.eq("id", billH.getBhPatientRID()));
+                PayerMasterSearchRequest.setSearchCriterionList(searchCriterionList);
+                List<PayerMaster> payerMasterList = masterService.getPayerMaster(PayerMasterSearchRequest, false);
+                for (PayerMaster payerMaster : payerMasterList) {
+                    string = dataDictionaryService.getReportFromHTML(string, payerMaster, "payer");
+                }
+            } else {
+                string = dataDictionaryService.getReportFromTemplate("TRAN_REPORT_PAYMENTMODES", billH, "bill", billHSearchRequest.getEntityRid());
+                List<Criterion> searchCriterionList = new ArrayList<>();
+                PaymentModeSearchRequest paymentModeSearchRequest = new PaymentModeSearchRequest();
+                searchCriterionList.add(Restrictions.eq("pmdTransRID", billH.getReceiptH().get(0).getId()));
+                paymentModeSearchRequest.setSearchCriterionList(searchCriterionList);
+                List<PaymentModeDetailsData> paymentMode = billingDAO.getPaymentModeDetails(paymentModeSearchRequest);
+                if (CollectionUtils.isNotEmpty(paymentMode)) {
+                    List<PaymentModeDetails> result = null;
+                    result = billingAdapter.convertPaymentModeDetailsDataToPaymentModeDetails(paymentMode);
+                    for (PaymentModeDetails paymentModeDetails : result) {
+                        if (paymentMode.get(0).getPmdTransType() == 3) {
+                            string = dataDictionaryService.getReportFromHTML(string, paymentModeDetails, "pay");
+                        }
+                        searchCriterionList.clear();
+                        DdictSearchRequest ddictSearchRequest = new DdictSearchRequest();
+                        searchCriterionList.add(Restrictions.eq("id", paymentModeDetails.getPmdPaymentMode()));
+                        ddictSearchRequest.setSearchCriterionList(searchCriterionList);
+                        Ddict ddictResult = dataDictionaryService.getDdict(ddictSearchRequest).get(0);
+                        if (ddictResult != null) {
+                            string = dataDictionaryService.getReportFromHTML(string, ddictResult, "dict");
+                        }
+                    }
+                }
+            }
+            Patient patient = clinicalService.getPatient(billH.getBhPatientRID());
+            string = dataDictionaryService.getReportFromHTML(string, patient, "pat");
+
+            User user = CacheUtil.getUser(billHSearchRequest.getUserId());
+            string = dataDictionaryService.getReportFromHTML(string, user, "usr");
+
+            Entity entity = CacheUtil.getEntity(billHSearchRequest.getEntityRid());
+            string = dataDictionaryService.getReportFromHTML(string, entity, "ent");
+
+        } catch (Exception e) {
+            throw new DcometServiceException(e);
+        }
+        return string;
+    }
+}

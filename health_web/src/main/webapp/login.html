@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- Site information -->
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Healthplus</title>
+        <meta name="description" content="Apptics, Optical Software, Optical Lens, Optical Frames, Lens, Frames, Optical Distributors Software">
+
+        <!-- External CSS -->
+        <link rel="stylesheet" type="text/css" href="loginPage/assets/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="loginPage/assets/css/font-awesome.min.css">
+        <link rel="stylesheet" type="text/css" href="loginPage/assets/css/owl.carousel.css">
+        <link rel="stylesheet" type="text/css" href="loginPage/assets/css/owl.transitions.css">
+        <link rel="stylesheet" type="text/css" href="loginPage/assets/css/themify-icons.css">
+        <!-- <link rel="stylesheet" href="loginPage/assets/css/magnific-popup.css"> -->
+
+        <!-- Custom CSS -->
+        <link rel="stylesheet" type="text/css" href="loginPage/assets/css/style.css">
+        <link rel="stylesheet" type="text/css" href="loginPage/assets/css/responsive.css">
+
+        <!-- Google Fonts -->
+        <link href="https://fonts.googleapis.com/css?family=Poppins:400,600" rel="stylesheet">
+
+        <!-- Favicon -->
+        <link rel="icon" href="loginPage/images/template/HealthPlus.png">
+        <!-- <link rel="apple-touch-icon" href="images/template/apple-touch-icon.png"> -->
+        <!-- <link rel="apple-touch-icon" sizes="72x72" href="images/template/icon-72x72.png"> -->
+        <!-- <link rel="apple-touch-icon" sizes="114x114" href="images/template/icon-114x114.png"> -->
+
+        <script>
+            function validateEmail(email) {
+                var reg = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+                if (reg.test(email.value) === false) {
+                    alert('Invalid Email Address');
+                    return false;
+                }
+            }
+            function isNumberKey(evt) {
+                var charCode = (evt.which) ? evt.which : event.keyCode
+                if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+                    return false;
+                    return true;
+                }
+            }
+            function contactFromWhichCompany(val){
+                $('#type').val(val);
+            }
+//            function submitEmail() {
+//                var contactDetails = {}
+//                contactDetails.ucmName = $('#name').val();
+//                contactDetails.ucmMobileNumber = $('#mobileNo').val();
+//                contactDetails.ucmContactEmail = $('#email').val();
+//                contactDetails.ucmMessages = $('#message').val();
+//                contactDetails.ucmStatus = 0;
+//                contactDetails.ucmType = 1;
+//                if (!!$('#name').val() && !!$('#mobileNo').val() && !!$('#email').val() && !!$('#message').val()) {
+//                    dcomethealth.EmailResource.saveContactDetails(contactDetails).done(function (data, textStatus, jqXHR) {
+//                        alert("Congratulation, your message sent");
+//                        window.location.reload()
+//                    }).fail(function (jqXHR, textStatus, errorThrown) {
+//                        alert("Sorry, something went wrong")
+//                    });
+//                } else {
+//                    alert('Dont Leave Any Field');
+//                    return false;
+//                }
+//
+//            }
+        </script>
+    </head>
+
+    <body>
+        <!-- Main header -->
+        <nav class="navbar navbar-default navbar-fixed" data-spy="apptics" data-offset-top="120">
+            <div class="container-fluid">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#nav-collapse"> <!-- aria-expanded="false" -->
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">
+                        <img src="loginPage/images/template/HealthPlus.png" alt="Apptics Logo">
+                    </a>
+                    <ul class="nav navbar-nav navbar-left">
+                        <li><a href="#" style="color: #FFFFFF;font-size: xx-large">Healthplus</a></li>
+                    </ul>
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+<!--                <div class="collapse navbar-collapse" id="nav-collapse">
+                    <ul class="nav navbar-nav navbar-right" id="one-page-nav">
+                        <li class="active"><a href="#banner-area"><i class="fa fa-arrow-up"></i></a></li>
+                        <li><a href="#feature-area">Features</a></li>
+                    </ul>
+                </div>-->
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container-fluid -->
+        </nav>
+        <!-- Main header end -->
+
+        <!-- Banner -->
+        <div class="banner text-white style-4" id="banner-area">
+            <div class="banner-bg-overlay">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="left-part">
+                                <div class="banner-content">
+                                    <div class="col-xs-6">
+                                        <h1 class="banner-title">Healthplus</h1>
+                                        <!--<h3 class="banner-subtext">A Complete Solution for Optical Trade</h3>-->
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <div class="button-group col-md-offset-3">
+                                            <form action="j_security_check" method="post">
+                                                <input type="text" name="j_username" autofocus placeholder="User Name" required>
+                                                <input type="password" name="j_password" placeholder="Password" required>
+                                                <input class="btn pull-right" type="submit" value="Sign In">
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Banner end -->
+
+        <!-- intros -->
+<!--        <div class="feature section style-2" id="feature-area">
+            <div class="intro section section-padding" id="intro">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="section-header section-header-left">
+                                <h3 class="section-title">Healthplus Features</h3>
+                                <h5 class="section-subtext">A powerful Optical Trade Software Solution</h5>
+                                <div class="section-download">
+                                    <a href="#"><i class="fa fa-apple"></i></a>
+                                    <a href="#"><i class="fa fa-android"></i></a>
+                                    <a href="#"><i class="fa fa-windows"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8 col-md-offset-1">
+                            <div class="row">
+                                <div class="intros">
+                                    <div class="col-xs-6">
+                                        <div class="intro-item">
+                                            <div class="intro-icon">
+                                                 <i class="fa fa-windows"></i> 
+                                                <span class="ti-files"></span>
+                                            </div>
+                                            <div class="intro-body">
+                                                <h4 class="intro-title">Sales / Orders</h4>
+                                                <p class="intro-entry">Faster sales booking option and better clarity on the status</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <div class="intro-item">
+                                            <div class="intro-icon">
+                                                <span class="ti-layout-grid4"></span>
+                                            </div>
+                                            <div class="intro-body">
+                                                <h4 class="intro-title">Invenotory Management</h4>
+                                                <p class="intro-entry">help you to count and value it instantly</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <div class="intro-item">
+                                            <div class="intro-icon">
+                                                <span class="ti-comments"></span>
+                                            </div>
+                                            <div class="intro-body">
+                                                <h4 class="intro-title">Customer Management</h4>
+                                                <p class="intro-entry">It helps you to be in touch with your cusotmer always</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <div class="intro-item">
+                                            <div class="intro-icon">
+                                                <span class="ti-dashboard"></span>
+                                            </div>
+                                            <div class="intro-body">
+                                                <h4 class="intro-title">Extensive Reports</h4>
+                                                <p class="intro-entry">The reports engine helps you to take right actions</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <div class="intro-item">
+                                            <div class="intro-icon">
+                                                <span class="ti-layers"></span>
+                                            </div>
+                                            <div class="intro-body">
+                                                <h4 class="intro-title">Easy Workflow</h4>
+                                                <p class="intro-entry">Smooth transaction on every screen</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <div class="intro-item">
+                                            <div class="intro-icon">
+                                                <span class="ti-crown"></span>
+                                            </div>
+                                            <div class="intro-body">
+                                                <h4 class="intro-title">User Friendly</h4>
+                                                <p class="intro-entry">Right information on display to scroll on</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <div class="intro-item">
+                                            <div class="intro-icon">
+                                                <span class="ti-alarm-clock"></span>
+                                            </div>
+                                            <div class="intro-body">
+                                                <h4 class="intro-title">Alerts and Notifications</h4>
+                                                <p class="intro-entry">Timely notification to bring better clarity</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <div class="intro-item">
+                                            <div class="intro-icon">
+                                                <span class="ti-world"></span>
+                                            </div>
+                                            <div class="intro-body">
+                                                <h4 class="intro-title">Access from Anywhere</h4>
+                                                <p class="intro-entry">Global access on 24/7 availability</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>-->
+        <!-- intros end -->
+
+        <!-- Working Process -->
+<!--        <div class="section section-padding second-bg working-process">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="section-header section-header-left">
+                            <h3 class="section-title">Make your Healthplus<br/>window</h3>
+                            <p class="section-subtext">Simple steps to start</p>
+                        </div>
+                    </div>
+                    <div class="col-md-8 col-md-offset-1">
+                        <div class="row">
+                            <div class="col-md-3 col-xs-3">
+                                <div class="process-item">
+                                    <div class="process-icon">
+                                        <span class="ti-user"></span>
+                                    </div>
+                                    <h5 class="process-title">Register</h5>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-xs-3">
+                                <div class="process-item">
+                                    <div class="process-icon">
+                                        <span class="ti-check-box"></span>
+                                    </div>
+                                    <h5 class="process-title">Verification</h5>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-xs-3">
+                                <div class="process-item">
+                                    <div class="process-icon">
+                                        <span class="ti-settings"></span>
+                                    </div>
+                                    <h5 class="process-title">Setup</h5>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-xs-3">
+                                <div class="process-item">
+                                    <div class="process-icon">
+                                        <span class="ti-cup"></span>
+                                    </div>
+                                    <h5 class="process-title">Go Live</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>-->
+        <!-- Working Process End -->
+
+        <!--         Testimonial 
+                <div id="testimonial" class="section theme-bg section-padding testimonial style-2">
+                    <div class="container">
+                        <div class="testimonials-wrap">
+                            <div class="testimonial-carousel owl-carousel" id="testimonial-carousel">
+                                <div class="testimonial-item">
+                                    <div class="reviewer-mock">
+                                        <img class="img-responsive" src="loginPage/images/member/arun.jpeg" alt="Commenter Sunil">
+                                    </div>
+                                    <blockquote>Very good software to use with, could able get all trends of sales across India and Maurtius</blockquote>
+                                    <div class="about-reviewer">
+                                        <h5 class="name">Sunil K Sangi</h5>
+                                        <p class="designation">Chief Operating Officer</p>
+                                    </div>
+                                </div>
+                                <div class="testimonial-item">
+                                    <div class="reviewer-mock">
+                                        <img class="img-responsive" src="loginPage/images/member/arun.jpeg" alt="Commenter Samley">
+                                    </div>
+                                    <blockquote>Brought best practises to our factory in down south of India</blockquote>
+                                    <div class="about-reviewer">
+                                        <h5 class="name">Samley</h5>
+                                        <p class="designation">Director</p>
+                                    </div>
+                                </div>
+                                <div class="testimonial-item">
+                                    <div class="reviewer-mock">
+                                        <img class="img-responsive" src="loginPage/images/member/arun.jpeg" alt="Commenter Arun">
+                                    </div>
+                                    <blockquote>Good to work with Healthplus in Rwanda and Uganda</blockquote>
+                                    <div class="about-reviewer">
+                                        <h5 class="name">Arun Anandan</h5>
+                                        <p class="designation">Manager - Operations</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                 Testimonial End -->
+
+        <!-- Pricing -->
+<!--        <div class="section section-padding second-bg pricing" id="pricing">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6 col-md-offset-3">
+                        <div class="section-header text-center">
+                            <h2 class="section-title">Affordable Pricing Plan</h2>
+                            <p class="section-subtext">A Complete solution for Optical Trade<br/>Retails, Lens / Frames Distribution, Lens Laboratory, Frame Factory</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="price-items">
+                        <div class="col-sm-4">
+                            <div class="price-item">
+                                <div class="price-header">
+                                    <h4 class="package-name">Optical showroom</h4>
+                                </div>
+                                <div class="package-price">
+                                    <a><i class="fa fa-envelope"></i></a>
+                                                                        <span class="currency">â‚¹</span>800
+                                </div>
+                                <ul class="package-feature">
+                                    <li>Free Update</li>
+                                    <li>Cloud Backup</li>
+                                    <li>24 Hours Support</li>
+                                    <li>Unlimited User Access</li>
+                                </ul>
+                                <a href="#contact-area" onclick="contactFromWhichCompany(1)"  class="btn btn-border btn-pack">Register</a>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="price-item">
+                                <div class="price-header">
+                                    <h4 class="package-name">Lens laboratory</h4>
+                                </div>
+                                <div class="package-price">
+                                    <a><i class="fa fa-envelope"></i></a>
+                                </div>
+                                <ul class="package-feature">
+                                    <li>User friendly workflow</li>
+                                    <li>Cloud Backup</li>
+                                    <li>24 Hours Support</li>
+                                    <li>Unlimited User Access</li>
+                                </ul>
+                                <a href="#contact-area" onclick="contactFromWhichCompany(2)"  class="btn btn-border btn-pack">Register</a>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="price-item">
+                                <div class="price-header">
+                                    <h4 class="package-name">Frame factory</h4>
+                                </div>
+                                <div class="package-price">
+                                    <a><i class="fa fa-envelope"></i></a>
+                                </div>
+                                <ul class="package-feature">
+                                    <li>User friendly workflow</li>
+                                    <li>Cloud Backup</li>
+                                    <li>24 Hours Support</li>
+                                    <li>Unlimited User Access</li>
+                                </ul>
+                                <a href="#contact-area"  onclick="contactFromWhichCompany(3)"  class="btn btn-border btn-pack">Register</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>-->
+        <!-- Pricing End -->
+
+        <!--  Contact Start -->
+<!--        <div class="section section-padding second-bg contact" id="contact-area">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6 col-md-offset-3">
+                        <div class="section-header text-center">
+                            <h2 class="section-title">Get in Touch</h2>
+                            <p class="section-subtext">please send us your a query to get back</p>
+                        </div>
+                    </div>
+                </div>
+                onchange="return isValidEmail(this)"
+                <div class="row"> 
+                    <div class="col-md-6 col-md-offset-3">
+                        <form id="contactForm" class="contact-form" action="#" method="post">
+                            <input type="hidden" id="type"/> 
+                            <input type="text" id="name" name="name" placeholder="Full Name" required>
+                            <input type="text" name="mobileno" onkeypress="return  isNumberKey(event, this)" id="mobileNo" placeholder="Mobile Number" required>
+                            <input type="email" id="email" name="email" onchange="return validateEmail(this)" placeholder="Email" required>
+                            <textarea id="message" name="message" placeholder="Message" rows="3"></textarea>
+                            <div class="text-center"><button class="btn" type="submit">Send</button></div>
+                            <p class="input-success">Congratulation, your message sent</p>
+                            <p id="emailFailed" class="input-error">Sorry, something went wrong</p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>-->
+        <!-- Contact End -->
+
+        <!--  Location on map 
+        <div id="map-area" class="section">
+            <div class="google-map" id="location" data-lat="13.0278121" data-lng="80.2126723" data-zoom="15"></div>
+            <div class="contact-info-area">
+                <div class="container">
+                    <div class="row">
+                        <div class="contact-items text-white">
+                            <div class="col-lg-3 col-md-4 col-lg-offset-1">
+                                <div class="contact-item">
+                                    <div class="contact-icon">
+                                        <i class="fa fa-map-marker"></i>
+                                    </div>
+                                    <p class="contact-content">13, Ragavan Colony,<br/>Ashok Nagar, Chennai</p>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-4 col-lg-offset-1">
+                                <div class="contact-item">
+                                    <div class="contact-icon">
+                                        <i class="fa fa-phone"></i>
+                                    </div>
+                                    <p class="contact-content">+91 94444 48606<br/>+91 99406 66678</p>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-4">
+                                <div class="contact-item">
+                                    <div class="contact-icon">
+                                        <i class="fa fa-envelope"></i>
+                                    </div>
+                                    <p class="contact-content">info@apptics.in<br/>apptics@dcomet.com</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        Location on map end -->
+
+        <footer>
+            <div class="footer-top theme-bg">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="footer-about">
+                                <a class="footer-logo" href="#">
+                                    <img src="loginPage/images/template/HealthPlus.png" alt="Apptics Logo">
+                                </a>
+                                <p>Healthplus<br> A product of dComet Technologies for Health</p>
+                                <div class="socials">
+                                    <a href="https://www.facebook.com/dcomettech/" target="_blank"><i class="fa fa-facebook"></i></a>
+                                    <a href="https://twitter.com/dcomettech" target="_blank"><i class="fa fa-twitter"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="copyright">Copyright 2018, Healthplus - A product of  
+                    <a href="http://www.dcomet.com" target="_blank">dComet Technologies</a>, All Right Reserved</p>
+            </div>
+        </footer>
+
+        <!-- Script -->
+        <script type='text/javascript' src='loginPage/jquery-1.10.2.min.js'></script>
+        <!--<script type='text/javascript' src="loginPage/assets/js/jquery.min.js"></script>-->
+        <script type='text/javascript' src="loginPage/assets/js/bootstrap.min.js"></script>
+        <script type='text/javascript' src="loginPage/assets/js/owl.carousel.js"></script>
+        <script type='text/javascript' src="loginPage/assets/js/jquery.nav.js"></script>
+        <script type='text/javascript' src="loginPage/assets/js/jquery.magnific-popup.min.js"></script>
+        <script type='text/javascript' src="loginPage/assets/js/jquery.ajaxchimp.min.js"></script>
+        <script type='text/javascript' src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDbEvIaVawjAKnexU9B6ZmXgIG1hqcJRPs"></script>
+        <script type='text/javascript' src="loginPage/assets/js/map.js"></script>
+        <script type='text/javascript' src="loginPage/assets/js/custom.js"></script>
+        <script type="text/javascript" src="loginPage/EmailResource.js"></script>
+    </body>
+</html>

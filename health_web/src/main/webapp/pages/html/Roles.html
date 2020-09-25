@@ -1,0 +1,106 @@
+<script>
+    function div_hide() {
+        $("#RoleMasterHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+        $("#ms-multi-select").find(".ms-selection").find(".ms-optgroup-container").find("li").each(function () {
+            $(this).removeClass("ms-selected");
+            $(this).attr("style", "display: none")
+        });
+        $(':text').val('');
+        $(':checkbox, :radio').prop('checked', false);
+    }
+    function div_back() {
+        dcomethealth.util.loadpage('Roles');
+        dcomethealth.util.base_init();
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-multiselect/css/multi-select.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-select2/select2.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<div class="row">
+    <div id="RoleMasterHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>Roles Master</h4>
+            <div class="pull-right edit-all-button-container">
+                <a href="#" class="btn btn-primary " onclick="div_hide()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Add New</span></a>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12">
+                <div class="col-md-12">
+                    <div id="RoleMasterFooter">
+                        <table id="rolesTable" cellpadding="0" cellspacing="0" border="0" class="table table-responsive table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Role Name</th>
+                                    <th>Is Active</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tbody_head">
+                            </tbody> 
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="add_new" class="hidden"> 
+    <div class="row" id="RoleMaster">     
+        <div class="panel panel-primary">
+            <div class="panel-heading"><h4>Roles</h4>
+                <div class="hidden-print">
+                    <div class="edit-all-button-container pull-right">
+                        <div>
+                            <a href="#" id="roleBack" class="btn btn-inverse" onclick="div_back()" style="margin-top: 3px; margin-bottom: 3px;"><span>Back</span></a>
+                            <a href="#" class="btn btn-primary" id="saveRoles" style="margin-top: 3px; margin-bottom: 3px;"><span  >Save</span></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="row col-md-4 col-sm-4 col-xs-4">
+                                    <label class="row">Role Name</label>
+                                    <div class="row">
+                                        <input type="text" id="roleName" name="roleName" value="" class="col-md-8 col-sm-8 col-xs-8"/>
+                                        <input type="hidden" id="roleRid" name="roleRid" value="">
+                                    </div>
+                                </div>
+                                <div class="row col-md-3 col-sm-3 col-xs-3">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">Is Active</label>
+                                    <div class="row col-md-8 col-sm-8 col-xs-8 control-label"> <!--  control-label needed for positioning -->
+                                        <div class="roleStatus"></div>
+                                    </div>                                                                                
+                                </div>
+                            </div>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                              <hr class="btn-danger">  
+                            </div>                            
+                            <div class="row">
+                                <div class="col-md-12 col-sm-12 col-xs-12">
+                                    <label>Features</label>
+                                    <form action="#" class="form-horizontal row-border">
+                                        <div class="form-group">
+                                            <select multiple="multiple" id="multi-select"  class="dcomet-c-s_feature-list"></select>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/form-multiselect/js/jquery.multi-select.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-select2/select2.min.js'></script> 
+<script type='text/javascript' src='js/plugins/quicksearch/jquery.quicksearch.min.js'></script> 

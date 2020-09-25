@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>HealthPlus</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="HealthPlus">
+        <meta name="author" content="dCometTechnologies">
+
+        <link rel="stylesheet" href="css/dcometStyles/styles.css" />
+        <link rel="stylesheet" type="text/css" href="js/jquery/jqueryui.css" />
+        <!--<link rel="stylesheet" type="text/css" href="js/jquery/jquery.lightbox-0.5.css" />-->
+        <link rel="stylesheet" type="text/css" href="js/plugins/form-daterangepicker/daterangepicker-bs3.css" />
+        <!--<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600' rel='stylesheet' type='text/css'>-->
+
+        <!--<script type="text/javascript" src="js/jquery/jquery.blockUI.js"></script>-->      
+        <script type='text/javascript' src='js/jquery/jquery-1.10.2.min.js'></script>
+        <script type='text/javascript' src='js/jquery/jqueryui-1.10.3.min.js'></script>
+        <!--<script type='text/javascript' src='js/jquery/jquery.lightbox-0.5.js'></script>-->
+
+        <!-- Main java script -->
+        <script type="text/javascript" src="js/dcomethealth.js"></script>
+        <script type="text/javascript" src="js/datatypes.js"></script>
+        <script type="text/javascript" src="js/handlebars.js"></script>
+        <script type="text/javascript" src="js/Validation.js"></script>
+        <script type="text/javascript" src="js/DynamicTableTemplate.js"></script>
+
+        <!-- Resource-->
+        <script type="text/javascript" src="server/ServerRequestResource.js"></script>
+        <script type="text/javascript" src="server/AppointmentsResource.js"></script>
+        <script type="text/javascript" src="server/DataDictionaryResource.js"></script>
+        <script type="text/javascript" src="server/ClinicalResource.js"></script>
+        <script type="text/javascript" src="server/ServiceRequestResource.js"></script>        
+        <script type="text/javascript" src="server/SalesResource.js"></script>
+        <script type="text/javascript" src="server/InventoryResource.js"></script>
+        <script type="text/javascript" src="server/BillingResouce.js"></script>
+        <script type="text/javascript" src="server/MasterResource.js"></script>
+        <script type="text/javascript" src="server/FavouriteResource.js"></script>
+        <script type="text/javascript" src="server/PatientResource.js"></script>
+        <script type="text/javascript" src="server/NotificationResourse.js"></script>
+        <script type="text/javascript" src="server/GoodsReceiptResource.js"></script>
+        <script type="text/javascript" src="server/PurchaseOrderResource.js"></script>
+        <script type="text/javascript" src="server/ReceiptResource.js"></script>
+        <script type="text/javascript" src="server/CreateOPBillResource.js"></script>
+        <script type="text/javascript" src="server/ServiceOrderResource.js"></script>
+        <script type="text/javascript" src="server/AdvanceResource.js"></script>
+        <script type="text/javascript" src="server/LaboratoryResource.js"></script>
+        <script type="text/javascript" src="server/DashBoardResource.js"></script>
+        <script type="text/javascript" src="server/SecurityResource.js"></script>
+        <script type="text/javascript" src="server/RefundResource.js"></script>        
+        <script type="text/javascript" src="server/FileResource.js"></script>
+
+        <script >
+            var dcomethealth = dcomethealth || {};
+
+            function init() {
+                dcomethealth.DataDictionaryResource.getDdicts(function (data) {
+                    dcomethealth.s_ddict = data;
+                });
+                dcomethealth.DataDictionaryResource.searchCountries({}, function (data) {
+                    dcomethealth.s_countries = data;
+                });
+                dcomethealth.MasterResource.loginUser().done(function (user) {
+                    $("body").removeClass("hide");
+                    dcomethealth.loginuser = user;
+                    $("#sidebar").append(dcomethealth.util.build_menu(dcomethealth.loginuser.pageList));
+                    dcomethealth.MasterResource.searchStaff({"staffUserRID": dcomethealth.loginuser.id}, function (data) {
+                        dcomethealth.s_loginStaff = data;
+                    });
+                    loadUserUnit();
+                    dcomethealth.util.loadCountryUtil();
+                    loadUserInfo();
+                });
+            }
+            function loadUserInfo() {
+                $("#user-name-in-dropdown").html(dcomethealth.util.ucword(dcomethealth.loginuser.userID) + '<i class="fa fa-caret-down"></i>');
+                $("#user-name-in-loggedin").html('<h5>Hi, ' + dcomethealth.util.ucword(dcomethealth.loginuser.userFullName) + '!</h5><small>Logged in as <span>' + dcomethealth.util.ucword(dcomethealth.loginuser.userID) + '</span></small>');
+                $('#user_photo').attr('src', '/health_web/rest/file/user/photo?id=' + dcomethealth.loginuser.id);
+                $('#user_photo_dropdown').attr('src', '/health_web/rest/file/user/photo?id=' + dcomethealth.loginuser.id);
+            }
+
+            function loadUserUnit() {
+                dcomethealth.MasterResource.getUserUnit(function (data) {
+                    var unitDiv = '<div class="container"><div class="row">';
+                    $.each(data, function (pIdx, unit) {
+                        if (parseInt(unit.unitValid) === 1) {
+                            $.each(dcomethealth.s_loginStaff, function (i, staff) {
+                                $.each(staff.staffUnitMap, function (sIdx, staffUnit) {
+                                    if (parseInt(unit.id) === parseInt(staffUnit.suUnitRID)) {
+                                        if (parseInt(unit.id) === parseInt(staffUnit.suIsPrimaryUnit)) {
+                                            if (pIdx === 0) {
+                                                $("#headerbardropdown").append('<span id="selectedunit">' + unit.unitName + ' <i class="fa fa-level-down"></i></span>');
+                                                dcomethealth.selectedunit = unit.id;
+                                                dcomethealth.selectedunitname = unit.unitName;
+                                                dcomethealth.util.loadpage(unit.unitName + "Dashboard");
+//                                dcomethealth.util.loadpage('PatientDashboard');
+                                            }
+                                        }
+                                        unitDiv += '<div class="col-xs-6 col-sm-2"><a href="#" onclick=selectUnit("' + unit.unitName + '","' + unit.id + '") class="shortcut-tiles ' + unit.unitDisplayColor + '"><div class="tiles-body"><div class="pull-left"><i class="' + unit.unitDisplayIcon + '"></i></div></div><div class="tiles-footer">' + unit.unitName + '</div></a></div>';
+                                    }
+                                });
+                            });
+                        }
+                    });
+                    unitDiv += '</div></div>';
+                    $("#headerbar").append(unitDiv);
+                    loadNotification();
+                });
+            }
+            function selectUnit(unitName, unitId) {
+                dcomethealth.selectedunit = unitId;
+                dcomethealth.selectedunitname = unitName;
+                dcomethealth.util.loadpage(unitName + "Dashboard");
+                dcomethealth.ServerRequestResource.globelMessage(0, "text");
+                $("#headerbardropdown").empty();
+                $("#headerbardropdown").append('<span class="selectedunit">' + unitName + '<i class="fa fa-level-down"></i></span>');
+            }
+            function loadNotification() {
+                $("#worklistHead").empty();
+                dcomethealth.NotificationResource.getBOWorklistConfig(function (data) {
+                    dcomethealth.workListConfig = data;
+                });
+                var searchParams = dcomethealth.selectedunit + '/' + new Date();
+                dcomethealth.NotificationResource.searchNotification(searchParams, function (data) {
+                    var li;
+                    var notification_count = !!data ? data.length : 0;
+                    var ali = $('<a href="#" class="hasnotifications dropdown-toggle" data-toggle=\'dropdown\'>\n\
+                       <i class="fa fa-tasks"></i><span class="badge">' + notification_count + '</span></a><ul class="dropdown-menu notifications arrow">\n\
+                       <li class="dd-header">' + notification_count + ' Tasks (' + $.datepicker.formatDate('dd M yy', new Date()) + ')\n\
+                        <span class=\"fa fa-refresh cursorHand pull-right\" title=\"Refresh\" onclick=\"dcomethealth.util.base_init()\">\n\
+                       </span></li><div class="scrollthis" id="worklistDiv"></div><li class="dd-footer"><a href="#">View All Notifications</a></li></ul>');
+                    $("#worklistHead").append(ali);
+                    $.each(data, function (pIdx, workList) {
+                        li = $('<li >');
+                        li.append($('<a>', {
+                            html: "<span class=\"pull-right \">" + workList.workListcount + "</span><div><span class=\"name\"> " + workList.workListName + "</span>\n\
+                                       <input type=\"hidden\" id=\"worklistConfigRID\" value=" + workList.bowBowcRid + "></div>",
+                            class: "active",
+                            onclick: "loadWorklist(" + workList.bowBowcRid + ",'Notification');"
+                        }));
+                        $("#worklistDiv").append(li);
+                    });
+                });
+            }
+            function loadWorklist(bowBowcRid, page) {
+                dcomethealth.bowBowcRid = bowBowcRid;
+//                dcomethealth.bowBowcName = bowBowcName;
+                dcomethealth.util.loadpage(page);
+            }
+            init();
+        </script>
+
+    </head>
+    <body class="hide"> 
+        <div id="headerbar"></div>
+        <header id="banner-header-bar" class="navbar navbar-inverse navbar-fixed-top" role="banner">
+            <a id="leftmenu-trigger" class="tooltips" data-toggle="tooltip" data-placement="right" title="Sidebar"></a>
+            <a id="rightmenu-trigger" class="tooltips" data-toggle="tooltip" data-placement="left" title="Infobar"></a>
+            <div class="navbar-header pull-left">
+                <a class="navbar-brand" href="#" onclick="selectUnit(dcomethealth.selectedunitname)">healthPlus</a>
+                <a class="navbar-client-brand" href="#"></a>
+            </div>
+            <ul class="nav navbar-nav pull-right toolbar">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle username" data-toggle="dropdown"><span class="hidden-xs" id="user-name-in-dropdown"></span>
+                        <img id="user_photo" alt="User" /></a>
+                    <ul class="dropdown-menu userinfo arrow">
+                        <li class="username" onclick="dcomethealth.util.loadpage('user_profile');">
+                            <a href="#">
+                                <div class="pull-left"><img id="user_photo_dropdown" alt="User"/></div>
+                                <div class="pull-right" id="user-name-in-loggedin"></div>
+                            </a>
+                        </li>
+                        <li class="userlinks">
+                            <ul class="dropdown-menu">
+                                <li><a href="#" onclick="dcomethealth.SecurityResource.logout();">Sign Out <i class="pull-right fa fa-sign-out"></i></a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li class="dropdown" id="worklistHead"></li>
+                <li><a href="#" id="headerbardropdown"></a></li>
+            </ul>
+        </header>
+        <div id="page-container">
+            <!-- BEGIN SIDEBAR -->
+            <nav id="page-leftbar" role="navigation">
+                <!-- BEGIN SIDEBAR MENU -->
+                <ul class="acc-menu" id="sidebar">
+                    <!--                    <li id="search">
+                                            <a href="javascript:;"><i class="fa fa-search opacity-control"></i></a>
+                                            <form>
+                                                <input type="text" class="search-query" placeholder="Search...">
+                                                <button type="submit"><i class="fa fa-search"></i></button>
+                                            </form>
+                                        </li>
+                                        <li class="divider"></li>-->
+                </ul>
+                <!-- END SIDEBAR MENU -->
+            </nav>
+
+            <!-- BEGIN RIGHTBAR -->
+            <div id="page-rightbar">
+            </div>
+            <!-- END RIGHTBAR -->
+
+            <!-- MainWorkSpace --->
+            <div id="page-content">
+                <div id='wrap'>
+                    <div id="page-heading">
+                        <div id="breadcrumbs" class="breadcrumbs">
+                            <div class="left"> 
+                                <ul class="breadcrumb">
+                                    <li>
+                                        <i class="dct-icon fa fa-home home-icon"></i>
+                                        <a href="#" onclick="dcomethealth.util.loadpage(dcomethealth.selectedunitname + 'Dashboard')">Home</a>
+                                    </li>
+                                    <li id="page-header" class="active">Dashboard</li>
+                                    <span class="global-message pull-right"><a id="globel-message-label" class="globel-message-label success"></a> </span>
+                                </ul>
+
+                            </div>
+                        </div>
+                    </div> <!-- container -->
+                    <div class="container" id="main_navigation_bar"></div>
+                </div> <!--wrap -->
+            </div> <!-- page-content -->
+            <!-- Main Work Space END--->
+            <footer role="contentinfo">
+                <div class="clearfix">
+                    <ul class="list-unstyled list-inline pull-left">
+                        <li>dComet &copy; 2016</li>
+                    </ul>
+                    <button class="pull-right btn btn-inverse-alt btn-xs hidden-print" id="back-to-top"><i class="fa fa-arrow-up"></i></button>
+                </div>
+            </footer>
+
+        </div> <!-- page-container -->
+
+        <script type='text/javascript' src='js/jquery/jquery.validate.min.js'></script> 
+        <script type='text/javascript' src='js/jquery/bootstrap.min.js'></script>         
+        <script type='text/javascript' src='js/jquery/jquery.nicescroll.min.js'></script> 
+        <script type='text/javascript' src='js/jquery/enquire.js'></script>  
+        <script type='text/javascript' src='js/application.js'></script>
+        <script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+        <script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> 
+        <script type='text/javascript' src='js/plugins/form-daterangepicker/moment.min.js'></script> 
+        <script type='text/javascript' src="js/plugins/form-datepicker/bootstrap-datepicker.js"></script>
+    </body>
+</html>

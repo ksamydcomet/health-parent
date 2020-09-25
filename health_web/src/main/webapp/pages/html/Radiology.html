@@ -1,0 +1,283 @@
+<script>
+    $("#pendingDate").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    $("#pendingDate").datepicker("setDate", new Date());
+
+    function dateValidation() {
+        var a = moment();
+        var b = moment($("#pendingDate").val(), 'DD-MM-YYYY');
+        if (a.isBefore(b)) {
+            alert("Enter Valid date");
+            return false;
+        }
+    }
+    function  showAttachFile() {
+        if ($("#fileUpload_Header").hasClass("hidden")) {
+            $("#fileUpload_Header,#uploadButton").removeClass('hidden');
+            $("#fileDownload_Header").addClass('hidden');
+            $("").removeClass('hidden');
+        } else {
+            $("#fileUpload_Header").addClass('hidden');
+            if ($('#dyn_table_download tbody#fileDownload_tbody').children().length == 0) { // For Table Head view if it's length != 0
+                $("#fileDownload_Header,#uploadButton").addClass('hidden');
+            } else {
+                $("#fileDownload_Header,#uploadButton").removeClass('hidden');
+            }
+        }
+    }
+    function addRow(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dyn_table_upload');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var uploadedFile = dynTableGetNodeInRow(table.rows[i + 1], 'file').value;
+//            var fileDescription = dynTableGetNodeInRow(table.rows[i + 1], 'taFileDesc').value;
+        }
+        if (uploadedFile === "" || uploadedFile === "undefined") {
+            alert("Attach AnyOne File");
+            return false;
+        } else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "del_Upload").className = "ace-icon fa fa-minus";
+//            dynTableGetNodeInRow(newRow, "fileId").value = 0;
+            dynTableGetNodeInRow(newRow, "file").value = "";
+//            dynTableGetNodeInRow(newRow, "taFileDesc").value = "";
+        }
+    }
+</script>
+<style>
+    ul#tempUL {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        width: 65%;
+        background-color: #f1f1f1;
+        height: 200px;
+        overflow-y:  scroll;
+    }
+    ul#tempUL > li.serviceList > a {
+        display: block;
+        color: #000;
+        padding: 8px 16px;
+        text-decoration: none;
+    }
+    ul#tempUL > li.serviceList > a.active {
+        background-color: #4CAF50;
+        color: white;
+    }
+    ul#tempUL > li.serviceList > a:hover:not(.active) {
+        background-color: #555;
+        color: white;
+    }
+</style>
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<script type="text/javascript" src="js/plugins/ckeditor/ckeditor.js"></script>
+<div class="row">
+    <div id="RadioServiceHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>Radiology Service</h4>
+            <div class="pull-right edit-all-button-container"> 
+                <button class="btn btn-primary" id="radioDateRange" style="margin-top: 3px; margin-bottom: 3px;"><span class="hidden-xs hidden-sm" id="radioDateRangeSpan"></span> <b class="caret"></b></button>
+                <button class="btn btn-primary" id="radioComDateRange" style="margin-top: 3px; margin-bottom: 3px;"><span class="hidden-xs hidden-sm" id="radioComDateRangeSpan"></span> <b class="caret"></b></button>
+                <div class="pull-right edit-all-button-container">
+                    <a href="#" class="btn btn-primary" onclick="dcomethealth.Radiology.searchSOByDate()" style="margin-top: 3px; margin-bottom: 3px;"><span >Pendings </span></a>
+                    <a href="#" class="btn btn-primary" onclick="dcomethealth.Radiology.searchCompleted()" style="margin-top: 3px; margin-bottom: 3px;"><span >Completed</span></a>
+                </div>                
+            </div>
+        </div>
+        <br>        
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12">
+                <div class="col-md-12">
+                    <div id="prof">
+                        <table id="dynTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>UHID</th>
+                                    <th>Patient Name</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="viewTbody"></tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <table id="front_table" class="table table-condensed table-hover hidden">
+                            <thead><th>Service Order</th><th>Result Value</th><th>Description</th><th>Units</th><th>Result State</th></thead>
+                            <tbody id="foTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="add_new" class="hidden">     
+    <div class="panel panel-primary">
+        <div class="panel-heading"><h4>Radiology Service</h4>
+            <div class="hidden-print">
+                <div id="buttons" class="edit-all-button-container pull-right">                            
+                    <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('Radiology');
+                            dcomethealth.util.base_init();" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Back</span></a>
+                    <button type="button" id="radioSave" name="radioSave" class="btn btn-success" onclick="dcomethealth.Radiology.saveTemplates()" style="margin-top: 3px; margin-bottom: 3px;">Save</button>
+                </div>
+                <div id="btns_state" class="edit-all-button-container pull-right">
+                    <a class="btn btn-primary" onclick="dcomethealth.util.loadpage('Radiology');
+                            dcomethealth.util.base_init();"><span id="reset" class="" style="margin-top: 3px; margin-bottom: 3px;">Back</span></a>
+                    <input id="submitData" type="submit" class="btn btn-primary" value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>
+                </div>
+
+            </div>
+        </div>      
+        <br>
+        <form action="#">
+            <div class="panel panel-default">
+                <div class="panel-body">              
+                    <div class="row">                   
+                        <div class="row col-md-12 col-sm-12 col-xs-12">                 
+                            <div class="col-md-3 col-sm-3 col-xs-6">
+                                <div class="row col-sm-12 col-md-12 col-xs-12">
+                                    <b><span class="text-info"> Patient UHID :</span><span id="patMRN" class="text-primary"></span></b>
+                                    <input type="hidden" id="sodRid" />
+                                    <input type="hidden" id="sodSoRid" />
+                                    <input type="hidden" id="sodVisRid" />
+                                    <input type="hidden" id="sodPatRid" />
+                                    <input type="hidden" id="soItemName" />
+                                    <input type="hidden" id="soItemID" />
+                                    <input type="hidden" id="soAgainstUnitRID" />
+                                    <input type="hidden" id="soSerMode" />
+                                    <input type="hidden" id="soStatus" />
+
+                                </div>
+                            </div>              
+                            <div class="col-md-4 col-sm-3 col-xs-6">
+                                <div class="col-sm-12 col-md-12 col-xs-12">
+                                    <b><span class="text-info">Patient Name : </span>&nbsp;<span id="patName" class="text-primary"></span></b>
+                                    <input type="hidden" id="patDOB"/>
+                                    <input type="hidden" id="patAge"/>
+                                    <input type="hidden" id="patGender"/>
+                                </div>
+                            </div>  
+                            <div id="tempDynDiv" class="col-md-4 col-sm-12 col-xs-12">
+                                <b><span class="text-info">Service Name:</span>&nbsp;<span id="serName" class="text-primary"></span></b> 
+                                <input type="hidden" id="soRidIn" />
+                                <input type="hidden" id="itemRidIn" />
+                            </div>                            
+                            <div class="col-md-1 col-sm-4 col-xs-6">
+                                <a id="attachFile" class="btn btn-sm btn-info jqueryUIToolTip" title="Attach File" onclick="showAttachFile()"><i class="fa fa-paperclip"></i></a>&nbsp;&nbsp;
+                                <a id="uploadButton" class="row btn btn-sm btn-info jqueryUIToolTip hidden" title="Upload File" onclick="dcomethealth.Radiology.uploadAttachFiles();"><i class="fa fa-upload"></i></a>
+                            </div>
+                            <div class="row"><br></div><br>
+                            <div id="dateRange" class="hidden col-md-4 col-sm-3 col-xs-6">
+                                <div class="col-sm-12 col-md-12 col-xs-12">
+                                    <span class="text-info"><b> Date : </b></span>&nbsp;<span id="date" class="text-primary"><b></b></span>
+                                </div>
+                            </div> 
+                            <div id="tempHeader" class="col-md-12 col-sm-12 col-xs-12" style="border-top: 2px solid #1c9cbc;border-bottom: 2px solid #1c9cbc;">
+                                <div class="col-md-4"><b><span class="">List of Reports</span></b></div>
+                                <div class="col-md-8"><b><span class="">Assign to Patients</span></b></div>
+                            </div>
+                            <div class="row"><br></div><br>
+                            <div id="serviceDiv" class="col-md-12 col-sm-12 col-xs-12">
+                                <div id="tempListDiv" class="col-md-3 col-sm-5 col-xs-9"></div>
+                                <div class="col-md-5 col-sm-12 col-xs-12">
+                                    <div class="row table-responsive">
+                                        <table id="tempDynTable" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover hidden">
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Service Name</th>
+                                                    <th>Assigned Templates</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tempTbody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>                                
+                                <div class="col-md-4 hidden" id="fileUpload_Header">
+                                    <div class="table-responsive">
+                                        <table id="dyn_table_upload" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                            <thead>
+                                            <th>Attach Files</th>
+                                            </thead>
+                                            <tbody id="fileUpload_tbody" class="">
+                                                <tr>
+                                                    <td class="hidden"></td>
+                                                    <td>
+                                                        <input id="file" name="file" type="file" class="btn btn-inverse col-md-11" onchange="dcomethealth.Radiology.attachFiles(0)"/>
+                                                    </td>                                               
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                            </div>
+                                </div>
+                            </div>
+                            <div id="serviceCompletedDiv" class="col-md-12 col-sm-12 col-xs-12 hidden">
+                                <div class="row table-responsive col-md-9 col-sm-12 col-xs-12">
+                                    <table id="tempViewTable" class="col-md-6 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Service Name</th>
+                                                <th>Reports Templates</th>
+                                                <th>Options</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tempViewTbody"></tbody>
+                                    </table>
+                                </div>
+                                <div class="row table-responsive col-md-3 col-sm-8 col-xs-8 hidden" style="margin-top:-10px;" id="fileDownload_Header">
+                                    <div class="table-responsive">
+                                        <table id="dyn_table_download" class="col-md-12 col-sm-12 col-xs-12 table ">
+                                            <thead>
+                                            <th></th>
+                                            <th>Attached File Name</th>
+                                            </thead>
+                                            <tbody id="fileDownload_tbody" class=""></tbody>
+                                        </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    </div>
+                </div>
+        </form>
+    </div>
+</div>
+<div id="reportDiv" class="hidden"></div>
+<div id="temporaryDiv" class="hidden"></div>
+<div class="row col-md-12">                                    
+    <div class="modal fade" id="radioModal" role="dialog">
+        <div class="modal-dialog" style="width: 750px;">
+            <div class="modal-content">
+                <div class="modal-header" style="border-bottom: 3px solid #1c9cbc;text-align:center;">
+                    <b><span id="tempNameSpan"></span></b>
+                    <input type="hidden" id="tempName" />
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="col-md-12 col-sm-4 col-xs-4">                                                                               
+                        <div class="form-group">
+                            <textarea class="form-control" id="radioNodes" name="radioNodes" rows="10" required></textarea>
+                            <script type="text/javascript">
+                                CKEDITOR.replace('radioNodes');
+                            </script>
+                            <div id="viewDivs" class="col-md-12 col-sm-12 col-xs-12 hidden"></div>
+                            <div id="viewDiv2" class="col-md-12 col-sm-12 col-xs-12 hidden"></div>
+                        </div>    
+                    </div>                                                                    
+                </div>
+                <div class="modal-footer" style="border-top: none;">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" id="addTempService" class="btn btn-primary" onclick="dcomethealth.Radiology.addTempNodes()">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src="js/plugins/form-daterangepicker/daterangepicker.min.js"></script>
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script>

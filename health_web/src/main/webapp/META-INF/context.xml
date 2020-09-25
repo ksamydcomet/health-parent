@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context antiJARLocking="true" path="/health_web">
+    <Realm appName="DComMetLogin" className="org.apache.catalina.realm.JAASRealm" 
+           roleClassNames="com.dcomet.fw.security.service.jaas.RolePrincipal" 
+           userClassNames="com.dcomet.fw.security.service.jaas.UserPrincipal"/>
+</Context>

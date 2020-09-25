@@ -1,0 +1,206 @@
+<script>
+    function div_hide() {
+        $("#FeatureMasterHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+    }
+    function viewParentGroup() {
+        $("#featureParentGroupDiv").removeClass("hidden");
+
+    }
+    function showMoreDeatil() {
+        $("#giveMoreDetail").change(function () {
+            if ($("#giveMoreDetail").is(":checked")) {
+                $("#moreDetailsDiv1", "#moreDetailsDiv2", "#moreDetailsDiv3").removeClass("hidden");
+            } else {
+                $("#moreDetailsDiv1", "#moreDetailsDiv1").addClass("hidden");
+            }
+        });
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-select2/select2.css'/>
+<div class="row">
+    <div id="FeatureMasterHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>Feature Master</h4>
+            <div class="pull-right edit-all-button-container">
+                <a href="#" class="btn btn-primary " onclick="div_hide()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form">Add New</span></a>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <table id="featureMasterTable" cellpadding="0" cellspacing="0" border="0"  class="table table-striped table-bordered">
+                        <thead>
+                            <tr style="background-color: gainsboro ">
+                                <th style="color: black">Feature Name</th>
+                                <th style="color: black">Feature Code</th>
+                                <th style="color: black"> Feature Parent Group</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyHead"></tbody> 
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="add_new" class="hidden"> 
+    <div class="row">
+        <div class="panel panel-primary">
+            <form action="#" id="edit_user_form" name="edit_user_form" class="form-horizontal row-border">
+                <div class="panel-heading"><h4>Features</h4>
+                    <div class="hidden-print">
+                        <div class="pull-right edit-all-button-container">
+                            <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('Features');
+                                    dcomethealth.util.base_init();" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Back</span></a>
+                            <input type="submit" id="submitData" class="btn btn-primary" value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>
+                        </div>
+                    </div>
+                </div>
+                <br>                
+                <div class="panel panel-default">
+                    <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+                        <div class="" id="fileDownloadHeader">                            
+                        </div>                        
+                        <!--<hr class="btn-danger">-->
+                        <div class="row col-md-12 col-sm-12 col-xs-12 ">
+                            <div class="row  col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Feature Product RID</label>
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <input type="text" id="featureProductRID" name="featureProductRID" class="form-control"  placeholder="Mandatory" maxlength="1" onkeypress="dcomethealth.validation.isNumberKey(event)" value=""/>
+                                </div>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Feature Code</label>
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <input type="text" id="featureCode" name="featureCode" class="form-control"  placeholder="Mandatory" value="" maxlength="40"/>
+                                    <input type="hidden" id="featureId" name="featureId"/> 
+                                </div>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                                
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Feature Name</label>
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <input class="form-control" type="text" id="featureName" name="featureName" value=""  placeholder="Mandatory" maxlength="40"  onkeypress="dcomethealth.validation.ValidateAlpha(event)"/>
+                                </div>
+                            </div>
+
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                               
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">Feature Group</label>
+                                    <input type="text" id="featureGroup" name="featureGroup" class="form-control "  placeholder="Should be Capital letters only" onkeypress="dcomethealth.validation.ValidateAlpha()" maxlength="2"  />
+                                </div>
+                            </div>
+                        </div>
+                        <div class=" row col-md-12 col-sm-12 col-xs-12 ">  
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                        
+                                <label class="row col-md-12 col-sm-12 col-xs-12"  style="color: black">Assign Entity</label>
+                                <div class= "row col-md-12 col-sm-8 col-xs-8">
+                                    <select id="assignEntity" name="assignEntity" multiple  style="width:100%;" class="row populate assignEntity"></select>
+                                </div>
+                            </div> 
+                            <div id="featureValidDiv" class="hidden row col-md-3 col-sm-3 col-xs-3">                               
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">Feature Valid</label>
+                                    <div class="col-md-12 control-label">
+                                        <div class="featureValid"></div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class=" row col-md-3 col-sm-3 col-xs-3" id="viewParentGroupDiv">                               
+                                <div class="row col-md-12 col-sm-12 col-xs-12" id="featureChild">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">Feature Is Child</label>                                    
+                                    <div class="col-xs-4 col-sm-4"><input id="featureIsParent" onclick="dcomethealth.Features.checkParent(this);" type="checkbox"></div>                                 
+                                </div>
+                            </div>
+                            <div class="hidden  row col-md-3 col-sm-3 col-xs-3" id="featureParentGroupDiv">                               
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Feature Parent Group</label>
+                                <div class="row col-xs-12 col-sm-12 col-md-12"><select id="featureParentGroup"  class=" col-md-12 form-control" name="featureParentGroup"></select></div>
+                            </div>                    
+                            <div class=" row col-md-3 col-sm-3 col-xs-3" id="moreDetails">                               
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">More Details</label>
+                                    <div class="row col-xs-4 col-sm-4"><input id="giveMoreDetail" onclick="dcomethealth.Features.check(this);" type="checkbox"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class=" hidden row col-md-12 col-sm-12 col-xs-12 " id="moreDetailsDiv1">  
+                            <div class="row col-md-3 col-sm-3 col-xs-3">
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">Feature Command</label>
+                                    <input type="text" id="featureCommand" name="featureCommand" class="form-control"/>
+                                </div>                                  
+                            </div>                                  
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                               
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">Feature Group Desc</label>
+                                    <input type="text" id="featureGroupDesc" name="featureGroupDesc" class="form-control"/>
+                                </div>
+                            </div>
+
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                               
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">Feature Bitmap Fname</label>
+                                    <input type="text" id="featureBitmapFname" name="featureBitmapFname" class="form-control"/>
+                                </div>
+                            </div> 
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                               
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">Feature Help</label>
+                                    <input type="text" id="featureHelp"  name="featureHelp" class="form-control"/>
+                                </div>
+                            </div> 
+                        </div>
+                        <div class="hidden row col-md-12 col-sm-12 col-xs-12 " id="moreDetailsDiv2">                           
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                               
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">Feature Version</label>
+                                    <input type="text" id="featureVersion" name="featureVersion" class="form-control"/>
+                                </div>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                               
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">Feature Release Date</label>
+                                    <input type="text" id="featureReleaseDate" name="featureReleaseDate" class="form-control" onkeypress=""/>
+                                </div>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                               
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">Feature Is Unit Specific</label>
+                                    <input type="text" id="featureIsUnitSpecific" name="featureIsUnitSpecific" class="form-control"/>
+                                </div>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                               
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">Feature Icon</label>
+                                    <input type="text" id="featureIcon" name="featureIcon" class="form-control"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="hidden row col-md-12 col-sm-12 col-xs-12 " id="moreDetailsDiv3">                           
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                               
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">Feature Seq Num</label>
+                                    <input type="text" id="featureSeqNum" name="featureSeqNum" class="form-control"/>
+                                </div>
+                            </div>  
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                               
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">ID No</label>
+                                    <input type="text" id="idNo" name="idNo" class="form-control"/>
+                                </div>
+                            </div>  
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-select2/select2.min.js'></script>
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> 

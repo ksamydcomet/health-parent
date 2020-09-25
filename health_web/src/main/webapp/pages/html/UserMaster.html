@@ -1,0 +1,248 @@
+<script>
+    $("#userDOB").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    function div_hide() {
+        $("#UserMasterHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+        $("#ms-multi-select").addClass("row"); // for multi-select left alignment
+        $("select.dcomet-c-s_roles-list").empty();
+        $("select.dcomet-c-s_roles-list", $("#UserMaster")).each(function (idx, elem) {
+            $.each(dcometRoles, function (index, roles) {
+                if (parseInt(dcomethealth.loginuser.entityRid) == parseInt(roles.roleEntityRID) && !!roles.roleValid) {
+                    $(elem).append('<option value="' + roles.id + '">' + roles.roleName + '</option>');
+                }
+            });
+            var opts = $("#source").html(), opts2 = "<option></option>" + opts;
+            $("select.populate").each(function () {
+                var e = $(this);
+                e.html(e.hasClass("placeholder") ? opts2 : opts);
+            });
+        });
+        $('#tbody_hidden').empty();
+        $('.select2-choices').find('.select2-search-choice').each(function () {
+            $(this).remove();
+        });
+        $('#tbody_hidden').append('<tr><td><input type="hidden" id="urRoleMapRid" name="urRoleMapRid" value=""/><input type="hidden" id="urRoleRid" name="urRoleRid" value=""/></td></tr>');
+        $(':text').val('');
+        $(':checkbox, :radio').prop('checked', false);
+    }
+
+    function div_back() {
+        $("#add_new").removeClass("panel panel-primary").addClass("hidden");
+        $("#UserMasterHeader").removeClass("hidden").addClass("panel panel-primary");
+    }
+
+    function clearAllUm() {
+        document.getElementById("edit_user_form").reset();
+        document.getElementById("roles").innerHTML = "";
+        $('.activeStatus').toggles({on: true}, "userValid");
+    }
+
+    function CalculateAge(birthday) {
+        var re = /^(0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])[- /.](19|20)\d\d+$/;
+        if (!!birthday.value) {
+            if (!re.test(birthday.value)) {
+                alert("Date must be mm/dd/yyyy format")
+                return false;
+            }
+        }
+    }
+    function dateValidation() {
+        var a = moment();
+        var b = moment($("#userDOB").val(), 'DD-MM-YYYY');
+        if (a.isBefore(b)) {
+            alert("Enter Valid Date");
+        }
+        return false;
+    }
+
+
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-multiselect/css/multi-select.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-select2/select2.css' />
+<div class="row">
+    <div id="UserMasterHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>User Master</h4>
+            <div class="pull-right edit-all-button-container">
+                <a href="#" class="btn btn-primary " onclick="div_hide()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Add New</span></a>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div id="userMasterDetails" class="">
+                        <table id="usersTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        User Name
+                                    </th>
+                                    <th>
+                                        Full Name
+                                    </th>
+                                    <th>
+                                        Type
+                                    </th>
+                                    <th>
+                                        Contact Number
+                                    </th>
+                                </tr>
+                            </thead>            
+                            <tbody id="tbody_head">
+                            </tbody> 
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="add_new" class="hidden"> 
+    <div class="row" id="ItemMaster">     
+        <div class="panel panel-primary">
+            <table id="dyn_table" class="hidden">
+                <tbody id="tbody_hidden"></tbody>
+            </table>
+            <form action="#" id="edit_user_form" name="edit_user_form" novalidate="novalidate">
+                <div class="panel-heading"><h4>User Master</h4>
+                    <div class="hidden-print">
+                        <div class="edit-all-button-container pull-right">                            
+                            <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('UserMaster');
+                                    dcomethealth.util.base_init();" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Back</span></a>
+                            <!--<a href="#" class="btn btn-primary edit-all-button"><span id="savePage4Form">Save</span></a>-->
+                            <input type="submit" class="btn btn-primary" value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="panel-body">
+                    <span class="text-primary"><strong>User Info.</strong></span><hr class="btn-danger">
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">User Name</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="userID" name="userID" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" class="form-control"/>
+                                <input type="hidden" id="userType" name="userType" value="User"/>
+                                <input type="hidden" id="uId"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Full Name</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="userFullName" name="userFullName" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Gender</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <select id="userGender" name="userGender" class="dcomet-c-s_ddict_gender-list form-control">
+                                    <option></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Contact No.</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="userMobile" name="userMobile" onkeypress="return dcomethealth.validation.isNumberKey(event)" maxlength="20" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Email ID</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="userEmail" name="userEmail"  class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">DOB</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="userDOB" maxlength="10" onchange="dateValidation()" name="userDOB" onkeypress="return dcomethealth.validation.ValidateDateEntry(event)" title="DD-MM-YYYY Format" class="form-control jqueryUIToolTip"/>
+                            </div>
+                        </div>
+                    </div>
+                    <br>                    
+                    <div id="passWordDiv" class="row col-md-12 col-sm-12 col-xs-12">
+                        <span class="text-primary"><strong>Reset Password</strong></span><hr class="btn-danger">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Password</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input type="password" id="userPassword" name="userPassword" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Confirm Password</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input type="password" id="confirm_userPass" name="confirm_userPass" class="form-control"/>
+                            </div>
+                        </div>
+                    </div>
+                    <!--<div class="form-group"></div>-->
+                    <div class="row col-md-12 col-sm-12 col-xs-12">                        
+                        <span class="text-primary"><strong>WorkList Setting</strong></span><hr class="btn-danger">
+                        <div class="row col-md-12 col-sm-12 col-xs-12">
+                            <!--<form action="#" class="row form-horizontal row-border">-->
+                            <div class="row form-group col-md-12 col-sm-12 col-xs-12">
+                                <select multiple="multiple" id="multi-select"  class="row dcomet-c-s_feature-list"></select>
+                            </div>   
+                            <!--</form>-->
+                        </div>
+                    </div>
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="row form-group hidden">
+                            <label class="col-md-3 col-sm-3 col-xs-3 control-label">Select Box</label>
+                            <div class="row col-sm-6 col-md-6 col-xs-6">
+                                <select class="row  form-control dcomet-c-s_roles-list" id="source"></select>
+                            </div>
+                        </div>
+                        <hr class="btn-danger">
+                    </div>                    
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Roles</label>
+                            <div class="row col-md-6 col-sm-12 col-xs-12">
+                                <select id="roles" name="roles" multiple  style="width:100%;" class="row populate role"></select>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Unit</label>
+                            <div class="row col-md-6 col-sm-12 col-xs-12">
+                                <select id="units" class="dcomet-c-s_UserUnit-list" multiple style="width:100%;"></select><!---->
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Primary Unit</label>
+                            <div class="row col-md-6 col-sm-12 col-xs-12">
+                                <select id="primaryUnit" class="form-control">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Is Active</label>
+                            <div class="row col-sm-8 col-md-8 col-xs-8 control-label"> <!--  control-label needed for positioning -->
+                                <div class="activeStatus"></div>
+                            </div>                                                 
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Is Staff</label>
+                            <div class="row col-sm-8 col-md-8 col-xs-8 control-label"> <!--  control-label needed for positioning -->
+                                <div class="staffStatus"></div>
+                            </div> 
+                        </div>
+                    </div>
+                </div>  
+            </form>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-select2/select2.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-multiselect/js/jquery.multi-select.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> 

@@ -1,0 +1,106 @@
+<link rel="stylesheet" type='text/css' href="pages/css/pictures.css">
+<div class="row" id="UserProfile">     
+    <div class="panel panel-midnightblue">            
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-midnightblue">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <div style="margin-right: 25px;">
+                                    <fieldset id="pictures">                    
+                                        <input type='hidden' name="resourceId" id="resourceId" value="" />
+                                       <div id="image_containerImg" class="ImgPlaceHolder ddplaceHolder"> 
+                                            <img id="userImg" alt="userImage" style="width: 150px; height: 150px" />
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="table-responsive">
+                                    <table class="table table-condensed">
+                                        <div id="up-header-name"></div>
+                                        <tbody>
+                                            <tr><td>Email</td><td>:</td><td><span id="up-user-email"></span></td></tr>
+                                            <tr><td>Gender</td><td>:</td><td><span id="up-user-gender"></span></td></tr>
+                                            <tr><td>Date Of Birth</td><td>:</td><td><span id="up-user-dob"></span></td></tr>
+<!--                                            <tr><td>Address</td><td>:</td><td>
+                                                    <span id="up-user-address"></span><br>
+                                                    <span id="up-user-city"></span><br>
+                                                    <span id="up-user-country"></span>
+                                                </td>
+                                            </tr>
+                                            <tr><td>Pin Code</td><td>:</td><td><span id="up-user-pincode"></span></td></tr>
+                                            <tr><td>Phone</td><td>:</td><td><span id="up-user-phone"></span></td></tr>-->
+                                            <tr><td>Mobile</td><td>:</td><td><span id="up-user-mobile"></span></td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <!--<div class="col-md-2"></div>-->
+                                <div id="reset" class="col-md-4" style="margin-top: 40px;">
+                                    <button type="button" id="resetPassword" name="resetPassword" class="btn btn-midnightblue" onclick="dcomethealth.UserProfile.showResetScreen();">Reset Password</button>
+                                </div>
+                                <div id="resetPwd" class="col-md-6 hidden">
+                                    <div class="panel panel-primary">
+                                        <div class="panel-body">
+                                            <h4 class="text-center" style="margin-bottom: 25px;">Reset Password</h4>
+                                            <form action="#" class="form-horizontal" style="margin-bottom: 0px !important;">
+                                                <div id="oldpwdDiv" class="form-group">
+                                                    <div class="col-sm-10 col-md-offset-1">
+                                                        <div class="input-group">
+                                                            <span class="input-group-addon"><i class="fa fa-key"></i></span>
+                                                            <input type="password" class="form-control" id="oldPassword" name="oldPassword" placeholder="Old Password">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div id="newPwdDiv" class="hidden">
+                                                    <div id="newPwdDiv" class="form-group">
+                                                        <div class="col-sm-10 col-md-offset-1">
+                                                            <div class="input-group">
+                                                                <span class="input-group-addon"><i class="fa fa-key"></i></span>
+                                                                <input type="password" class="form-control" id="newPwd" name="newPwd" placeholder="New Password">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div id="confirmPwdDiv" class="form-group">
+                                                        <div class="col-sm-10 col-md-offset-1">
+                                                            <div class="input-group">
+                                                                <span class="input-group-addon"><i class="fa fa-key"></i></span>
+                                                                <input type="password" class="form-control" id="confirmPwd" name="confirmPwd" placeholder="Confirm Password">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+<!--                                                <div class="col-md-offset-3">
+                                                    <a href="#" id="back" class="btn btn-midnightblue hidden" onclick="dcomethealth.UserProfile.div_Back();">Back</a>
+                                                </div>-->
+                                                <div id="enterDiv" class="col-md-offset-4 pull-right">
+                                                    <a href="#" id="oldPwd" class="btn btn-midnightblue" onclick="dcomethealth.UserProfile.isExistPassword();">Validate</a>
+                                                </div>
+                                                <div id="confirmDiv" class="col-md-offset-3 hidden pull-right">
+                                                    <a href="#" id="confirmBtn" name="confirmBtn" class="btn btn-midnightblue" onclick="dcomethealth.UserProfile.saveUser();">Confirm</a>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> 
+                            <!--                            <div class="col-md-6">
+                                                            <h3>Geographic</h3>
+                                                            <p>
+                                                                User Profile.
+                                                            </p>
+                                                            <div style='overflow:hidden;height:400px;width:600px;'>
+                                                                <div id='googleMap' style='height:400px;width:600px;'></div>
+                                                                <style>#gmap_canvas img{max-width:none!important;background:none!important}</style></div>
+                                                        </div>-->
+                        </div> 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='pages/js/pictures.js'></script>

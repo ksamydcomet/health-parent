@@ -1,0 +1,1115 @@
+<script type="text/javascript">
+    function div_hide() {
+        $("#ProcedureDetails").removeClass("panel panel-primary").addClass("hidden");
+        $("#PatientInfo").removeClass("hidden").addClass("panel panel-primary");
+    }
+    function insertRowPay(id, elem) {
+        var table = document.getElementById('pmd_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length; i++) {
+            var total = dynTableGetNodeInRow(table.rows[i], 'pmd_amount').value;
+        }
+        if (total != "" && parseInt(total) != 0) {
+            var x = dynTableRow(elem);
+            dynTableCloneRow(id, x);
+            var newRow = dynTableAppendRow(id);
+            dynTableGetNodeInRow(newRow, "pmd_amount").value = 0;
+            dynTableGetNodeInRow(newRow, "pmd_amount").className = "jqueryUIToolTip";
+            dynTableGetNodeInRow(newRow, "pmd_amount").title = "Advance Amount";
+            dynTableGetNodeInRow(newRow, "cheqno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "bankname").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "cheqdate").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "branchname").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "cardtype").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "approvalno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "cardno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "expdate").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "mobileno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "approvalno").value = "";
+            dynTableGetNodeInRow(newRow, "bankname").value = "";
+            dynTableGetNodeInRow(newRow, "cardno").value = "";
+            dynTableGetNodeInRow(newRow, "expdate").value = "";
+            dynTableGetNodeInRow(newRow, "mobileno").value = "";
+            dynTableGetNodeInRow(newRow, "cheqno").value = "";
+            dynTableGetNodeInRow(newRow, "cheqdate").value = "";
+            dynTableGetNodeInRow(newRow, "branchname").value = "";
+            dynTableGetNodeInRow(newRow, "del").className = 'ace-icon fa fa-minus';
+        } else {
+            alert("Enter Payment Amount");
+            return false;
+        }
+    }
+    function deleterowPay(elem) {
+        var x = dynTableRow(elem);
+        var remainAmount = parseFloat($("#advTextAmnt").text()) - parseFloat(dynTableGetNodeInRow(elem, "pmd_amount").value);
+        $("#advTextAmnt").text(remainAmount);
+        dynTableDeleteRow(x);
+    }
+    function deleteRow(elem, tableId) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById(tableId);
+        var table_length = table.rows.length;
+        var count = 0;
+        for (var i = 0; i < table_length - 1; i++) {
+            count++;
+            if (count == 2) {
+                dynTableDeleteRow(x);
+                dynTableGetNodeInRow(table.rows[1], 'plus').className = "fa fa-plus";
+                return false;
+            }
+        }
+    }
+    function insert_row_pre_service(tableid, elem, value) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('pre_op_service_dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var serv = dynTableGetNodeInRow(table.rows[i + 1], 'preOpServiceName').value;
+            var serviceRID = dynTableGetNodeInRow(table.rows[i + 1], 'preOpServiceRID').value;
+            if (serv == "") {
+                alert("Enter service name");
+                dynTableGetNodeInRow(table.rows[i + 1], 'preOpServiceName').value = "";
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'preOpServiceName').focus();
+                }, 1);
+                return false;
+            }
+            if (serviceRID == "") {
+                alert("Enter service name correctly");
+                dynTableGetNodeInRow(table.rows[i + 1], 'preOpServiceName').value = "";
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'preOpServiceName').focus();
+                }, 1);
+                return false;
+            }
+        }
+        if (serv == "") {
+            alert("Enter service name");
+            return false;
+        }
+        else {
+            var newRow = dynTableAppendRow(tableid);
+            if (value != 1) {
+                dynTableGetNodeInRow(newRow, 'preOpSerDel').className = "fa fa-minus";
+            } else {
+                dynTableGetNodeInRow(table.rows[1], 'preOpSerDel').className = "fa fa-minus";
+            }
+            dynTableGetNodeInRow(newRow, 'plus').className = "";
+            dynTableGetNodeInRow(newRow, 'preOpServiceName').readonly = true;
+//            dynTableGetNodeInRow(newRow, 'preOpServiceQty').tabIndex = "";
+//            dynTableGetNodeInRow(newRow, 'plus').tabIndex = "";
+            dynTableGetNodeInRow(table.rows[1], "preOpServiceName").value = "";
+            dynTableGetNodeInRow(table.rows[1], "preOpServiceName").disabled = false;
+            dynTableGetNodeInRow(table.rows[1], "preOpServiceQty").value = 1;
+            dynTableGetNodeInRow(table.rows[1], "preOpServiceQty").disabled = false;
+            dynTableGetNodeInRow(table.rows[1], "preOpServiceRID").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "preOpServiceDRid").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "preOpBdGroupRID").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "preOpServicePrice").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "preOpServiceName").focus();
+            dcomethealth.ProcedureRequest.autocompletePreService();
+//        }
+        }
+    }
+    function insert_row_intra_service(tableid, elem, value) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('intra_op_service_dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var serv = dynTableGetNodeInRow(table.rows[i + 1], 'intraOpServiceName').value;
+            var serviceRID = dynTableGetNodeInRow(table.rows[i + 1], 'intraOpServiceRID').value;
+            if (serviceRID == "") {
+                alert("Enter service name correctly");
+                dynTableGetNodeInRow(table.rows[i + 1], 'intraOpServiceName').value = "";
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'intraOpServiceName').focus();
+                }, 1);
+                return false;
+            }
+            if (serv == "") {
+                alert("Enter service name");
+                dynTableGetNodeInRow(table.rows[i + 1], 'intraOpServiceName').value = "";
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'intraOpServiceName').focus();
+                }, 1);
+                return false;
+            }
+        }
+        if (serv == "") {
+            alert("Enter service name");
+            return false;
+        } else {
+            var newRow = dynTableAppendRow(tableid);
+            if (value != 1) {
+                dynTableGetNodeInRow(newRow, 'intraOpSerDel').className = "fa fa-minus";
+            } else {
+                dynTableGetNodeInRow(table.rows[1], 'intraOpSerDel').className = "fa fa-minus";
+            }
+            dynTableGetNodeInRow(newRow, 'plus').className = "";
+            dynTableGetNodeInRow(table.rows[1], "intraOpServiceName").value = "";
+            dynTableGetNodeInRow(table.rows[1], "intraOpSerReqRid").value = 0;
+            dynTableGetNodeInRow(table.rows[1], "intraOpServiceName").disabled = false;
+            dynTableGetNodeInRow(newRow, "intraOpServiceName").readOnly = true;
+            dynTableGetNodeInRow(table.rows[1], "intraOpServiceQty").value = 1;
+            dynTableGetNodeInRow(table.rows[1], "intraOpServiceQty").disabled = false;
+            dynTableGetNodeInRow(table.rows[1], "intraOpServiceRID").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "intraOpBdGroupRID").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "intraOpServicePrice").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "intraOpServiceName").focus();
+            dcomethealth.ProcedureRequest.autocompleteIntraService();
+        }
+    }
+    function insert_row_post_service(tableid, elem, value) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('post_op_service_dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var serv = dynTableGetNodeInRow(table.rows[i + 1], 'postOpServiceName').value;
+            var serviceRID = dynTableGetNodeInRow(table.rows[i + 1], 'postOpServiceRID').value;
+            if (serviceRID == "") {
+                alert("Enter service name correctly");
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'postOpServiceName').focus();
+                }, 1);
+                dynTableGetNodeInRow(table.rows[i + 1], 'postOpServiceName').value = "";
+                return false;
+            }
+            if (serv == "") {
+                alert("Enter service name");
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'postOpServiceName').focus();
+                }, 1);
+                dynTableGetNodeInRow(table.rows[i + 1], 'postOpServiceName').value = "";
+                return false;
+            }
+        }
+        if (serv == "") {
+            alert("Enter service name");
+            return false;
+        } else {
+            var newRow = dynTableAppendRow(tableid);
+            if (value != 1) {
+                dynTableGetNodeInRow(newRow, 'postOpSerDel').className = "fa fa-minus";
+            } else {
+                dynTableGetNodeInRow(table.rows[1], 'postOpSerDel').className = "fa fa-minus";
+            }
+            dynTableGetNodeInRow(newRow, 'plus').className = "";
+            dynTableGetNodeInRow(newRow, 'postOpServiceName').readOnly = true;
+            dynTableGetNodeInRow(table.rows[1], "postOpServiceName").value = "";
+            dynTableGetNodeInRow(table.rows[1], "postOpServiceName").disabled = false;
+            dynTableGetNodeInRow(table.rows[1], "postOpServiceQty").value = 1;
+            dynTableGetNodeInRow(table.rows[1], "postOpServiceQty").disabled = false;
+            dynTableGetNodeInRow(table.rows[1], "postOpServiceRID").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "postOpServiceDRid").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "postOpBdGroupRID").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "postOpServicePrice").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "postOpServiceName").focus();
+            dcomethealth.ProcedureRequest.autocompletePostService();
+        }
+    }
+    function insert_row_pre_drug(tableid, elem, value) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('pre_op_drug_dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var serv = dynTableGetNodeInRow(table.rows[i + 1], 'preOpDrugName').value;
+            var serviceRID = dynTableGetNodeInRow(table.rows[i + 1], 'preOpDrugRID').value;
+            if (serv == "") {
+                alert("Enter material / drug name");
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'preOpDrugName').focus();
+                }, 1);
+                dynTableGetNodeInRow(table.rows[i + 1], 'preOpDrugName').value = "";
+                return false;
+            }
+            if (serviceRID == "") {
+                alert("Enter material / drug name correctly");
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'preOpDrugName').focus();
+                }, 1);
+                dynTableGetNodeInRow(table.rows[i + 1], 'preOpDrugName').value = "";
+                return false;
+            }
+        }
+        if (serv == "") {
+            alert("Enter material / drug name");
+            return false;
+        } else {
+            var newRow = dynTableAppendRow(tableid);
+            if (value != 1) {
+                dynTableGetNodeInRow(newRow, 'preOpDrugDel').className = "fa fa-minus";
+            } else {
+                dynTableGetNodeInRow(table.rows[1], 'preOpDrugDel').className = "fa fa-minus";
+            }
+            dynTableGetNodeInRow(newRow, 'plus').className = "";
+            dynTableGetNodeInRow(newRow, 'preOpDrugName').readOnly = true;
+            dynTableGetNodeInRow(table.rows[1], "preOpDrugName").value = "";
+            dynTableGetNodeInRow(table.rows[1], "preOpDrugName").disabled = false;
+            dynTableGetNodeInRow(table.rows[1], "preOpQtyDrug").value = 1;
+            dynTableGetNodeInRow(table.rows[1], "preOpQtyDrug").disabled = false;
+            dynTableGetNodeInRow(table.rows[1], "preOpDrugRID").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "preOpDrugDRid").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "preOpDrugName").focus();
+            dcomethealth.ProcedureRequest.autocompletePreDrug();
+        }
+    }
+    function insert_row_intra_drug(tableid, elem, value) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('intra_op_drug_dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var serv = dynTableGetNodeInRow(table.rows[i + 1], 'intraOpDrugName').value;
+            var serviceRID = dynTableGetNodeInRow(table.rows[i + 1], 'intraOpDrugRID').value;
+            if (serviceRID == "") {
+                alert("Enter material / drug Name Correctly");
+                dynTableGetNodeInRow(table.rows[i + 1], 'intraOpDrugName').value = "";
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'intraOpDrugName').focus();
+                }, 1);
+                return false;
+            }
+            if (serv == "") {
+                alert("Enter material / drug name");
+                dynTableGetNodeInRow(table.rows[i + 1], 'intraOpDrugName').value = "";
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'intraOpDrugName').focus();
+                }, 1);
+                return false;
+            }
+        }
+        if (serv == "") {
+            alert("Enter material / drug name");
+            return false;
+        } else {
+            var newRow = dynTableAppendRow(tableid);
+            if (value != 1) {
+                dynTableGetNodeInRow(newRow, 'intraOpDrugDel').className = "fa fa-minus";
+            } else {
+                dynTableGetNodeInRow(table.rows[1], "intraOpDrugDel").className = "fa fa-minus";
+            }
+            dynTableGetNodeInRow(newRow, 'plus').className = "";
+            dynTableGetNodeInRow(newRow, 'intraOpDrugName').readOnly = true;
+            dynTableGetNodeInRow(table.rows[1], "intraOpDrugName").value = "";
+            dynTableGetNodeInRow(table.rows[1], "intraOpDrugName").disabled = false;
+            dynTableGetNodeInRow(table.rows[1], "intraOpDrugQty").value = 1;
+            dynTableGetNodeInRow(table.rows[1], "intraOpDrugQty").disabled = false;
+            dynTableGetNodeInRow(table.rows[1], "intraOpDrugRID").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "intraOpDrugName").focus();
+            dynTableGetNodeInRow(table.rows[1], "intraOpDrugDRID").value = '0';
+            dcomethealth.ProcedureRequest.autocompleteIntraDrug();
+        }
+    }
+    function insert_row_post_drug(tableid, elem, value) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('post_op_drug_dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var serv = dynTableGetNodeInRow(table.rows[i + 1], 'postOpDrugName').value;
+            var serviceRID = dynTableGetNodeInRow(table.rows[i + 1], 'postOpDrugRID').value;
+            if (serviceRID == "") {
+                alert("Enter material / drug name correctly");
+                dynTableGetNodeInRow(table.rows[i + 1], 'postOpDrugName').value = "";
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'postOpDrugName').focus();
+                }, 1);
+                return false;
+            }
+            if (serv == "") {
+                alert("Enter material / drug name");
+                dynTableGetNodeInRow(table.rows[i + 1], 'postOpDrugName').value = "";
+                setTimeout(function () {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'postOpDrugName').focus();
+                }, 1);
+                return false;
+            }
+        }
+        if (serv == "") {
+            alert("Enter material / drug name");
+            return false;
+        } else {
+            var newRow = dynTableAppendRow(tableid);
+            if (value != 1) {
+                dynTableGetNodeInRow(newRow, 'postOpDrugDel').className = "fa fa-minus";
+            } else {
+                dynTableGetNodeInRow(table.rows[1], "postOpDrugDel").className = "fa fa-minus";
+            }
+            dynTableGetNodeInRow(newRow, 'plus').className = "";
+            dynTableGetNodeInRow(newRow, 'postOpDrugName').readOnly = true;
+            dynTableGetNodeInRow(table.rows[1], "postOpDrugName").value = "";
+            dynTableGetNodeInRow(table.rows[1], "postOpDrugName").disabled = false;
+            dynTableGetNodeInRow(table.rows[1], "postOpDrugQty").value = 1;
+            dynTableGetNodeInRow(table.rows[1], "postOpDrugQty").disabled = false;
+            dynTableGetNodeInRow(table.rows[1], "postOpDrugRID").value = '0';
+            dynTableGetNodeInRow(table.rows[1], "postOpDrugName").focus();
+            dynTableGetNodeInRow(table.rows[1], "postOpDrugDRid").value = '0';
+            dcomethealth.ProcedureRequest.autocompletePostDrug();
+        }
+    }
+    function tabKeyPress(e, tableName, event) {
+        var keyCode = event.keyCode || event.which;
+        if (keyCode == 9) {
+            if (tableName == "pre_op_service_dyn_table") {
+                insert_row_pre_service(tableName, e, 0);
+            }
+            if (tableName == "pre_op_drug_dyn_table") {
+                insert_row_pre_drug(tableName, e, 0);
+            }
+            if (tableName == "intra_op_service_dyn_table") {
+                insert_row_intra_service(tableName, e, 0);
+            }
+            if (tableName == "intra_op_drug_dyn_table") {
+                insert_row_intra_drug(tableName, e, 0);
+            }
+            if (tableName == "post_op_service_dyn_table") {
+                insert_row_post_service(tableName, e, 0);
+            }
+            if (tableName == "post_op_drug_dyn_table") {
+                insert_row_post_drug(tableName, e, 0);
+            }
+        }
+    }
+    function pmdPaid() {
+        var checkvalue = 0
+        var tab_id = document.getElementById('pmd_table');
+        var tab_length = tab_id.rows.length;
+        var pmd_amount = dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pmd_amount').value;
+        if (pmd_amount == 0) {
+            if (checkvalue == 0) {
+                checkvalue = 1;
+                alert("Enter Amount");
+//                document.getElementById('total_pmd').value = "";
+                setTimeout(function () {
+                    dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pmd_amount').focus();
+                }, 1);
+                return false;
+            }
+        }
+        var table = document.getElementById('pmd_table');
+        var table_length = table.rows.length;
+        var pmd_amount_c = 0;
+        var pmd_amount1 = 0;
+        for (var i = 0; i < table_length; i++) {
+            pmd_amount1 = dynTableGetNodeInRow(table.rows[i], 'pmd_amount').value;
+            var curRid = dynTableGetNodeInRow(table.rows[i], 'pay_mode_currency').value;
+            if (curRid != dcomethealth.sCurrencyRid) {
+                $.each(currencyExchange, function (idx, cur) {
+                    if (cur.cerDispCurRid == curRid) {
+                        pmd_amount1 = dynTableGetNodeInRow(table.rows[i], 'pmd_amount').value * cur.cerBaseToDispFactor;
+                        pmd_amount_c = parseInt(pmd_amount_c) + parseInt(pmd_amount1);
+                    }
+                });
+            } else {
+                pmd_amount_c = parseInt(pmd_amount_c) + parseInt(pmd_amount1);
+            }
+        }
+        $("#advTextAmnt").text(pmd_amount_c);
+        if (pmd_amount_c.toString() == 'NaN') {
+//            document.getElementById('total_pmd').value = "";
+        } else {
+//            document.getElementById('total_pmd').value = pmd_amount_c.toFixed(2);
+        }
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-select2/select2.css' />
+<link rel='stylesheet' href="js/plugins/dateTimeNew/css/bootstrap-datetimepicker.min.css"/>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<script type="text/javascript" src="js/plugins/ckeditor/ckeditor.js"></script>
+<div class="row">
+    <div id="ProcedureDetails" class="panel panel-primary">
+        <div class="panel-heading"><h4>Procedure Info </h4>
+            <div class="pull-right edit-all-button-container">
+                <a href="#" class="btn btn-primary " onclick="div_hide()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form">Create New</span></a>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <table id="ProcedureDetailsTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Patient Name</th>
+                                <th>Procedure Name</th>
+                                <!--<th>Procedure Date</th>-->                            
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyHead"></tbody> 
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="hidden" id="PatientInfo">    
+    <div id="addNew" class="panel panel-primary">
+        <form action="#" id="edit_user_form" name="edit_user_form" novalidate="novalidate" class="form-horizontal row-border">
+            <div class="panel-heading"><h4 id="head_OP">Procedure Request</h4>
+                <div class="hidden-print">
+                    <div class="edit-all-button-container pull-right" id="btns_state">
+                        <!--<input type="reset" id="reset" class="btn btn-primary" onclick="clear_values()" value="Clear"/>-->
+                        <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('ProcedureRequest');
+                                dcomethealth.util.base_init()"><span id="savePage4Form" >Back</span></a>                             
+                        <input type="button" id="saveSubmit" class="btn btn-primary hidden" value="Request"> 
+                        <input type="button" id="SCHEDULE" class="btn btn-primary hidden" value="Schedule"> 
+                        <input type="button" id="COMPLETE1" class="btn btn-primary" value="Complete"> 
+                        <!--                        <button type="button" id="closeBtn" class="btn btn-primary"><i class="fa fa-times" aria-hidden="true"></i></button>-->
+                    </div>
+                </div>
+            </div>
+            <br>            
+            <div class="panel panel-default">
+                <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div id="customerSearch" class="col-md-3 col-sm-12 col-xs-12">
+                            <label id="uhidLabel" class="row col-md-12 col-sm-12 col-xs-12">Patient Uhid</label>
+                            <input id="mrnSearch" type="text" name="mrnSearch" class="col-md-8 col-sm-5 col-xs-6 form-control" placeholder="UHID / Mobile No." />                        
+                            <span  class="hidden text-primary" id="mrnSearch1"></span>
+                        </div>
+                        <div id ="patDetails" class="alert alert-success col-md-7 col-sm-7 col-xs-12 hidden">                                                                              
+                            <span  class="" id="patUhid1">Patient Uhid:</span><span class="hidden text-primary" id="patUhid" style="margin-left: 20px;"></span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>                          
+                            <span  class="" id="patName1">Patient Name:</span><span class="hidden text-primary" id="patName" style="margin-left: 20px;"></span><input type="hidden" id="prPatientRid" name="prPatientRid"/><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>                              
+                            <span  class="hidden text-primary" id="patAge" style="margin-left: 10px;"></span>                            
+                            <span  class="hidden text" id="patGender" style="margin-left: 20px;"></span>
+                            <span  class="" id="patMobile1">Patient Mobile:</span><span class="hidden text-primary" id="patMobile" style="margin-left: 20px;"></span>
+                            <span class="hidden text-primary" id="patBldGrp" style="margin-left: 20px;"></span>
+                        </div>
+                    </div>             
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div id="customerSearch" class="col-md-3 col-sm-12 col-xs-12">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Procedure Name</label>
+                            <input id="procedureSearch" type="text" name="procedureSearch" class="col-md-8 col-sm-5 col-xs-6 form-control" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" placeholder="Procedure Name" onchange="dcomethealth.ProcedureRequest.autoClearPR()"/>                                                    
+                            <input type="hidden" id ="procedureRid"/>
+                            <input type="hidden" id ="prId"/>
+                            <input type="hidden" id ="prDraftBillId"/>
+                            <input type="hidden" id ="prVisitRid"/>
+                            <input type="hidden" id ="prPrice"/>
+                        </div>
+                        <div  class="col-md-2 col-sm-12 col-xs-12">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Status</label>
+                            <select autofocus class="col-md-8 form-control" id="prType">
+                                <option value="1">Normal</option>
+                                <option value="2">Emergency</option>
+                            </select>
+                        </div>                    
+                        <div class="col-md-2 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Primary Doctor</label>
+                            <select name="primaryDoctor" id="primaryDoctor" class="col-md-8 form-control">
+                                <option value="1"></option>
+                            </select>
+                        </div>
+                        <div id="categoryDiv" class="hidden col-md-2 col-sm-12 col-xs-12">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Category</label>
+                            <b><span id="prCategorySpan" class="row col-md-8"></span></b>
+                            <input type="hidden" id="prCategory" class="row col-md-8"/>
+                        </div>
+                        <div  id="summaryDivBtn" class="col-md-2 col-sm-12 col-xs-12 hidden">
+                            <a id="btnSummary" class="btn btn-primary btn-sm">Summary</a>                            
+                        </div>
+                    </div>                   
+
+                    <div id = "schedulingDiv" class="hidden">
+                        <div class="col-md-12">
+                            <span class="text-primary"><br><strong>Scheduling Details</strong></span><hr class="btn-danger">
+                        </div>
+                        <div class="col-md-3 col-sm-4 col-xs-4"> 
+                            <div class="input-group unity-input">
+                                <label class="  col-md-12 col-sm-12 col-xs-12">Estimated Duration</label>     
+                                <div  class="col-md-6 col-sm-8 col-xs-12">                                    <!--dcomethealth.validation.validateTime(this)-->
+                                    <input type="text"  class=" form-control" id="estimetdDuration"  onkeypress="return dcomethealth.validation.isNumberKey(event)" maxlength="5"   placeholder=""  onchange="dcomethealth.ProcedureRequest.checkAvailability(1);"/>
+                                    <input type = "hidden" id="update" value="0"/>
+                                </div>
+                                <div class="row col-md-4 col-sm-4 col-xs-8">     
+                                    <span class="row input-group-btn">
+                                        <select id="prEstimatedDurationMinIndex" name="prEstimatedDurationMinIndex" class="row dcomet-c-s_ddict_ESTIMATED_DURATION_INDEX-list input-group-addon form-control" onchange="" >
+                                        </select>
+                                    </span>
+                                </div>
+
+                            </div>                                
+                        </div>    
+                        <div class="col-md-3 col-sm-3 col-xs-3">
+                            <label style="padding-left: 15px" class="row col-md-12 col-sm-12 col-xs-12">Schedule Date & Time</label>
+                            <div style="padding-left: 15px" class="row col-md-9 col-sm-8 col-xs-8">
+                                <input type='text' name="scheduleDatetime" maxlength="16" id="scheduleDatetime" onkeypress="return dcomethealth.validation.isNumberKey(event)" data-date-format="dd-mm-yyyy  hh:ii" class="form-control" onchange="dcomethealth.ProcedureRequest.checkAvailability(1);"/>                                
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">OT Room</label>
+                            <div class="row col-md-9 col-sm-8 col-xs-8">
+                                <select name="otRoom" id="otRoom" class=" form-control">
+                                    <option value="1"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Attending Doctors</label>
+                            <div class="row col-md-9 col-sm-12 col-xs-12">
+                                <select id="attDoctor" name="attDoctor" multiple  style="width:100%;" class="row"></select>
+                                <input type ='hidden' name="attnDocID" id="attnDocID"/>
+                            </div>                       
+                        </div>                        
+
+                        <div class="col-md-12 col-sm-12 col-xs-12">    
+                            <div class="col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Nurses</label>
+                                <div class="row col-md-9 col-sm-9 col-xs-9">
+                                    <select id="nurses" name="nurses" multiple  style="width:100%;" class="row populate nurse"></select>
+                                    <input type ='hidden' name="nurseID" id="nurseID"/>
+                                </div>
+                            </div> 
+                            <div class="col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Technician</label>
+                                <div class="row col-md-9 col-sm-12 col-xs-12">
+                                    <select id="technician" name="technician" multiple  style="width:100%;" class="row populate tech"></select>
+                                    <input type ='hidden' name="techID" id="techID"/>
+                                </div>
+                            </div> 
+                            <div class="col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Anesthesist</label>
+                                <div class="row col-md-9 col-sm-12 col-xs-12">
+                                    <select name="anesthes" id="anesthes" multiple class="row populate anes" style="width:100%;" ></select>
+                                    <input type ='hidden' name="anesthesID" id="anesthesID"/>                                    
+                                </div>
+                            </div> 
+                            <div class="col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Anesthesia Type</label>
+                                <div class="row col-md-9 col-sm-12 col-xs-12">
+                                    <select name="prAnesthesistType" id="prAnesthesistType" class="dcomet-c-s_ddict_anesthesia_type-list form-control">
+                                        <option value="0"></option>
+                                    </select>
+                                </div>
+                            </div> 
+                        </div>
+                        <!--                        <div class="col-md-12 col-sm12 col-xs-12"> 
+                                                    <br>
+                                                    <div class="col-md-3">                              
+                                                        <input type="checkbox" id = "prAnesthesistRequired" class="col-sm-1 col-md-1 col-xs-8"/>
+                                                        <label class="row col-md-10 col-sm-10 col-xs-12">Anesthesis Required</label>       
+                                                    </div> 
+                                                    <div id="anesthesisDiv" class="hidden col-md-6 col-sm-12 col-xs-12">   
+                                                        <div class="col-md-4 col-sm-3 col-xs-3">
+                                                            <label class=" col-md-12 col-sm-12 col-xs-12">Anesthesia Type</label>
+                                                            <div class=" col-md-12 col-sm-8 col-xs-8">
+                                                                <select name="prAnesthesistType" id="prAnesthesistType" class="dcomet-c-s_ddict_anesthesia_type-list form-control">
+                                                                    <option value="0"></option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                        
+                                                        <div class="col-md-3 col-sm-3 col-xs-3">
+                                                            <label class=" col-md-12 col-sm-12 col-xs-12">Anesthesist</label>
+                                                            <div class=" col-md-12 col-sm-8 col-xs-8">
+                                                                <select name="anesthes" id="anesthes" class="row" style="width:100%;" multiple></select>
+                                                                <input type ='hidden' name="anesthesID" id="anesthesID"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>                      -->
+                        <div class="col-md-12 col-sm-12 col-xs-12">     
+                            <br>
+                            <div class="col-md-3 col-sm-3 col-xs-3">                            
+                                <input type="checkbox" style="cursor: pointer;" id = "transplantRequested" class="col-sm-1 col-md-1 col-xs-8"/>
+                                <span id="transReqSpan" class="row col-md-10 col-sm-10 col-xs-12" style="cursor: pointer;">Transplant Requested</span>                               
+                            </div>
+                            <div id="tranNotesDiv" class="hidden col-md-6 col-sm-6 col-xs-12">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Notes</label>
+                                <div class=" col-md-12 col-sm-12 col-xs-12">
+                                    <textarea id="tranNotes" name="tranNotes" maxlength="400" class="row col-md-12 col-sm-12 col-xs-12"></textarea>
+                                </div>
+                            </div> 
+                        </div>
+                        <br>
+                        <div class="col-md-12 col-sm-12 col-xs-12">   
+                            <div class="col-md-3 col-sm-3 col-xs-3">
+                                <input type="checkbox" style="cursor:pointer" id="bloodRequested" class="row col-sm-1 col-md-1 col-xs-8"/>
+                                <span id="bloodReqSpan" class="row col-md-10 col-sm-10 col-xs-12" style="cursor: pointer;">Blood Requested</span>
+                            </div>
+                            <div id="bloodNotesDiv" class="hidden col-md-6 col-sm-6 col-xs-12">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Notes</label>
+                                <div class=" col-md-12 col-sm-12 col-xs-12">
+                                    <textarea id="bloodNotes" name="bloodNotes" maxlength="400" class="row col-md-12 col-sm-12 col-xs-12"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div id="admissionDiv" class="hidden col-md-12 col-sm-12 col-xs-12">   
+                        <div class="col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Floor</label>
+                            <div class="row col-md-9 col-sm-8 col-xs-8">
+                                <select name="anesType" id="anesType" class=" form-control">
+                                    <option value="1"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Room</label>
+                            <div class="row col-md-9 col-sm-8 col-xs-8">
+                                <select name="anesType" id="anesType" class=" form-control">
+                                    <option value="1"></option>
+                                </select>
+                            </div>
+                        </div>                        
+                        <div class="col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12"></label>
+                            <div class="row col-md-9 col-sm-8 col-xs-8">
+                                <span>Bed Name</span>
+                            </div>
+                        </div> 
+                        <div class="col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12"></label>
+                            <div class="row col-md-9 col-sm-8 col-xs-8">
+                                <span>Bed Charge</span>
+                            </div>
+                        </div>  
+                    </div>
+
+
+                    <div id="deNormalDiv" class="hidden col-md-12 col-sm-12 col-xs-12">   
+                        <div class="col-md-3 col-sm-3 col-xs-3">                            
+                            <input type="checkbox" style="cursor:pointer" id="deNormally" class="row col-sm-1 col-md-1 col-xs-8" checked/>
+                            <span id="deNormallySpan" class="row col-md-10 col-sm-10 col-xs-12" style="cursor:pointer" >Can Drink Eat Normally</span>
+                        </div>
+                        <div id="deNormalNotesDiv" class="hidden col-md-6 col-sm-6 col-xs-12">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Notes</label>
+                            <div class=" col-md-12 col-sm-12 col-xs-12">
+                                <textarea id="deNormalNotes" name="deNormalNotes" maxlength="400" class="row col-md-12 col-sm-12 col-xs-12"></textarea>
+                            </div>
+                        </div> 
+
+                        <div id="lastffDiv" class="hidden row col-md-12 col-sm-12 col-xs-12">   
+                            <div class="col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Last Fluid Time</label>
+                                <div class="row col-md-9 col-sm-8 col-xs-8">
+                                    <input type='text' name="lastFluidTime" id="lastFluidTime" class="form-control"/>
+                                </div>
+                            </div>
+                            <div class=" col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Last Food Time</label>
+                                <div class="row col-md-9 col-sm-8 col-xs-8">
+                                    <input type='text' name="lastFoodTime" id="lastFoodTime" class="form-control"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row col-md-12 col-sm-12 col-xs-12">  
+                        <div class=" col-md-6 col-sm-6 col-xs-12">
+                            <label class=" col-md-12 col-sm-12 col-xs-12">Instuctions</label>
+                            <div class="col-md-12 col-sm-12 col-xs-12">  
+                                <textarea id="prInstructions" name="prInstructions" maxlength="400" class="col-md-12 col-sm-12 col-xs-12"></textarea>
+                            </div>
+                        </div> 
+                        <div class=" col-md-6 col-sm-6 col-xs-12">
+                            <label class=" col-md-12 col-sm-12 col-xs-12">Special Notes</label>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <textarea id="prRemarks" name="prRemarks" maxlength="400" class="col-md-12 col-sm-12 col-xs-12"></textarea>
+                            </div>
+                        </div> 
+                    </div>
+                    <div id="safeSurCheckListdiv" class=" hidden col-md-12 col-sm-12 col-xs-12">  
+                        <div class="row col-md-6 col-sm-6 col-xs-12">
+                            <label class="col-md-12 col-sm-12 col-xs-12">Safe Surgery CheckList</label>
+                            <div class="col-md-12 col-sm-12 col-xs-12" id="safeSurgeryDiv">                                
+                                <textarea id="safeSurCheckList" name="safeSurCheckList"  rows="10" class="form-control col-md-12 col-sm-12 col-xs-12"></textarea>
+                                <script>
+                                    CKEDITOR.replace('safeSurCheckList');</script>
+                            </div>
+                        </div>                        
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-12"><p></p></div>
+                    <div id="preOpDiv" class="col-md-12 col-sm-12 col-xs-12 hidden">        
+                        <div class="">
+                            <span class="text-primary" style="margin-bottom: 0;margin-top: 5px;"><strong>Pre Op Orders</strong></span><hr style="margin-bottom: 0;margin-top: 2px;" class="btn-danger">
+                        </div> 
+                        <div id="preOpServiceTable" class="col-md-6 col-sm-12 col-xs-12">
+                            <input type="hidden" id="serReqhPreOpCheck" name="serReqhPreOpCheck"/>
+                            <input type="hidden" id="serReqhPreOpCheck1" name="serReqhPreOpCheck1"/>
+                            <input type="hidden" id="serReqhPreOpRid" name="serReqhPreOpRid"/>
+                            <table id="pre_op_service_dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Service Name</th>
+                                        <th>Quantity</th>                                      
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pre_op_so_tbody">     
+                                    <tr>
+                                        <td width="3%"><i id="preOpSerDel" class="fa fa-minus hidden" onclick="deleteRow(this, 'pre_op_service_dyn_table')"></i></td>
+                                        <td width="40%">
+                                            <input type="text" id="preOpServiceName" name="preOpServiceName" placeholder="Enter Service Name" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" class="col-md-11 col-sm-11 col-xs-11" onchange="dcomethealth.ProcedureRequest.autoIdSetpre(this)"/>
+                                            <input type="hidden" id="preOpServiceRID" name="preOpServiceRID"  value="0"/>
+                                            <input type="hidden" id="preOpBdGroupRID" name="preOpBdGroupRID"/>
+                                            <input type="hidden" id="preOpServicePrice" name="preOpServicePrice"/>
+                                            <input type="hidden" id="preOpServiceDRid" name="preOpServiceDRid" value="0"/>
+                                        </td>
+                                        <td width="10%">
+                                            <input id="preOpServiceQty" type="text" value = "1" name="preOpServiceQty" onkeydown="tabKeyPress(this, 'pre_op_service_dyn_table', event)" maxlength="3" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" class="text-right col-md-12 col-sm-12 col-xs-12">
+                                        </td>                           
+                                        <td  width="5%"><i   role="button" id="plus" class="fa fa-plus faPlus" onclick="insert_row_pre_service('pre_op_service_dyn_table', this, 0)"></i></td>                                
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="preOpDrugTable" class="col-md-6 col-sm-12 col-xs-12">
+                            <input type="hidden" id="matReqhPreOpCheck" name="matReqhPreOpCheck"/>
+                            <input type="hidden" id="drugReqhPreOpRid" name="drugReqhPreOpRid"/>
+                            <table id="pre_op_drug_dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Material / Drug Name</th>
+                                        <th>Quantity</th>                                      
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pre_op_drug_tbody">           
+                                    <tr>
+                                        <td width="3%"><i id="preOpDrugDel" class="fa fa-minus hidden" onclick="deleteRow(this, 'pre_op_drug_dyn_table')"></i></td>
+                                        <td width="40%">
+                                            <input type="text" id="preOpDrugName" name="preOpDrugName" placeholder="Enter Material / Drug Name"   class="col-md-11 col-sm-11 col-xs-11" onchange="dcomethealth.ProcedureRequest.autoIdSetpreDrug(this)"/>
+                                            <input type="hidden" id="preOpDrugRID" name="preOpDrugRID" value="0"/>
+                                            <input type="hidden" id="preOpDrugPrice" name="preOpDrugPrice"/>                                           
+                                            <input type="hidden" id="preOpDrugDRid" name="preOpDrugDRid" value="0"/>                                           
+                                        </td>
+                                        <td width="10%">
+                                            <input id="preOpQtyDrug" type="text" value="1" name="preOpQtyDrug" maxlength="3" onkeydown="tabKeyPress(this, 'pre_op_drug_dyn_table', event)" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" class="text-right col-md-12 col-sm-12 col-xs-12">
+                                        </td>                           
+                                        <td width="5%"><i id="plus"  class="fa fa-plus faPlus" onclick="insert_row_pre_drug('pre_op_drug_dyn_table', this, 0)"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-12"><p></p></div>
+                    <div id="intraOpDiv" class="col-md-12 col-sm-12 col-xs-12">        
+                        <div class="">
+                            <span class="text-primary" style="margin-bottom: 0;margin-top: 5px;"><strong>Intra Op Orders</strong></span><hr style="margin-bottom: 0;margin-top: 2px;" class="btn-danger">
+                        </div> 
+                        <div id="intraOpServiceTable" class="col-md-6 col-sm-12 col-xs-12">
+                            <input type="hidden" id="serReqhIntraOpCheck" name="serReqhIntraOpCheck" />
+                            <table id="intra_op_service_dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Service Name</th>
+                                        <th>Quantity</th>                                      
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="intra_op_so_tbody">    
+                                    <tr>
+                                        <td width="3%"><i id="intraOpSerDel" class="fa fa-minus hidden" onclick="deleteRow(this, 'intra_op_service_dyn_table')"></i></td>
+                                        <td width="40%">
+                                            <input type="text" id="intraOpServiceName" name="intraOpServiceName" placeholder="Enter Service Name" class="col-md-11 col-sm-11 col-xs-11" onchange="dcomethealth.ProcedureRequest.autoIdSetintra(this)"/>
+                                            <input type="hidden" id="intraOpServiceRID" name="intraOpServiceRID" value="0"/>
+                                            <input type="hidden" id="intraOpBdGroupRID" name="intraOpBdGroupRID"/>                                    
+                                            <input type="hidden" id="intraOpServicePrice" name="intraOpServicePrice"/>
+                                            <input type="hidden" id="intraOpSerReqRid" name="intraOpSerReqRid" value="0"/>
+                                        </td>
+                                        <td width="10%">
+                                            <input id="intraOpServiceQty" type="text" value="1" name="intraOpServiceQty" onkeydown="tabKeyPress(this, 'intra_op_service_dyn_table', event)" maxlength="3" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" class="text-right col-md-12 col-sm-12 col-xs-12">
+                                        </td>                           
+                                        <td width="5%"><i id="plus"  class="fa fa-plus faPlus" onclick="insert_row_intra_service('intra_op_service_dyn_table', this, 0)"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="intraOpDrugTable" class="col-md-6 col-sm-12 col-xs-12">
+                            <input type="hidden" id="matReqhIntraOpCheck" name="matReqhIntraOpCheck"/>
+                            <table id="intra_op_drug_dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Material / Drug Name</th>
+                                        <th>Quantity</th>                                      
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="intra_op_drug_tbody">        
+                                    <tr>
+                                        <td width="3%"><i id="intraOpDrugDel" class="fa fa-minus hidden" onclick="deleteRow(this, 'intra_op_drug_dyn_table')"></i></td>
+                                        <td width="40%">
+                                            <input type="text" id="intraOpDrugName" name="intraOpDrugName"  placeholder="Enter Material / Drug Name" class="col-md-11 col-sm-11 col-xs-11" onchange="dcomethealth.ProcedureRequest.autoIdSetintraDrug(this)"/>
+                                            <input type="hidden" id="intraOpDrugRID" name="intraOpDrugRID" value="0"/>
+                                            <input type="hidden" id="intraOpBdGroup1RID" name="intraOpBdGroup1RID"/> 
+                                            <input type="hidden" id="intraOpDrugPrice" name="intraOpDrugPrice"/>
+                                            <input type="hidden" id="intraOpDrugDRID" name="intraOpDrugDRID" value="0"/>
+                                        </td>
+                                        <td width="10%">
+                                            <input id="intraOpDrugQty" type="text" value="1" onkeydown="tabKeyPress(this, 'intra_op_drug_dyn_table', event)" name="intraOpDrugQty" maxlength="3" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" class="text-right col-md-12 col-sm-12 col-xs-12">
+                                        </td>                           
+                                        <td width="5%"><i id="plus"  class="fa fa-plus faPlus" onclick="insert_row_intra_drug('intra_op_drug_dyn_table', this, 0)"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div> 
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-12"><p></p></div>
+                    <div id="postOpDiv" class=" col-md-12 col-sm-12 col-xs-12">        
+                        <div class="">
+                            <span class="text-primary" style="margin-bottom: 0;margin-top: 5px;"><strong>Post Op Orders</strong></span><hr style="margin-bottom: 0;margin-top: 2px;" class="btn-danger">
+                        </div> 
+                        <div id="postOpServiceTable" class="col-md-6 col-sm-12 col-xs-12">
+                            <input type="hidden" id="serReqhPostOpCheck" name="serReqhPostOpCheck"/>
+                            <input type="hidden" id="serReqhPostOpCheck1" name="serReqhPostOpCheck1"/>
+                            <input type="hidden" id="serReqhPostOpRid" name="serReqhPostOpRid"/>
+                            <table id="post_op_service_dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Service Name</th>
+                                        <th>Quantity</th>                                  
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="post_op_service_tbody"> 
+                                    <tr>
+                                        <td width="3%"><i id="postOpSerDel" class="fa fa-minus hidden" onclick="deleteRow(this, 'post_op_service_dyn_table')"></i></td>
+                                        <td width="40%">
+                                            <input type="text" id="postOpServiceName" name="postOpServiceName"  placeholder="Enter Service Name" class="col-md-11 col-sm-11 col-xs-11" onchange="dcomethealth.ProcedureRequest.autoIdSetpost(this)"/>
+                                            <input type="hidden" id="postOpServiceRID" name="postOpServiceRID"  value="0"/>
+                                            <input type="hidden" id="postOpBdGroupRID" name="postOpBdGroupRID"/>
+                                            <input type="hidden" id="postOpServicePrice" name="postOpServicePrice"/>
+                                            <input type="hidden" id="postOpServiceDRid" name="postOpServiceDRid" value="0"/>                                            
+                                        </td>
+                                        <td width="10%">
+                                            <input id="postOpServiceQty" type="text" value="1" name="postOpServiceQty" maxlength="3" onkeydown="tabKeyPress(this, 'post_op_service_dyn_table', event)" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" class="text-right col-md-12 col-sm-12 col-xs-12">
+                                        </td>                           
+                                        <td width="5%"><i id="plus" class="fa fa-plus faPlus"  onclick="insert_row_post_service('post_op_service_dyn_table', this, 0)"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="postOpDrugTable" class="col-md-6 col-sm-12 col-xs-12">
+                            <input type="hidden" id="matReqhPostOpCheck" name="matReqhPostOpCheck"/>
+                            <input type="hidden" id="drugReqhPostOpRid" name="drugReqhPostOpRid"/>
+                            <table id="post_op_drug_dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Material / Drug Name</th>
+                                        <th>Quantity</th>                                      
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="post_op_drug_tbody">     
+                                    <tr>
+                                        <td width="3%"><i id="postOpDrugDel" class="fa fa-minus hidden" onclick="deleteRow(this, 'post_op_drug_dyn_table')"></i></td>
+                                        <td width="40%">
+                                            <input type="text" id="postOpDrugName" name="postOpDrugName" placeholder="Enter Material / Drug Name"  class="col-md-11 col-sm-11 col-xs-11" onchange="dcomethealth.ProcedureRequest.autoIdSetpostDrug(this)"/>
+                                            <input type="hidden" id="postOpDrugRID" name="postOpDrugRID" value="0"/>
+                                            <input type="hidden" id="postOpDrugPrice" name="postOpDrugPrice"/>
+                                            <input type="hidden" id="postOpDrugDRid" name="postOpDrugDRid" value="0"/>                                            
+                                        </td>
+                                        <td width="10%">
+                                            <input id="postOpDrugQty" type="text" value="1" name="postOpDrugQty" maxlength="3" onkeydown="tabKeyPress(this, 'post_op_drug_dyn_table', event)" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" class="text-right col-md-12 col-sm-12 col-xs-12">
+                                        </td>                           
+                                        <td width="5%"><i id="plus" class="fa fa-plus faPlus"  onclick="insert_row_post_drug('post_op_drug_dyn_table', this, 0)"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="otComplicationDiv" class="hidden col-md-12 col-sm-12 col-xs-12">  
+                        <div class="row col-md-6 col-sm-6 col-xs-12">
+                            <label class="col-md-12 col-sm-12 col-xs-12">OT Complications</label>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <textarea id="prOtComplications" name="prOtComplications" maxlength="400" class="col-md-12 col-sm-12 col-xs-12"></textarea>
+                            </div>
+                        </div> 
+                        <div class="row col-md-6 col-sm-6 col-xs-12">
+                            <label class="scol-md-12 col-sm-12 col-xs-12">Post OP Complications</label>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <textarea id="postOtComplications" name="postOtComplications" maxlength="400" class="col-md-12 col-sm-12 col-xs-12"></textarea>
+                            </div>
+                        </div> 
+                    </div>
+                    <div id="postOPInstructionsDiv" class="hidden col-md-12 col-sm-12 col-xs-12">  
+                        <div class="row col-md-6 col-sm-6 col-xs-12">
+                            <label class="col-md-12 col-sm-12 col-xs-12">Post OP Instuctions</label>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <textarea id="prPostInstructions" name="prPostInstructions" maxlength="400" class="col-md-12 col-sm-12 col-xs-12"></textarea>
+                            </div>
+                        </div> 
+                        <div class="row col-md-6 col-sm-6 col-xs-12">
+                            <label class="scol-md-12 col-sm-12 col-xs-12">Follow Ups</label>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <textarea id="prFollowUp" name="prFollowUp" maxlength="400" class="col-md-12 col-sm-12 col-xs-12"></textarea>
+                            </div>
+                        </div> 
+                    </div> 
+                    <div class="col-md-12 col-sm-12 col-xs-12"></div>
+                    <div id="paymentDiv" class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="">
+                            <br>
+                            <span class="text-primary"><strong>Advance Details</strong></span><hr class="btn-danger">
+                        </div> 
+                        <div class="alert alert-info pull-right col-md-12 col-sm-12 col-xs-12">                            
+                            <div class="col-md-12 col-sm-12 col-xs-12">                                
+                                <div class="col-md-offset-8 col-sm-8 col-xs-12">
+                                    <label><strong>Admitting Advance</strong> (<span class="dcomet-c-s_currCode"></span>)</label>
+                                    <input id="total_pmd" name="total_pmd" placeholder="*" style="text-align:right;" maxlength="11" onkeypress="return dcomethealth.validation.isDecimalKey(event)"  onchange="dcomethealth.ProcedureRequest.addAdvance(this)"/>
+                                    <input type="hidden" id="advanceRID" name="advanceRID" />
+                                    <span id="advTextAmnt" class="hidden">0</span>
+                                </div>
+                            </div>
+                            <div class="col-md-12">   
+                                <div id="paymentMode" class="col-md-12 col-sm-12 col-xs-12 "> 
+                                    <span class="text-primary"><strong>Payment Mode</strong></span>
+                                    <div class="col-md-12 col-sm-12 col-xs-12">                                        
+                                        <table id="pmd_table" class="table table-condensed table-hover" width="100%" border="0" cellspacing="0" cellpadding="0">
+                                            <tr>
+                                                <td width="2%"><i id="del" class="ace-icon fa fa-minus-circle hidden" onclick="deleterowPay(this)"></i></td>
+                                                <td width="5%" onclick=""><div class="btn-group">
+                                                        <select id="pay_mode_ddict" name="pay_mode_ddict" class="dcomet-c-s_ddict_payment_mode-list" onchange="openCardInfo()" >
+                                                        </select></div>
+                                                </td>
+                                                <td width="8%" id="td_1"><select id="cardtype" name="cardtype"  class="dcomet-c-s_ddict_credit_card_type-list col-md-12 col-sm-12 col-xs-12 hidden" ></select><input class="col-md-12 col-sm-12 col-xs-12 hidden" id="cheqno" name="cheqno" placeholder="Cheque No"/></td>
+                                                <td width="7%" id="td_2"><input class="col-md-12 col-sm-12 col-xs-12 hidden" id="bankname" name="bankname" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" placeholder="Bank Name"/></td><input class="col-md-12 col-sm-12 col-xs-12 hidden" id="banknam" name="banknam" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" placeholder="Bank Name"/>
+                                            <td width="10%" id="td_3"><input class="col-md-12 col-sm-12 col-xs-12 hidden" id="approvalno" name="approvalno" maxlength="20" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" placeholder="Approval No."/><input class="col-md-12 col-sm-12 col-xs-12 hidden jqueryUIToolTip" title="MM/YYYY Format" id="cheqdate" name="cheqdate" maxlength="10" onchange="dcomethealth.IPAdmission.checkDate(this)" placeholder="Cheque Date"/></td>
+                                            <td width="10%" id="td_4"><input class="col-md-12 col-sm-12 col-xs-12 hidden" id="cardno" name="cardno" maxlength="20" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" placeholder="Card No"/><input class="col-md-12 col-sm-12 col-xs-12 hidden" id="branchname" name="branchname" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" placeholder="Branch Name"/></td>
+                                            <td class="" width="8%" id="td_5"><input class="col-md-12 col-sm-12 col-xs-12 hidden jqueryUIToolTip" title="MM/YYYY Format" id="expdate" name="expdate" maxlength="10"  onchange="dcomethealth.IPAdmission.checkDate(this)" placeholder="Exp Date"/></td>
+                                            <td class="" width="8%" id="td_6"><input class="col-md-12 hidden" id="mobileno" name="mobileno" maxlength="12" onkeypress="return dcomethealth.validation.isNumberKey()(this)" placeholder="Mobile No"/></td><input class="col-md-12 hidden" id="mobileno" name="mobileno" maxlength="10" onkeypress="return dcomethealth.validation.validateAlpha()" placeholder="Mobile No"/>
+                                            <td width="5%" onclick=""><div class="btn-group">
+                                                    <select id="pay_mode_currency" name="pay_mode_currency" onchange="pmdPaid()" >
+                                                    </select></div>
+                                            </td>
+                                            <td width="15%"><input class="input-small width-100 jqueryUIToolTip" id="pmd_amount" name="pmd_amount" maxlength="9" title="Advance Amount" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" onchange="pmdPaid()" type="text" style="text-align: right"/></td>
+
+                                            <td width="2%"><i class="ace-icon fa fa-plus" onclick="insertRowPay('pmd_table', this)"></i></td>
+                                            </tr>
+                                        </table>                                                              
+                                    </div>       
+                                </div>                            
+                            </div>
+                        </div>
+                    </div> 
+                </div>
+            </div>
+        </form>  
+    </div> 
+</div> 
+<div class="row col-md-12">                                    
+    <div class="modal fade" id="summaryModal" role="dialog">
+        <div class="modal-dialog modal-lg" style="">
+            <div class="modal-content">
+                <div class="modal-header" style="border-bottom: 3px solid #1c9cbc;text-align:center;">
+                    <b><span id="tempNameSpan"></span></b>
+                    <h4 class="text-center"><b>Summary</b></h4>
+                    <input type="hidden" id="tempName" />                
+                </div>
+                <div class="modal-body">
+                    <div class="col-md-12 col-sm-4 col-xs-4">                                                                               
+                        <div id="summaryDiv" class="col-md-12 col-sm-12 col-xs-12 hidden" style="height: 450px;overflow: scroll;">                            
+                            <div id="patDetailsDiv" class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <label class="col-md-12 col-sm-8 col-xs-12"><b>Patient UHID</b></label> 
+                                    <label id="patUhidLabel" class="col-md-8 col-sm-8 col-xs-12"></label> 
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <label class="col-md-12 col-sm-8 col-xs-12"><b>Patient Name</b></label> 
+                                    <label id="patNameLabel" class="col-md-8 col-sm-8 col-xs-12"></label>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <label class="col-md-12 col-sm-8 col-xs-12"><b>Mobile No.</b></label> 
+                                    <label id="patMobileNoLabel" class="col-md-8 col-sm-8 col-xs-12"></label>
+                                </div>
+                            </div>
+                            <div id="procDetailsDiv" class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <label class="col-md-12 col-sm-8 col-xs-12"><b>Procedure Name</b></label> 
+                                    <label id="procNameLabel" class="col-md-7 col-sm-8 col-xs-12"></label> 
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <label class="col-md-12 col-sm-8 col-xs-12"><b>Primary Procedure</b></label> 
+                                    <label id="primaryProcLabel" class="col-md-7 col-sm-8 col-xs-12"></label>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <label class="col-md-12 col-sm-8 col-xs-12"><b>Primary Doctor</b></label> 
+                                    <label id="primaryDoctorLabel" class="col-md-7 col-sm-8 col-xs-12"></label>
+                                </div>
+                            </div>
+                            <div id="scheduleDetailsDiv" class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <label class="col-md-12 col-sm-8 col-xs-12"><b>Attending Doctors</b></label> 
+                                    <label id="attndDocLabel" class="col-md-8 col-sm-8 col-xs-12"></label> 
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <label class="col-md-12 col-sm-8 col-xs-12"><b>Nurses Name</b></label> 
+                                    <label id="nurseNameLabel" class="col-md-8 col-sm-8 col-xs-12"></label>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <label class="col-md-12 col-sm-8 col-xs-12"><b>Technicians Name</b></label> 
+                                    <label id="techNameLabel" class="col-md-8 col-sm-8 col-xs-12"></label>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <label class="col-md-12 col-sm-8 col-xs-12"><b>Anesthesia Type</b></label> 
+                                    <label id="anesTypeLabel" class="col-md-8 col-sm-8 col-xs-12"></label>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <label class="col-md-12 col-sm-8 col-xs-12"><b>Anesthesists Name</b></label> 
+                                    <label id="anesthesistNameLabel" class="col-md-8 col-sm-8 col-xs-12"></label>
+                                </div>
+                            </div>
+                            <div id="secProcedureDetailsDiv" class="col-md-12 col-sm-12 col-xs-12">
+                                <table id="preOpTable" class="table table-bordered table-responsive">
+                                    <caption class="text-primary">Pre Op Orders</caption>
+                                    <thead>
+                                        <tr>
+                                            <th width="20%" align="left">S.No</th>
+                                            <th width="60%" align="left">Service Name</th>
+                                            <th width="20%" align="left">Qty</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="preOpTbody"></tbody>                             
+                                </table>                           
+                                <table id="intraOpTable" class="table table-bordered table-responsive">
+                                    <caption class="text-primary" align="center">IntraOp Orders</caption>
+                                    <thead>
+                                        <tr>
+                                            <th width="20%" align="left">S.No</th>
+                                            <th width="60%" align="left">Service Name</th>
+                                            <th width="20%" align="left">Qty</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="intraOpTbody"></tbody>                               
+                                </table>                           
+                                <table id="postOpTable" class="table table-bordered table-responsive">
+                                    <caption class="text-primary" align="center">PostOp Orders</caption>
+                                    <thead>
+                                        <tr>
+                                            <th width="20%" align="left">S.No</th>
+                                            <th width="60%" align="left">Service Name</th>
+                                            <th width="20%" align="left">Qty</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="postOpTbody"></tbody>                              
+                                </table>
+                            </div>    
+                        </div>                                                                    
+                    </div>
+                    <div class="modal-footer" style="border-top: none;">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="button" id="btnPrint" class="btn btn-primary" onclick="dcomethealth.ProcedureRequest.printSummary();">Print</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="printDIV" class="hidden"></div>
+    <script type='text/javascript' src='js/plugins/form-select2/select2.min.js'></script> 
+    <script type="text/javascript" src="js/plugins/dateTimeNew/js/bootstrap-datetimepicker.js"></script>
+    <script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+    <script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+    <script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> 

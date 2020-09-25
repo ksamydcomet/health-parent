@@ -1,0 +1,203 @@
+<style type="text/css">
+    .fileinput-button {
+        position: relative;
+        overflow: hidden;
+    }   
+    .fileinput-button input {
+        position: absolute;
+        top: 0;
+        right: 0;
+        margin: 0;
+        opacity: 0; 
+        filter: alpha(opacity=0); 
+        transform: translate(-300px, 0) scale(4);
+        font-size: 23px;
+        direction: ltr;
+        cursor: pointer;
+    }
+    .fileupload-loading {
+        float: right;
+        width: 32px;
+        height: 32px;
+        background: url(../img/loading.gif) center no-repeat;
+        background-size: contain;
+        display: none;
+    }
+    .fileupload-processing .fileupload-loading {
+        display: block;
+    }
+    .files audio,
+    .files video {
+        max-width: 300px;
+    }
+    @media print
+    {
+        table {page-break-after:always}
+    }
+    @media (max-width: 767px) {
+        .fileupload-buttonbar .toggle,
+        .files .toggle,
+        .files .btn span {
+            display: none;
+        }
+        .files .name {
+            width: 80px;
+            word-wrap: break-word;
+        }
+        .files audio,
+        .files video {
+            max-width: 80px;
+        }
+    }
+</style>
+<script>
+//    var table = document.getElementById("ExportHeamatologyTable");
+    $("#pendingDate").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    $("#pendingDate").datepicker("setDate", new Date());
+
+    function dateValidation() {
+        var a = moment();
+        var b = moment($("#pendingDate").val(), 'DD-MM-YYYY');
+        if (a.isBefore(b)) {
+            alert("Enter Valid date");
+            return false;
+        }
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<div class="row">
+    <div id="LabServiceHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>Laboratory Service</h4>
+            <div class="pull-right edit-all-button-container"> 
+                <button class="btn btn-primary" id="labDateRange" style="margin-top: 3px; margin-bottom: 3px;"><span class="hidden-xs hidden-sm" id="labDateRangeSpan"></span> <b class="caret"></b></button>
+                <button class="btn btn-primary" id="labComDateRange" style="margin-top: 3px; margin-bottom: 3px;"><span class="hidden-xs hidden-sm" id="labComDateRangeSpan"></span> <b class="caret"></b></button>
+                <div class="pull-right edit-all-button-container">
+                    <a href="#" id="pendingsBtn" class="btn btn-primary" onclick="dcomethealth.LabService.searchSOByDate()" style="margin-top: 3px; margin-bottom: 3px;"><span >Pendings </span></a>
+                    <button type="button" id="completedBtn" class="btn btn-primary" onclick="dcomethealth.LabService.searchCompleted()" style="margin-top: 3px; margin-bottom: 3px;"><span >Completed</span></button>
+                    <button type="button" id="cancelBtn" class="btn btn-primary hidden" onclick="dcomethealth.LabService.searchCancelledOrder()" style="margin-top: 3px; margin-bottom: 3px;"><span >Canceled</span></button>
+                </div>                
+            </div>
+        </div>
+        <br>        
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12">
+                <div class="col-md-12">
+                    <div id="profile1">
+                        <table id="dyn_table_pat" cellpadding="0" cellspacing="0" border="0" class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>UHID</th>
+                                    <th>Patient Name</th>
+                                    <th>Date</th>
+                                    <th id="statusTH">Status</th>
+                                    <th class="col-md-1 col-sm-1"></th>
+                                    <th id="mailTh" class="col-md-1 col-sm-1"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="apTbody"></tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <table id="front_table" class="table table-condensed table-hover hidden">
+                            <thead><th>Service Order</th><th>Result Value</th><th>Description</th><th>Units</th><th>Result State</th></thead>
+                            <tbody id="foTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="add_new" class="hidden">     
+    <div class="panel panel-primary">
+        <div class="panel-heading"><h4>Lab Service</h4>
+            <div class="hidden-print">
+                <div id="buttons" class="edit-all-button-container pull-right">                            
+                    <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('LabService');
+                            dcomethealth.util.base_init();"  style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Back</span></a>
+                    <button type="button" id="labSave" name="labSave" class="btn btn-success" onclick=""  style="margin-top: 3px; margin-bottom: 3px;">Save & Print</button>
+                </div>
+                <div id="btns_state" class="edit-all-button-container pull-right">
+                    <a class="btn btn-primary" onclick="dcomethealth.util.loadpage('LabService');
+                            dcomethealth.util.base_init();"  style="margin-top: 3px; margin-bottom: 3px;"><span id="reset" class="">Back</span></a>
+                    <input id="submitData" type="submit" class="btn btn-primary" value="Save"  style="margin-top: 3px; margin-bottom: 3px;">
+                </div>
+
+        </div>      
+        </div>      
+        <br>
+        <form action="#">
+            <div class="panel panel-default">
+                <div class="panel-body">              
+                    <div class="row">                   
+                        <div class="row col-md-12 col-sm-12 col-xs-12">                 
+                            <div class="col-md-3 col-sm-3 col-xs-6">
+                                <div class="col-sm-12 col-md-12 col-xs-12">
+                                    <span class="text-warning"><b> Patient UHID </b></span><span id="patMRN" class="text-primary"><b></b></span>
+                                    <input type="hidden" id="soRidIn" /><input type="hidden" id="visitRidIn" />                                    
+                                    <input type="hidden" id="patRidIn" /><input type="hidden" id="id" />
+                                </div>
+                            </div>              
+                            <div class="col-md-4 col-sm-3 col-xs-6">
+                                <div class="col-sm-12 col-md-12 col-xs-12">
+                                    <span class="text-warning"><b> Patient Name </b></span><span id="patName" class="text-primary"><b></b></span>
+                                    <input type="hidden" id="soRidIn" /><input type="hidden" id="visitRidIn" />
+                                    <input type="hidden" id="patRidIn" /><input type="hidden" id="id" />
+                                </div>
+                            </div>                  
+                            <div id="dateRange" class="hidden col-md-4 col-sm-3 col-xs-6">
+                                <div class="col-sm-12 col-md-12 col-xs-12">
+                                    <span class="text-warning"><b> Date : </b></span><span id="date" class="text-primary"><b></b></span>
+                                </div>
+                            </div> 
+                            <input type="hidden" id="patAge" name="patAge" value=""/>
+                            <input type="hidden" id="PatGender" name="PatGender" value=""/>	
+                            <input type="hidden" id="PatientGend" name="PatientGend" value=""/>	
+                            <input type="hidden" id="PatientRegDate" name="PatientRegDate" value=""/>	
+                            <input type="hidden" id="PatientRid" name="PatientRid" value=""/>	                        
+                            <input type="hidden" id="PatientVisitRid" name="PatientVisitRid" value=""/>	
+                            <input type="hidden" id="labResultId" name="labResultId" value=""/>	
+                            <div class="row"><br></div><br>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <table id="ls_table" class="table table-condensed table-hover">
+                                    <thead><th>Service Order</th><th>Result Value</th><th>Units</th><th>Range</th><th>Result State</th></thead>
+                                    <tbody id="soTbody"></tbody>
+                                </table>                            
+                            </div>
+                            <div class="row"><br></div>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="row col-md-6 col-sm-6 col-xs-6">
+                                    <div class="col-md-12 col-sm-6 col-xs-6"><label>Doctor</label></div>
+                                    <div class="col-md-12 col-sm-8 col-xs-8">
+                                        <input type="text" id="patDoc" list="Doctors" class="form-control"/>
+                                        <input type="hidden" id="staffCategory"/>
+                                        <input type="hidden" id="staffId"/>
+                                        <datalist id="Doctors" class="dcomet-c-s_doctors-list" style="display: none;"></datalist>
+                                    </div>                              
+                                </div>
+                                <div class="col-md-6 col-sm-6 col-xs-6 hidden">
+                                    <div class="col-md-12 col-sm-6 col-xs-6"><label>Current Medical Condition</label></div>
+                                    <div class="col-md-12 col-sm-8 col-xs-8"><textarea id="patMedCond" name="patMedCond" class="form-control"></textarea></div>
+                                </div>
+                                <div class="col-md-6 col-sm-6 col-xs-6">
+                                    <div class="col-md-12 col-sm-6 col-xs-6"><label>Remarks</label></div>
+                                    <div class="col-md-12 col-sm-8 col-xs-8"><textarea id="patRemarks" name="patRemarks" maxlength="100" class="form-control"></textarea></div>                                
+                                </div>
+                            </div>
+                        </div>
+                        <div class="hidden" id="setDiv"></div>
+                        <div class="hidden" id="viewDiv"></div>                        
+                    </div>
+                    <hr>
+                    <div class="hidden " id="exportHaematology"><table id="ExportHeamatologyTable"></table></div>       
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="printDiv" class="hidden"></div>
+<div id="emailDiv" class="hidden"></div>
+<script type='text/javascript' src="js/plugins/form-daterangepicker/daterangepicker.min.js"></script>
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script>

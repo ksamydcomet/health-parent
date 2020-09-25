@@ -1,0 +1,201 @@
+package com.dcomet.health.domain;
+
+import com.dcomet.fw.domain.SearchCriteria;
+import java.util.Calendar;
+
+/**
+ *
+ * @author Dev4
+ */
+public class VisitTemplateSearchCriteria extends SearchCriteria {
+
+    private Integer id;
+    private Integer vistVisitRID;
+    private String vistGroup;
+    private String vistSubGroup;
+    private String vistType;
+    private String vistSpeciality;
+    private Integer vistPatRID;
+    private Integer vistEntityRid;
+    private String vistNodes;
+    private Integer vistSeqNum;
+    private Integer createdUserRid;
+    private Calendar createdDateTime;
+    private Integer modifiedUserRid;
+    private Calendar modifiedDateTime;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getVistVisitRID() {
+        return vistVisitRID;
+    }
+
+    public void setVistVisitRID(Integer vistVisitRID) {
+        this.vistVisitRID = vistVisitRID;
+    }
+
+    public String getVistGroup() {
+        return vistGroup;
+    }
+
+    public void setVistGroup(String vistGroup) {
+        this.vistGroup = vistGroup;
+    }
+
+    public String getVistSubGroup() {
+        return vistSubGroup;
+    }
+
+    public void setVistSubGroup(String vistSubGroup) {
+        this.vistSubGroup = vistSubGroup;
+    }
+
+    public String getVistType() {
+        return vistType;
+    }
+
+    public void setVistType(String vistType) {
+        this.vistType = vistType;
+    }
+
+    public String getVistSpeciality() {
+        return vistSpeciality;
+    }
+
+    public void setVistSpeciality(String vistSpeciality) {
+        this.vistSpeciality = vistSpeciality;
+    }
+
+    public Integer getVistPatRID() {
+        return vistPatRID;
+    }
+
+    public void setVistPatRID(Integer vistPatRID) {
+        this.vistPatRID = vistPatRID;
+    }
+
+    public Integer getVistEntityRid() {
+        return vistEntityRid;
+    }
+
+    public void setVistEntityRid(Integer vistEntityRid) {
+        this.vistEntityRid = vistEntityRid;
+    }
+
+    public String getVistNodes() {
+        return vistNodes;
+    }
+
+    public void setVistNodes(String vistNodes) {
+        this.vistNodes = vistNodes;
+    }
+
+    public Integer getVistSeqNum() {
+        return vistSeqNum;
+    }
+
+    public void setVistSeqNum(Integer vistSeqNum) {
+        this.vistSeqNum = vistSeqNum;
+    }
+
+    public Integer getCreatedUserRid() {
+        return createdUserRid;
+    }
+
+    public void setCreatedUserRid(Integer createdUserRid) {
+        this.createdUserRid = createdUserRid;
+    }
+
+//    public Calendar getCreatedDateTime() {
+//        return createdDateTime;
+//    }
+//
+//    public void setCreatedDateTime(Calendar createdDateTime) {
+//        this.createdDateTime = createdDateTime;
+//    }
+
+    public Integer getModifiedUserRid() {
+        return modifiedUserRid;
+    }
+
+    public void setModifiedUserRid(Integer modifiedUserRid) {
+        this.modifiedUserRid = modifiedUserRid;
+    }
+
+//    public Calendar getModifiedDateTime() {
+//        return modifiedDateTime;
+//    }
+//
+//    public void setModifiedDateTime(Calendar modifiedDateTime) {
+//        this.modifiedDateTime = modifiedDateTime;
+//    }
+
+    @Override
+    public String toString() {
+
+        super.toString();
+        StringBuilder sb = new StringBuilder(super.toString());
+        sb.append("\n\tid: Integer=");
+        sb.append(id);
+        sb.append(";");
+
+        sb.append("\n\tvistVisitRID: Integer=");
+        sb.append(vistVisitRID);
+        sb.append(";");
+
+        sb.append("\n\tvistGroup: String=");
+        sb.append(vistGroup);
+        sb.append(";");
+
+        sb.append("\n\tvistSubGroup: String=");
+        sb.append(vistSubGroup);
+        sb.append(";");
+
+        sb.append("\n\tvistType: String=");
+        sb.append(vistType);
+        sb.append(";");
+
+        sb.append("\n\tvistSpeciality: String=");
+        sb.append(vistSpeciality);
+        sb.append(";");
+
+        sb.append("\n\tvistPatRID: Integer=");
+        sb.append(vistPatRID);
+        sb.append(";");
+
+        sb.append("\n\tvistEntityRid: Integer=");
+        sb.append(vistEntityRid);
+        sb.append(";");
+
+        sb.append("\n\tvistNodes: String=");
+        sb.append(vistNodes);
+        sb.append(";");
+
+        sb.append("\n\tvistSeqNum: Integer=");
+        sb.append(vistSeqNum);
+        sb.append(";");
+
+        sb.append("\n\tcreatedUserRid: Integer=");
+        sb.append(createdUserRid);
+        sb.append(";");
+
+        sb.append("\n\tcreatedDateTime: Calendar=");
+        sb.append(createdDateTime);
+        sb.append(";");
+
+        sb.append("\n\tmodifiedUserRid: String=");
+        sb.append(modifiedUserRid);
+        sb.append(";");
+
+        sb.append("\n\tmodifiedDateTime: Calendar=");
+        sb.append(modifiedDateTime);
+        sb.append(";");
+        return sb.toString();
+    }
+}

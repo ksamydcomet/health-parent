@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration debug="true"
+                     xmlns:log4j='http://jakarta.apache.org/log4j/'>
+
+    <appender name="consoleAppender" class="org.apache.log4j.ConsoleAppender">
+        <param name="Threshold" value="warn" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{dd MMM yyyy HH:mm:ss} %5p %c{1} - %m%n" />
+        </layout>
+    </appender>
+    <appender name="dcometHealthServicesLogAppender" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="file"
+               value="D:/dcomet_log/healthplus/service.log" />
+        <param name="Append" value="true" />
+        <param name="DatePattern" value=".yyyy-MM-dd" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{ABSOLUTE} %-5p [%c{1}] %m%n" />
+        </layout>
+    </appender>
+    <logger name="org.hibernate" additivity="false">
+        <level value="warn" />
+    </logger>
+    <logger name="org.hibernate.hql.ast.AST">
+        <level value="warn" />
+    </logger>
+    <logger name="org.hibernate.SQL">
+        <level value="warn" />
+        <appender-ref ref="dcometHealthServicesLogAppender"/>
+    </logger>
+    <logger name="org.hibernate.type">
+        <level value="warn" />
+    </logger>
+    <logger name="org.hibernate.tool.hbm2ddl">
+        <level value="warn" />
+    </logger>
+    <logger name="org.hibernate.hql">
+        <level value="warn" />
+    </logger>
+    <logger name="org.hibernate.cache">
+        <level value="warn" />
+    </logger>
+    <logger name="org.hibernate.transaction">
+        <level value="warn" />
+    </logger>
+    <logger name="org.hibernate.jdbc">
+        <level value="warn" />
+    </logger>
+    <logger name="org.hibernate.connection.DriverManagerConnectionProvider">
+        <level value="warn" />
+    </logger>
+    <logger name="com.dcomet.health">
+        <level value="info" />
+        <appender-ref ref="dcometHealthServicesLogAppender"/>
+    </logger>
+    <root>
+        <level value="info" />
+        <appender-ref ref="consoleAppender" />
+    </root>
+
+</log4j:configuration>

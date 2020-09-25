@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+  <persistence-unit name="health_health_web_war_1.0PU" transaction-type="RESOURCE_LOCAL">
+    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+    <class>com.dcomet.health.dao.data.PatientImageData</class>
+    <class>com.dcomet.health.dao.data.FileAttachmentData</class>
+    <class>com.dcomet.health.dao.data.ClinicalSummaryData</class>
+    <class>com.dcomet.health.dao.data.HolidayMasterData</class>
+    <class>com.dcomet.health.domain.WardMaster</class>
+    <class>com.dcomet.health.dao.data.WardMasterData</class>
+    <class>com.dcomet.health.dao.data.PackageMasterData</class>
+    <class>com.dcomet.health.dao.data.PackageItemMapData</class>
+    <class>com.dcomet.health.dao.data.PackageServiceMapData</class>
+    <exclude-unlisted-classes>false</exclude-unlisted-classes>
+    <properties>
+      <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/healthplus?zeroDateTimeBehavior=convertToNull"/>
+      <property name="javax.persistence.jdbc.password" value="admin"/>
+      <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+      <property name="javax.persistence.jdbc.user" value="root"/>
+    </properties>
+  </persistence-unit>
+</persistence>

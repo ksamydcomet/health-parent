@@ -1,0 +1,460 @@
+<script>
+    function div_hide() {
+        $("#UnitMasterHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+        $(':text').val('');
+        $(':checkbox, :radio').prop('checked', false);
+    }
+    function clearAll() {
+        document.getElementById("edit_user_form").reset();
+        $('.hasStatus').toggles({on: false}, "isHas");
+        $('.clinicalStatus').toggles({on: false}, "isClinical");
+        $('.externalStatus').toggles({on: false}, "isExternal");
+        $('.serviceStatus').toggles({on: false}, "isService");
+        $('.departmentStatus').toggles({on: false}, "isDepartment");
+        $('.storeStatus').toggles({on: false}, "isStore");
+        $('.purchaseStatus').toggles({on: false}, "isPurchase");
+        $('.activeStatus').toggles({on: true}, "isActive");
+    }
+    function div_back() {
+        $("#add_new").removeClass("panel panel-primary").addClass("hidden");
+        $("#UnitMasterHeader").removeClass("hidden").addClass("panel panel-primary");
+    }
+
+    function daywiseStatus() {
+        var zero = document.getElementById('openPmd');
+        if (zero.checked) {
+            dcomethealth.UnitMaster.clearValues();
+            document.getElementById('collect').value = 1;
+            $("#datewise").removeClass("hidden");
+        } else {
+            document.getElementById('collect').value = 0;
+            $("#datewise").addClass("hidden")
+        }
+    }
+    function insert_row(tableid, elem, value) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById(tableid);
+        if (tableid == 'dyn_table_date') {
+            var table_length = table.rows.length;
+            for (var i = 0; i < table_length - 1; i++) {
+                var resAvilDateFrom = dynTableGetNodeInRow(table.rows[i + 1], 'resAvilDateFrom').value;
+                var resAvilDateTo = dynTableGetNodeInRow(table.rows[i + 1], 'resAvilDateTo').value;
+                var fromTime = dynTableGetNodeInRow(table.rows[i + 1], 'fromTime').value;
+                var ToTime = dynTableGetNodeInRow(table.rows[i + 1], 'ToTime').value;
+                if (daysVal == "") {
+                    alert("Select Any One Day");
+                    return false;
+                }
+            }
+            if (resAvilDateFrom == "") {
+                alert("Enter From Date");
+                return false;
+            } else if (resAvilDateTo == "") {
+                alert("Enter To Date");
+                return false;
+            } else if (fromTime == "") {
+                alert("Enter From Time");
+                return false;
+            } else if (ToTime == "") {
+                alert("Enter To Time");
+                return false;
+            } else {
+                var newRow = dynTableAppendRow(tableid);
+                if (value != 1) {
+                    dynTableGetNodeInRow(newRow, 'del').className = "ace-icon fa fa-minus";
+                } else {
+                    dynTableGetNodeInRow(table.rows[1], 'del').className = "ace-icon fa fa-minus";
+                }
+                dynTableGetNodeInRow(newRow, 'plus').className = "";
+                dynTableGetNodeInRow(newRow, 'resAvilDays').className = "col-md-11 col-sm-11 col-xs-11 dcomet-c-s_ddict_days-list form-control";
+                dynTableGetNodeInRow(newRow, 'resAvilDays').value = dynTableGetNodeInRow(table.rows[1], 'resAvilDays').value;
+                dynTableGetNodeInRow(table.rows[1], 'resAvilDays').innerHTML = "<option value=''></option>";
+                dynTableGetNodeInRow(table.rows[1], 'resAvilDays').className = "col-md-11 col-sm-11 col-xs-11 dcomet-c-s_ddict_days-list form-control";
+                dynTableGetNodeInRow(table.rows[1], "resAvilRid").value = "";
+                dynTableGetNodeInRow(table.rows[1], "resAvilWhRid").value = "";
+                dynTableGetNodeInRow(table.rows[1], "fromTime").value = "";
+                dynTableGetNodeInRow(table.rows[1], "ToTime").value = "";
+                dcomethealth.datatypes.init($("#tbody_days"));
+                $("select#resAvilDays option").each(function () { //For remove duplicates
+                    $(this).siblings("[value='" + this.value + "']").remove();
+                });
+                $("#resAvilDateFrom").datepicker({
+                    format: 'dd-mm-yyyy',
+                });
+                $("#resAvilDateTo").datepicker({
+                    format: 'dd-mm-yyyy',
+                });
+            }
+        } else if (tableid == 'dynTableSchedule') {
+            var table_length = table.rows.length;
+            for (var i = 0; i < table_length - 1; i++) {
+                var fromTime = dynTableGetNodeInRow(table.rows[i + 1], 'fromTime').value;
+                var ToTime = dynTableGetNodeInRow(table.rows[i + 1], 'ToTime').value;
+                var daysVal = dynTableGetNodeInRow(table.rows[i + 1], 'resAvilDays').value;
+                if (daysVal == "" || daysVal == 0) {
+                    alert("Select Any One Day");
+                    return false;
+                }
+                if (fromTime == "") {
+                    alert("Enter From Time");
+                    return false;
+                }
+                if (ToTime == "") {
+                    alert("Enter To Time");
+                    return false;
+                }
+            }
+            var val = checkExistTime(elem, tableid);
+            if (parseInt(val) == 0) {
+                var fArray = fromTime.split(':');
+                var fHours = fArray[0];
+                var fMins = fArray[1];
+
+                var tArray = ToTime.split(':');
+                var tHours = tArray[0];
+                var tMins = tArray[1];
+                if (parseInt(fHours) < parseInt(tHours)) {
+                    var newRow = dynTableAppendRow(tableid);
+                    if (value != 1) {
+                        dynTableGetNodeInRow(newRow, 'del').className = "ace-icon fa fa-minus";
+                    } else {
+                        dynTableGetNodeInRow(table.rows[1], 'del').className = "ace-icon fa fa-minus";
+                    }
+                    dynTableGetNodeInRow(newRow, 'plus').className = "";
+                    dynTableGetNodeInRow(newRow, 'resAvilDays').className = "col-md-11 col-sm-11 col-xs-11 dcomet-c-s_ddict_days-list form-control";
+                    dynTableGetNodeInRow(newRow, 'resAvilDays').value = dynTableGetNodeInRow(table.rows[1], 'resAvilDays').value;
+                    dynTableGetNodeInRow(table.rows[1], 'resAvilDays').innerHTML = "<option value=''></option>";
+                    dynTableGetNodeInRow(table.rows[1], 'resAvilDays').className = "col-md-11 col-sm-11 col-xs-11 dcomet-c-s_ddict_days-list form-control";
+                    dynTableGetNodeInRow(table.rows[1], "resAvilRid").value = "";
+                    dynTableGetNodeInRow(table.rows[1], "resAvilWhRid").value = "";
+                    dynTableGetNodeInRow(table.rows[1], "fromTime").value = "";
+                    dynTableGetNodeInRow(table.rows[1], "ToTime").value = "";
+                    dcomethealth.datatypes.init($("#tbody_days"));
+                    $("select#resAvilDays option").each(function () { //For remove duplicates
+                        $(this).siblings("[value='" + this.value + "']").remove();
+                    });
+                } else if (parseInt(fHours) == parseInt(tHours)) {
+                    if (parseInt(fMins) < parseInt(tMins)) {
+                        var newRow = dynTableAppendRow(tableid);
+                        if (value != 1) {
+                            dynTableGetNodeInRow(newRow, 'del').className = "ace-icon fa fa-minus";
+                        } else {
+                            dynTableGetNodeInRow(table.rows[1], 'del').className = "ace-icon fa fa-minus";
+                        }
+                        dynTableGetNodeInRow(newRow, 'plus').className = "";
+                        dynTableGetNodeInRow(newRow, 'resAvilDays').className = "col-md-11 col-sm-11 col-xs-11 dcomet-c-s_ddict_days-list form-control";
+                        dynTableGetNodeInRow(newRow, 'resAvilDays').value = dynTableGetNodeInRow(table.rows[1], 'resAvilDays').value;
+                        dynTableGetNodeInRow(table.rows[1], 'resAvilDays').innerHTML = "<option value=''></option>";
+                        dynTableGetNodeInRow(table.rows[1], 'resAvilDays').className = "col-md-11 col-sm-11 col-xs-11 dcomet-c-s_ddict_days-list form-control";
+                        dynTableGetNodeInRow(table.rows[1], "resAvilRid").value = "";
+                        dynTableGetNodeInRow(table.rows[1], "resAvilWhRid").value = "";
+                        dynTableGetNodeInRow(table.rows[1], "fromTime").value = "";
+                        dynTableGetNodeInRow(table.rows[1], "ToTime").value = "";
+                        dcomethealth.datatypes.init($("#tbody_days"));
+                        $("select#resAvilDays option").each(function () { //For remove duplicates
+                            $(this).siblings("[value='" + this.value + "']").remove();
+                        });
+                    } else {
+                        alert("Enter Correct Time");
+                    }
+                } else {
+                    alert("Enter Correct Time");
+                    dynTableGetNodeInRow(elem, 'ToTime').focus();
+                }
+            }
+        }
+    }
+    function checkExistTime(elem, tableid) {
+        var table = document.getElementById(tableid);
+        var table_length = table.rows.length;
+        var count = 0;
+        var edaysVal = dynTableGetNodeInRow(elem, 'resAvilDays').value;
+        var eFtime = dynTableGetNodeInRow(elem, 'fromTime').value;
+        var ToTime = "";
+        for (var i = 0; i < table_length - 1; i++) {
+            var daysVal = dynTableGetNodeInRow(table.rows[i + 1], 'resAvilDays').value;
+            if (parseInt(daysVal) == parseInt(edaysVal)) {
+                count++;
+                if (count == 1) {
+                    ToTime = dynTableGetNodeInRow(table.rows[i + 1], 'ToTime').value;
+                }
+                if (count == 2) {
+                    var OldTime = moment(ToTime, 'HH:mm').format('HH:mm');
+                    var NewTime = moment(eFtime, 'HH:mm').format('HH:mm');
+                    if (OldTime > NewTime) {
+                        alert("Enter Correct Time");
+                        dynTableGetNodeInRow(elem, 'fromTime').focus();
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+    function checkServicePoint() {
+        if (parseInt($("#isHas").val()) == 1 || parseInt($("#isService").val()) == 1) {
+            $("#servicePointDiv").removeClass("hidden")
+        } else {
+            $("#servicePointDiv").addClass("hidden");
+        }
+    }
+
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<div class="row">
+    <div id="UnitMasterHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>Unit Master</h4>
+            <div class="pull-right edit-all-button-container">
+                <a href="#" class="btn btn-primary " onclick="div_hide()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Add New</span></a>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body collapse in">
+                <div id="unitMasterFooter">
+                    <input type="hidden" name="jsFile" id="jsFile" value="<%= request.getContextPath()%>/js/master/UnitMaster.js" />
+                    <input type="hidden" id="onloadFn" name="onLoadFn" value="unitMaster.initPage()" >
+                    <table id="unitsTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Unit Name</th>
+                                <th>Unit Code</th>
+                            </tr>
+                        </thead>            
+                        <tbody id="tbody_head">
+                        </tbody>  
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="add_new" class="hidden"> 
+    <div class="row" id="UnitMaster">     
+        <div class="panel panel-primary">
+            <form action="#" id="edit_user_form" name="edit_user_form" novalidate="novalidate" class="form-horizontal row-border">
+                <div class="panel-heading"><h4>Unit Master</h4>
+                    <div class="hidden-print">
+                        <div class="edit-all-button-container pull-right">                            
+                            <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('UnitMaster');
+                                    dcomethealth.util.base_init();" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Back</span></a>                                
+                            <input type="submit" class="btn btn-primary" value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="panel-body">
+                    <!--<div class="clearfix">-->
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <span class="text-primary"><strong>Unit Info</strong></span><hr class="btn-danger">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Unit Code</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="unitCode" name="unitCode" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Unit Name</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="unitName"  name="unitName" class="form-control"/>
+                                <input type="hidden" id="unitRid"  name="unitRid" value=""/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Unit Head</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <select name="unitHead" id="unitHead" class=" form-control">
+                                    <option value="1"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Unit Parent</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <select name="unitParentRID" id="unitParentRID" class="form-control">
+                                    <option value="1"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Unit Type</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <select class="dcomet-c-s_ddict_unit_type-list form-control" id="unitTypeIndex" name="unitTypeIndex">
+                                    <option></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Cost Center</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <select name="unitCostCenterRID" id="unitCostCenterRID" class="form-control">
+                                    <option value="1"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>                  
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <br>
+                        <span class="text-primary"><strong>Account Details</strong></span><hr class="btn-danger">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Drug License No.</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="unitDlNo" name="unitDlNo" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Tax No.</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="unitLocalSTNo" name="unitLocalSTNo" maxlength="25" class="form-control"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <br>
+                        <span class="text-primary"><strong>Unit Specification</strong></span><hr class="btn-danger">
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">has Beds</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8"> 
+                                <div class="hasStatus" onclick="checkServicePoint()"></div>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Clinical Unit</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8"> 
+                                <div class="clinicalStatus"></div>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Is External Unit</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8"> 
+                                <div class="externalStatus"></div>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Is Service Provider</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8"> 
+                                <div class="serviceStatus" onclick="checkServicePoint()"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Department</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8"> 
+                                <div class="departmentStatus"></div>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Is Store</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8"> 
+                                <div class="storeStatus"></div>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Is Purchase Unit</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8"> 
+                                <div class="purchaseStatus"></div>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Is Active</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8"> 
+                                <div class="activeStatus" onmousedown="checkServicePoint()"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="servicePointDiv" class="row col-md-12 col-sm-12 col-xs-12 hidden">
+                        <span class="text-primary"><strong>Service Unit Info</strong></span><hr class="btn-danger">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="row col-md-3 col-sm-3 col-xs-4">                            
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Service Unit Name</label>  
+                                <div class= "row col-md-8 col-sm-8 col-xs-8">                               
+                                    <input id="wrdName" type="text" name="wrdName" class="col-md-12 col-sm-12 col-xs-12 form-control"/>
+                                    <input type="hidden" id="wrdRid" name="wrdRid"/>
+                                    <input type="hidden" id="resRid" name="resRid"/>
+                                    <input type="hidden" id="spRid" name="spRid"/>
+                                    <input type="hidden" id="resTypeRid" name="resTypeRid"/>
+                                </div>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-4">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Service Unit Type</label>  
+                                <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                    <select id="wrdType" name="wrdType" class="dcomet-c-s_ddict_SERVICE_POINT_TYPE-list form-control">
+                                        <option value="0"></option>
+                                    </select>                                    
+                                </div>
+                            </div>
+                            <div class="row col-md-3 col-sm-4 col-xs-4">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Is Schedulable</label> 
+                                <div class="row col-md-8 col-sm-8 col-xs-12">
+                                    <input type="hidden" id="collect" name="collect" value="0"/>
+                                    <input type="checkbox" id="openPmd" name="openPmd" class="row" onclick="daywiseStatus()"/>                      
+                                </div>
+                            </div> 
+                            <div class="col-md-1 col-sm-1 col-xs-1">                                
+                                <a style="margin-top: 35px" id="btnAdd" class="btn btn-info btn-sm" onclick="dcomethealth.UnitMaster.prepareObject();">Add</a>
+                            </div>
+                            <div class="col-md-2 col-sm-2 col-xs-2">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Service Units</label> 
+                                <select id="selectSP" class="form-control">
+                                    <option value="0">--Choose--</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-12 col-sm-12 col-xs-12"><p></p></div>
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="row col-md-8 col-sm-8 col-xs-8">
+                                <div class="alert alert-info pull-right col-md-12 hidden" id="datewise">
+                                    <div id="CustomerTable" >
+                                        <table id="dynTableSchedule" class="col-md-12 col-sm-12 col-xs-12 table table-responsive table-striped table-hover">
+                                            <thead>                                           
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Day</th>
+                                                    <th>From Time</th>
+                                                    <th>To Time</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbody_days"> 
+                                                <tr>
+                                                    <td width="1%"><i id="del" class="dct-icon fa fa-minus-circle" onclick="dcomethealth.UnitMaster.deleteRowWorkingHrs(this)" ></i><!--onclick="delete_row(this, 'dynTableSchedule')"-->
+                                                        <input type="hidden" id="resAvilRid" name="resAvilRid" value=""/>
+                                                        <input type="hidden" id="resAvilWhRid" name="resAvilWhRid" value=""/></td>
+                                                    <td width="15%">
+                                                        <Select class="col-md-11 col-sm-11 col-xs-11 dcomet-c-s_ddict_days-list form-control"  id="resAvilDays" name="resAvilDays">  
+                                                            <option value="0"></option>
+                                                        </select>
+                                                    </td>                                                    
+                                                    <td width="10%">
+                                                        <input type="time" class="col-md-12 col-sm-12 col-xs-12 form-control" id="fromTime" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" name="fromTime"/>
+                                                    </td>
+                                                    <td width="10%">
+                                                        <input type="time" class="col-md-12 col-sm-12 col-xs-12 form-control" id="ToTime" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" name="ToTime"/>
+                                                    </td>                                             
+                                                    <td width="1%"><i id="plus" class="dct-icon fa fa-plus-square red" onclick="insert_row('dynTableSchedule', this, 0)"></i></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>                
+            </form>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> 

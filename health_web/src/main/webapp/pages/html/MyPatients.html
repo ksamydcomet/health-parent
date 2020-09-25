@@ -1,0 +1,107 @@
+<script type="text/javascript" src="js/plugins/form-toggle/toggle.min.js"></script>
+<script type='text/javascript' src="js/plugins/form-daterangepicker/daterangepicker.min.js"></script>
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> 
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css'/>
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<div class="panel panel-primary" id="mPatHeader">
+    <div class="panel-heading"><h4>Patient Info.</h4>
+        <div class="pull-right">
+            <div class="btn-toolbar">
+                <button class="btn btn-primary" id="visitDateRange">
+                    <span class="hidden-xs hidden-sm" id="visitDateRangeSpan"></span> <b class="caret"></b>
+                </button>
+                <div class="pull-right edit-all-button-container">
+                    <a href="#" class="btn btn-primary" onclick="dcomethealth.MyPatients.loadDoctorVisits();">
+                        <span >Search </span><i class="fa fa-search"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="panel panel-default">
+        <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+            <div class="row form-group col-md-12">
+                <div class="col-md-2">
+                    <label>Speciality:</label>
+                    <div>
+                        <select id="specialist" name="specialist" class="form-control col-md-10 dcomet-c-s_ddict_staff_speciality-list">
+                            <option value="0">--All--</option>
+                        </select>   
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label>Doctor:</label>
+                    <div>
+                        <select id="doc_name" name="doc_name" class="form-control"><option value="0">--Name--</option></select>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="row form-group col-md-12"><hr class="btn-danger"><label class="text-primary"><strong>Patients Details:</strong></label>
+                <div class="row">
+                    <table id="mPatTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>MRN.No.</th>
+                                <th>Patient Name</th>
+                                <th>Contact Number</th>
+                                <th>Registered Date</th>
+                                <th>Visited Date</th>
+                            </tr>
+                        </thead>            
+                        <tbody id="tbody_pat"></tbody> 
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<input id="visitTempRID" name="visitTempRID" type="hidden" value=""/>
+<div id="myPatDiv" class="row hidden">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="panel panel-midnightblue">
+            <div class="panel-body">
+                <div class="row col-md-12 col-sm-12">
+                    <div class="col-md-2 col-sm-12 col-xs-12">
+                        <input id="mrnSearch" type="text" name="mrnSearch" placeholder="Mrn No" style="border: none" readonly/>
+                        <input id="billHRID" type="hidden" value=""/>
+                        <input id="patientRID" type="hidden" value=""/>
+                        <input id="receiptRID" type="hidden" value="0"/>
+                        <input id="receiptDRID" type="hidden" value="0"/>
+                        <input id="visitRID" type="hidden" value=""/>
+                        <input id="advanceRID" type="hidden" value=""/>
+                        <input id="billNo" type="hidden" value=""/>
+                    </div>
+
+                    <div class="row col-md-10 col-sm-12 col-xs-12">
+                        <div class="col-md-1 col-sm-1"></div>
+                        <div class="col-md-3 col-sm-4 col-xs-4">
+                            <input class="col-md-12" type="text" id="PatientName" name="PatientName" placeholder="Patient Name.." onkeypress="dcomethealth.validation.ValidateAlpha(event)" style="border: none" readonly/>
+                        </div>
+                        <div class="col-md-3 col-sm-4 col-xs-4">
+                            <input class="col-md-12" type="text" id="PatientAge" name="PatientAge" placeholder="Age.." maxlength="3" onkeypress="dcomethealth.validation.isNumberKey(event, this)" style="border: none" readonly/>
+                        </div>
+                        <div class="col-md-3 col-sm-4 col-xs-4">
+                            <input class="col-md-12" type="text" id="patientMobile" name="patientMobile" placeholder="Mobile Number.." maxlength="20" onkeypress="dcomethealth.validation.isNumberKey(event, this)" style="border: none" readonly/>
+                        </div>
+                        <div class="col-md-1 col-sm-4 col-xs-4">
+                            <!--<input class="col-md-12" type="text" id="patGender" name="patGender" placeholder="Patient Name.." style="border: none" readonly/>-->
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group"><br></div>
+                <div class="row col-md-12 col-sm-12">
+                    <div class="tab-container tab-danger">
+                        <ul class="nav nav-tabs" id="patient_visit_tab"></ul>
+                        <div class="" id="template"> </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--<br>-->
+<!--<div id="savebtn" class="col-md-4 col-md-offset-8 hidden">
+    <button type="button" class="btn btn-success col-md-12" onclick="dcomethealth.MyPatients.save()"><strong>Save</strong></button>
+</div>-->

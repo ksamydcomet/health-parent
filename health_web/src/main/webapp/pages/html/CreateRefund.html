@@ -1,0 +1,113 @@
+<script>
+    function calculation(row) {
+        var zero = dynTableGetNodeInRow(row, 'advanceCheck');
+        if (zero.checked) {
+            dynTableGetNodeInRow(row, 'checkValue').value = 1;
+            var amtAdv = 0.00;
+            amtAdv = parseFloat($("#totalAdv").val()) + parseFloat(dynTableGetNodeInRow(row, 'adBalanceAmount').value);
+            amtAdv = parseFloat(amtAdv)
+            $("#totalAdv").val(amtAdv.toFixed(2));
+        } else {
+            dynTableGetNodeInRow(row, 'checkValue').value = 0;
+            var amtAdvM = parseFloat($("#totalAdv").val()) - parseFloat(dynTableGetNodeInRow(row, 'adBalanceAmount').value);
+            amtAdvM = parseFloat(amtAdvM)
+            $("#totalAdv").val(amtAdvM.toFixed(2));
+        }
+
+    }
+</script>
+<div class="" id="CreateRefund">     
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h4>Create Refund</h4>
+            <div class="hidden-print">
+                <div class="pull-right edit-all-button-container" id="btns_state">                    
+                    <div id="divSave" class="col-md-12 col-sm-6 col-xs-6">
+                        <a href="#" id="refhSave" class="btn btn-primary" style="margin-top: 3px; margin-bottom: 3px;"><span id="save" class="edit-all-button">Save</span></a>
+                    </div>                                   
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+                <div class="clearfix">
+                    <div class="row col-md-6 col-sm-6 col-xs-6">
+                        <div>
+                            <input type="text" id="patientSearch" name="patientSearch" class="form-control" placeholder="UHID / Mobile No."/>
+                            <input type="hidden" id="patientID" name="patientID"/>
+                            <input type="hidden" id="patientNo" name="patientNo"/>
+                            <input type="hidden" id="refhRid" name="refhRid" value=""/>
+                            <input type="hidden" id="patMRN" name="patMRN" value=""/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-primary">
+            <div class="panel-body"> 
+                <span class="text-primary"><strong>Patient Info.</strong></span> 
+                <div class="row">
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="text-primary col-md-3 col-sm-3 col-xs-3">Name</label>
+                            <input type="text" id="patientName" name="patientName" class="col-md-9 col-sm-9 col-xs-9" readonly="readonly" style="border: none"/>
+                        </div>
+                        <div class="row col-md-2 col-sm-2 col-xs-2">
+                            <label class="text-primary col-md-4 col-sm-4 col-xs-4">Age</label>
+                            <input type="text" id="PatientAge" name="PatientAge" class="col-md-8 col-sm-8 col-xs-8" readonly="readonly" style="border: none"/>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="text-primary col-md-5 col-sm-5 col-xs-5">Gender</label>
+                            <input id="PatientGender" name="PatientGender" class="col-md-7 col-sm-7 col-xs-7 jqueryUIToolTip dcomet-c-s_ddict_gender-list" readonly="readonly"  style="border: none"> 
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="text-primary col-md-6 col-sm-6 col-xs-5">Contact No</label>
+                            <input type="text" id="PatientMobile" name="PatientMobile" class="col-md-6 col-sm-6 col-xs-7" readonly="readonly" style="border: none"/>
+                        </div> 
+                    </div>
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <hr class="btn-danger">
+                    </div>                    
+                    <label class="text-primary col-md-12 col-sm-12 col-xs-12"><strong>Last Visited Details</strong></label>
+                    <div class="col-sm-12 col-md-12 col-xs-12 ">
+                        <table class="table table-condensed table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Visit Date</th>
+                                    <th>Visit Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody id="visitDetails"></tbody>
+                        </table>
+                    </div>
+                    <label class="text-primary col-md-12 col-sm-12 col-xs-12"><strong>Advance Available</strong></label>
+                    <div class="col-sm-12 col-md-12 col-xs-12 ">
+                        <table id="dyn_table" class="table table-condensed table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Mark</th>
+                                    <th>Advance No.</th>
+                                    <th>Advance Amount</th>
+                                    <th>Balance Amount</th>
+                                    <th>Paid Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="advDetails"></tbody>
+                        </table>
+                    </div>
+                    <div class="row col-sm-12 col-md-12 col-xs-12 ">
+                        <div class="col-md-6 col-sm-6 col-xs-6 pull-right">
+                            <div class="col-md-7 col-sm-7 col-xs-7">
+                                <label class="row col-sm-12 col-md-12 col-xs-12">Total Advance Selected(<span class="dcomet-c-s_currCode"></span>)</label>
+                            </div>
+                            <div class="row col-md-5 col-sm-5 col-xs-5">
+                                <input type="text" class="form-control" id="totalAdv" name="totalAdv" readonly="readonly" value="0.00"/>
+                            </div>
+                        </div>
+                    </div>                                   
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

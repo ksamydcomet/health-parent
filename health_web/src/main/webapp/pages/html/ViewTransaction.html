@@ -1,0 +1,226 @@
+<script type="text/javascript">
+    $("#from_date").datepicker({
+        showOtherMonths: true,
+        selectOtherMonths: false,
+        dateFormat: 'dd-mm-yy'
+    });
+    $("#to_date").datepicker({
+        showOtherMonths: true,
+        selectOtherMonths: false,
+        dateFormat: 'dd-mm-yy'
+    });
+    $("#from_date").datepicker("setDate", new Date());
+    $("#to_date").datepicker("setDate", new Date());
+
+    function modifyTran(id, transType, status) {
+//        if (transType === 'bill' && status === 'Collected' || status === 'Cancelled') {
+//            alert("Already " + status);
+//            return false;
+//        } else if (transType === 'advance' && status === 'Cancelled') {
+//            alert("Already " + status);
+//            return false;
+//        } else if (transType === 'receipt' && status === 'Cancelled') {
+//            alert("Already " + status);
+//            return false;
+//        } else if (transType === 'refund' && status === 'Cancelled') {
+//            alert("Already " + status);
+//            return false;
+//        } else {
+        dcomethealth.util.loadpage('ModifyTransaction');
+        dcomethealth.id = id;
+        dcomethealth.transType = transType;
+        dcomethealth.transStatus = status;
+//        }
+    }
+
+    $('#selectsBill').click(function (event) {
+        if (this.checked) {
+            $('.selectBill :checkbox').each(function () {
+                this.checked = true;
+            });
+        } else {
+            $('.selectBill :checkbox').each(function () {
+                this.checked = false;
+            });
+        }
+    });
+
+    $('#selectsReceipt').click(function (event) {
+        if (this.checked) {
+            $('.selectReceipt :checkbox').each(function () {
+                this.checked = true;
+            });
+        } else {
+            $('.selectReceipt :checkbox').each(function () {
+                this.checked = false;
+            });
+        }
+    });
+
+    $('#selectsRefund').click(function (event) {
+        if (this.checked) {
+            $('.selectRefund :checkbox').each(function () {
+                this.checked = true;
+            });
+        } else {
+            $('.selectRefund :checkbox').each(function () {
+                this.checked = false;
+            });
+        }
+    });
+    $('#selectsAdvance').click(function (event) {
+        if (this.checked) {
+            $('.selectAdvance :checkbox').each(function () {
+                this.checked = true;
+            });
+        } else {
+            $('.selectAdvance :checkbox').each(function () {
+                this.checked = false;
+            });
+        }
+    });
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />    
+<div class="panel panel-orange">
+    <div class="panel-heading"><h4>View Transaction</h4>
+        <div class="pull-right">
+            <div class="btn-toolbar">
+                <button class="btn btn-orange" id="billDateRange" style="margin-top: 3px; margin-bottom: 3px;">
+                    <span class="hidden-xs hidden-sm" id="billDateRangeSpan"></span> <b class="caret"></b>
+                </button>
+                <!--                <div class="pull-right edit-all-button-container">
+                                    <a href="#" class="btn btn-orange" onclick="dcomethealth.ViewTransaction.changeStatus();">
+                                        <span >Search </span><i class="fa fa-search"></i>
+                                    </a>
+                                </div>-->
+                <!--                <div class="btn-group hidden-xs">
+                                    <a href='#' class="btn btn-orange dropdown-toggle" data-toggle='dropdown'><i class="fa fa-cloud-download"></i><span class="hidden-xs hidden-sm hidden-md"> Export as</span> <span class="caret"></span></a>
+                                    <ul class="dropdown-menu">
+                                        <li onclick="dcomethealth.ViewTransaction.beforeExport(1)"><a href="#">Excel File (*.xlsx)</a></li>
+                                        <li onclick="dcomethealth.ViewTransaction.beforeExport(2)"><a href="#">Print File</a></li>
+                                    </ul>
+                                </div>-->
+            </div>
+        </div>
+    </div>
+    <br> 
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div id="mainformid">
+                        <div id="maindiv">
+                            <div class="form-group col-md-12">
+                                <div> 
+                                    <div class="row col-md-3">
+                                        <input type="text" id="billno" name="billno" class="form-control col-md-12" placeholder="Bill No" onblur="dcomethealth.ViewTransaction.changeStatus()"/>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="text" id="cus_name" name="cus_name" class="form-control col-md-12" placeholder="Patient Name" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" onblur="dcomethealth.ViewTransaction.changeStatus()"/>
+                                        <input type="hidden" id="cus_rid"  name="cus_rid"/>
+                                        <input type="hidden" id="payerType"  name="payerType"/>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select id="transactionSel" name="transactionSel" class="form-control col-md-12" onchange="dcomethealth.ViewTransaction.changeTransaction()">
+                                            <option value="1">Bill</option>
+                                            <option value="2">Advance</option>
+                                            <option value="3">Receipt</option>
+                                            <option value="4">Refund</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select id="transtatus" name="transtatus" class="col-md-12 form-control" onchange="dcomethealth.ViewTransaction.changeStatus()">
+                                            <option value="0">--Status--</option>
+                                            <!--<option value="1">Draft</option>-->
+                                            <option value="2">Submitted</option>
+                                            <option value="3">Partially paid</option>
+                                            <option value="5">Collected</option>
+                                            <option value="6">Cancelled</option>
+                                            <!--<option value="7">Dont Care</option>-->
+
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>
+                            <div>
+                                <div id="Billing" class="col-md-12">
+                                    <table id="billsTable" cellpadding="0" cellspacing="0" border="0" class="table table-responsive table-striped">
+                                        <thead>                    
+                                            <tr>
+                                                <th>View</th>
+                                                <th>Bill No</th>
+                                                <th>Payer</th>
+                                                <th>UHID</th>
+                                                <th>Patient Name</th>
+                                                <th>Date</th>
+                                                <th>Total (<span class="dcomet-c-s_currCode"></span>)</th>
+                                                <th>Due (<span class="dcomet-c-s_currCode"></span>)</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="selectBill" id="bill_tbody"></tbody>
+                                    </table>
+                                </div>
+                                <div id="Advance" class="col-md-12 col-sm-12 hidden">
+                                    <table id="advanceTable" cellpadding="0" cellspacing="0" border="0" class="table table-responsive table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>View</th>
+                                                <th>Advance No</th>
+                                                <th>Patient Name</th>
+                                                <th>Contact No</th>
+                                                <th>Date</th>
+                                                <th>Advance(<span class="dcomet-c-s_currCode"></span>)</th>
+                                                <th>Adjusted(<span class="dcomet-c-s_currCode"></span>)</th>
+                                                <th>Refunded(<span class="dcomet-c-s_currCode"></span>)</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="selectAdvance" id="advance_tbody"></tbody>
+                                    </table>
+                                </div>
+                                <div id="Receipt" class="col-md-12 hidden">
+                                    <table id="receiptTable" cellpadding="0" cellspacing="0" border="0" class="table table-responsive table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>View</th>
+                                                <th>Receipt No</th>
+                                                <th>Payer Name</th>
+                                                <th>Contact No</th>
+                                                <th>Date</th>
+                                                <th>Net (<span class="dcomet-c-s_currCode"></span>)</th>
+                                                <th>Paid (<span class="dcomet-c-s_currCode"></span>)</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="selectReceipt" id="receipt_tbody"></tbody>
+                                    </table>
+                                </div>
+                                <div id="Refund" class="col-md-12 hidden">
+                                    <table id="refundTable" cellpadding="0" cellspacing="0" border="0" class="table table-responsive table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>View</th>
+                                                <th>Refund No</th>
+                                                <th>Patient Name</th>
+                                                <th>Patient No</th>
+                                                <th>Date</th>
+                                                <th>Refund Amount </th>
+                                                <th>Refund Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="selectRefund" id="refund_tbody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="printDiv" class="hidden"></div> 
+<script type='text/javascript' src="js/plugins/form-daterangepicker/daterangepicker.min.js"></script>
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script>

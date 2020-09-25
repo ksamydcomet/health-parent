@@ -1,0 +1,438 @@
+<script type="text/javascript">
+    function delete_row(elem) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+
+    function clearAll() {
+        $('#sReturn_tbody').empty();
+    }
+    function insert_row(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var total = dynTableGetNodeInRow(table.rows[i + 1], 'qty').value;
+        }
+        if (total == "" || parseInt(total) == 0) {
+            alert("Enter the Quantity");
+        }
+        else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "skuName").value = "";
+            dynTableGetNodeInRow(newRow, "batchNo").innerHTML = "<option value=''>--Batch No--</option>";
+            dynTableGetNodeInRow(newRow, "expDate").innerHTML = "<option value=''>--Exp Date--</option>";
+            dynTableGetNodeInRow(newRow, "MRP").innerHTML = "<option value=''>--MRP--</option>";
+            dynTableGetNodeInRow(newRow, "qty").value = "";
+            dynTableGetNodeInRow(newRow, "net_amount").value = "";
+            dcomethealth.SalesReturn.autocomplete();
+        }
+    }
+
+    function popup() {
+        document.getElementById('discType').value = "";
+        document.getElementById('discName').value = "";
+        document.getElementById('discVal').value = "";
+        document.getElementById('discPercent').value = "";
+    }
+
+    function calculation(row) {
+        var itemname = dynTableGetNodeInRow(row, 'skuName').value;
+        var mrp_row = dynTableGetNodeInRow(row, 'MRP').value;
+        var acc_qty_row = dynTableGetNodeInRow(row, 'return_qty').value;
+        var returnable_qty_row = dynTableGetNodeInRow(row, 'returnable_qty').value;
+        if (returnable_qty_row === "") {
+            returnable_qty_row = 0;
+        }
+        if (acc_qty_row === "") {
+            acc_qty_row = 0;
+        }
+        if (parseInt(returnable_qty_row) < parseInt(acc_qty_row) && parseInt(acc_qty_row) != 0) {
+            alert("Enter Positive Qty");
+            dynTableGetNodeInRow(row, 'return_qty').value = 0;
+            return false;
+        } else {
+
+        }
+        if (itemname != "") {
+            if (parseInt(mrp_row) != 0) {
+                if (parseInt(acc_qty_row) != 0) {
+                    var gross = 0, net = 0, disc_total = 0, tax_total = 0, serv_tax_total = 0;
+                    var table = document.getElementById('dyn_table');
+                    var table_length = table.rows.length;
+//                    var y = table_length - 2;
+                    for (var i = 0; i < table_length - 1; i++) {
+                        var qty_row = dynTableGetNodeInRow(table.rows[i + 1], 'return_qty').value;
+                        var mrp_total = dynTableGetNodeInRow(table.rows[i + 1], 'MRP').value;
+                        var tax_row = dynTableGetNodeInRow(table.rows[i + 1], 'retailTax').value;
+                        if (qty_row == '') {
+                            qty_row = 0;
+                        }
+                        if (tax_row == '') {
+                            tax_row = 0;
+                        }
+                        var gross_row = parseFloat(qty_row) * parseFloat(mrp_total);
+//                        var tax_calc = parseFloat(gross_row) * (parseFloat(tax_row) / 100);
+//                        tax_total = parseFloat(tax_total) + parseFloat(tax_calc);
+                        gross = parseFloat(gross) + parseFloat(gross_row);
+//                        var net_row = parseFloat(gross_row) + parseFloat(tax_calc);
+                        var net_row = parseFloat(gross_row);
+                        dynTableGetNodeInRow(row, 'return_amount').value = (mrp_row * acc_qty_row).toFixed(2);
+                        net = parseFloat(net) + parseFloat(net_row);
+                        var round = parseInt(net.toFixed(0)) - parseFloat(net);
+                    }
+                    document.getElementById('salesGrossAmount').value = gross.toFixed(2);
+                    document.getElementById('salesDiscountAmount').value = disc_total.toFixed(2);
+                    document.getElementById('salesTaxAmount').value = tax_total.toFixed(2);
+                    document.getElementById('round_off_amount').value = round.toFixed(2);
+                    document.getElementById('salesNetAmount').value = net.toFixed(0);
+                }
+                else {
+                    alert("Enter Qty");
+                    return false;
+                }
+            }
+            else {
+                alert("Select MRP");
+                return false;
+            }
+        }
+        else {
+            alert("Enter Itemname");
+            return false;
+        }
+    }
+    function Modepayment(val) {
+        var tab_id = document.getElementById('adv_table');
+        var tab_length = tab_id.rows.length;
+        if (val == 1) {
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').value = 27;
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_hid_card').value = 1;
+        } else if (val == 2) {
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').value = 28;
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_hid_cheque').value = 1;
+        } else {
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').value = 29;
+        }
+    }
+
+    function insertRowPay(id, elem) {
+//                var App_no = document.getElementById('approve_no').value;
+        var table = document.getElementById('adv_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length; i++) {
+            var total = dynTableGetNodeInRow(table.rows[i], 'advance_amount').value;
+        }
+        if (total != "" && parseInt(total) != 0) {
+            var x = dynTableRow(elem);
+            dynTableCloneRow(id, x);
+            var newRow = dynTableAppendRow(id);
+            dynTableGetNodeInRow(newRow, "advance_amount").value = 0;
+            dynTableGetNodeInRow(newRow, "del").className = 'ace-icon fa fa-minus';
+            dynTableGetNodeInRow(newRow, 'mode_pay').innerHTML = 'Cash';
+            dynTableGetNodeInRow(newRow, 'Card_li').className = '';
+            dynTableGetNodeInRow(newRow, 'Cheque_li').className = '';
+            dynTableGetNodeInRow(newRow, 'Cash_li').className = 'hidden';
+            dynTableGetNodeInRow(newRow, 'pay_mode_hid_card').value = '';
+            dynTableGetNodeInRow(newRow, 'pay_mode_hid_card_amt').value = '';
+            dynTableGetNodeInRow(newRow, 'pay_mode_hid_cheque').value = '';
+            dynTableGetNodeInRow(newRow, 'pay_mode_hid_cheque_amt').value = '';
+        }
+    }
+
+    function deleterowPay(elem) {
+        var x = dynTableRow(elem);
+        dynTableDeleteRow(x);
+        clearPopUp(elem);
+    }
+
+    function clearPopUp(elem) {
+        var mode = dynTableGetNodeInRow(elem, 'mode_pay').innerHTML;
+        if (mode == 'Card') {
+            document.getElementById('approve_no').value = "";
+            document.getElementById('bank_name_card').value = "";
+            document.getElementById('amt_card').value = "";
+        } else if (mode == 'Cheque') {
+            document.getElementById('cheque_no').value = "";
+            document.getElementById('cheque_date').value = "";
+            document.getElementById('bank_name').value = "";
+            document.getElementById('branch_details').value = "";
+            document.getElementById('amt_cheque').value = "";
+        }
+    }
+
+    function cancel(val) {
+        var card_type = document.getElementById('card_type').value;
+        var approve_no = document.getElementById('approve_no').value;
+        var cheque_no = document.getElementById('cheque_no').value;
+        var bank_name = document.getElementById('bank_name').value;
+        var tab_id = document.getElementById('adv_table');
+        var tab_length = tab_id.rows.length;
+        dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'mode_pay').innerHTML = 'Cash';
+        dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'Card_li').className = '';
+        dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'Cheque_li').className = '';
+        dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'Cash_li').className = 'hidden';
+    }
+
+    function div_hide() {
+        $("#SalesReturnHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#AddNew").removeClass("hidden").addClass("panel panel-primary");
+    }
+
+    function div_back() {
+        $("#AddNew").removeClass("panel panel-primary").addClass("hidden");
+        $("#SalesReturnHeader").removeClass("hidden").addClass("panel panel-primary");
+    }
+
+    function advPaid() {
+        var tab_id = document.getElementById('adv_table');
+        var tab_length = tab_id.rows.length;
+        var advance_amount = dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'advance_amount').value;
+        if (advance_amount == 0) {
+            alert("Enter Amount");
+            setTimeout(function () {
+                dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'advance_amount').focus();
+            }, 1);
+            return false;
+        }
+        var table = document.getElementById('adv_table');
+        var table_length = table.rows.length;
+        var advance_amount_c = 0;
+        var advance_amount1 = 0;
+        for (var i = 0; i < table_length; i++) {
+            advance_amount1 = dynTableGetNodeInRow(table.rows[i], 'advance_amount').value;
+            if (dynTableGetNodeInRow(table.rows[i], 'pay_mode_hid_card').value == 1 && dynTableGetNodeInRow(table.rows[i], 'pay_mode_hid_card_amt').value == "") {
+                dynTableGetNodeInRow(table.rows[i], 'pay_mode_hid_card_amt').value = advance_amount1;
+            }
+            if (dynTableGetNodeInRow(table.rows[i], 'pay_mode_hid_cheque').value == 1 && dynTableGetNodeInRow(table.rows[i], 'pay_mode_hid_cheque_amt').value == "") {
+                dynTableGetNodeInRow(table.rows[i], 'pay_mode_hid_cheque_amt').value = advance_amount1;
+            }
+            advance_amount_c = parseInt(advance_amount_c) + parseInt(advance_amount1);
+        }
+        document.getElementById('total_adv').value = advance_amount_c.toFixed(2);
+    }
+
+    function validateReturnQty(elem)
+    {
+        var return_qty = dynTableGetNodeInRow(elem, 'return_qty').value;
+        var returnable_Qty = dynTableGetNodeInRow(elem, 'returnable_qty').value;
+        if (parseInt(return_qty) > parseInt(returnable_Qty)) {
+            alert("Returnable Qty is less");
+            setTimeout(function () {
+                dynTableGetNodeInRow(elem, 'qty').focus();
+            }, 1);
+            return false;
+        } else {
+            dctBase.calculation_lens_amount();
+        }
+    }
+
+    function openCardInfo() {
+        var val = document.getElementById('pay_mode_ddict').value;
+        if (parseInt(val) == 13) {
+            $("#cardtype").removeClass("col-md-12 hidden").addClass("col-md-12");
+            $("#approvalno").removeClass("col-md-12 hidden").addClass("col-md-12");
+            $("#bankno").removeClass("col-md-12 hidden").addClass("col-md-12");
+            $("#cardno").removeClass("col-md-12 hidden").addClass("col-md-12");
+            $("#expdate").removeClass("col-md-12 hidden").addClass("col-md-12");
+            $("#cheqno").removeClass("col-md-12 ").addClass("col-md-12 hidden");
+            $("#bankname").removeClass("col-md-12").addClass("col-md-12 hidden");
+            $("#cheqdate").removeClass("col-md-12").addClass("col-md-12 hidden");
+            $("#branchname").removeClass("col-md-12 ").addClass("col-md-12 hidden");
+        }
+        else if (parseInt(val) == 14) {
+            $("#cheqno").removeClass("col-md-12 hidden").addClass("col-md-12");
+            $("#bankname").removeClass("col-md-12 hidden").addClass("col-md-12");
+            $("#cheqdate").removeClass("col-md-12 hidden").addClass("col-md-12");
+            $("#branchname").removeClass("col-md-12 hidden").addClass("col-md-12");
+            $("#cardtype").removeClass("col-md-12 ").addClass("col-md-12 hidden");
+            $("#approvalno").removeClass("col-md-12 ").addClass("col-md-12 hidden");
+            $("#bankno").removeClass("col-md-12 ").addClass("col-md-12 hidden");
+            $("#cardno").removeClass("col-md-12 ").addClass("col-md-12 hidden");
+            $("#expdate").removeClass("col-md-12 ").addClass("col-md-12 hidden");
+        }
+        else {
+            $("#cheqno").removeClass("col-md-12 ").addClass("col-md-12 hidden");
+            $("#bankname").removeClass("col-md-12").addClass("col-md-12 hidden");
+            $("#cheqdate").removeClass("col-md-12").addClass("col-md-12 hidden");
+            $("#branchname").removeClass("col-md-12").addClass("col-md-12 hidden");
+            $("#cardtype").removeClass("col-md-12").addClass("col-md-12 hidden");
+            $("#approvalno").removeClass("col-md-12").addClass("col-md-12 hidden");
+            $("#bankno").removeClass("col-md-12").addClass("col-md-12 hidden");
+            $("#cardno").removeClass("col-md-12").addClass("col-md-12 hidden");
+            $("#expdate").removeClass("col-md-12").addClass("col-md-12 hidden");
+        }
+    }
+
+</script>
+<div class="row">   
+    <div id="CreateOpBillHeader" class="panel panel-primary">  
+        <form action="#" id="edit_user_form" name="edit_user_form" novalidate="novalidate" class="form-horizontal row-border">
+            <div class="panel-heading"><h4>Sales Return</h4>
+                <div class="hidden-print">
+                    <div class="pull-right edit-all-button-container">
+                        <button type="reset" class="btn btn-primary" id="reset" onclick="dcomethealth.util.loadpage('SalesReturn');
+                                dcomethealth.util.base_init();" style="margin-top: 3px; margin-bottom: 3px;">
+                            <span id="reset" class="">Clear Form</span>
+                        </button>
+                        <input type="submit" class="btn btn-primary" value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>
+                    </div>
+                </div> 
+            </div>
+            <br>
+            <div class="panel panel-default">
+                <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+                    <div class="clearfix">
+                        <div class="row col-md-6 col-sm-6 col-xs-6">
+                            <div> 
+                                <input id="billSearch" type="text" name="billSearch" class="col-md-6 form-control jqueryUIToolTip" title="Start By PHA/..."  placeholder="Bill Search.." />
+                                <input id="billHRID" type="hidden" value=""/>
+                                <input id="patientRID" type="hidden" value=""/>
+                                <input id="visitRID" type="hidden" value=""/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="row clearfix col-md-12 col-sm-12 col-xs-12">                               
+                                <div class="row">
+                                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                                        <div class="col-md-3 col-sm-6 col-xs-12">
+                                            <label class="text-primary">Patient Mrn:</label>
+                                            <input type="text" id="mrnSearch" name="mrnSearch" readonly style="border: none"/>
+                                        </div>
+                                        <div class="col-md-3 col-sm-6 col-xs-12">
+                                            <label class="text-primary">Patient Name: </label>
+                                            <input type="text" id="PatientName" name="PatientName" readonly style="border: none"/>
+                                        </div>
+                                        <div class="col-md-3 col-sm-6 col-xs-12">
+                                            <label class="text-primary">Patient Age: </label>
+                                            <input type="text" id="PatientAge" readonly style="border: none" name="PatientAge"/>
+                                        </div>
+
+                                        <div class="col-md-3 col-sm-6 col-xs-12">
+                                            <label class="text-primary">Contact No: </label>
+                                            <input type="text" id="PatientMobile" readonly style="border: none" name="PatientMobile"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="row col-md-12 col-sm-12 col-xs-12">                                        
+                                        <div class="col-md-3 col-sm-6 col-xs-12">
+                                            <label class="text-primary">Net Amount: </label>
+                                            <input type="text" id="netAmtBill" name="netAmtBill" readonly style="border: none"/>
+                                            <input type="hidden" id="grossAmtBill" name="grossAmtBill"/>
+                                        </div>
+                                        <div class="col-md-3 col-sm-6 col-xs-12">
+                                            <label class="text-primary">Paid Amount: </label>
+                                            <input type="text" id="paidAmtBill" name="paidAmtBill" readonly style="border: none"/>
+                                        </div>
+                                        <div class="col-md-3 col-sm-6 col-xs-12">
+                                            <label class="text-primary">Due Amount: </label>
+                                            <input type="text" id="dueAmtBill" name="dueAmtBill" readonly style="border: none"/>
+                                        </div>
+                                    </div>     
+                                </div>     
+                                <br>
+
+                                <span class="text-primary"><strong>Item Info.</strong></span><hr class="btn-danger">
+                                <div id="CustomerTable" class="col-md-12 col-sm-12 col-xs-12">
+                                    <table id="dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Item Name</th>
+                                                <th>Batch No.</th>
+                                                <th>Expiry Date</th>
+                                                <th title="Sales Price">Price (<span class="dcomet-c-s_currCode"></span>)</th>
+                                                <th>Sold Qty</th>
+                                                <th title="Returnable Quantity">R.able Qty</th>
+                                                <th title="Return Quantity">R.Qty</th>
+                                                <th title="Return Amount">R.Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="sReturn_tbody"> 
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-12 col-sm-12 col-xs-12 hidden">
+                                    <a data-toggle="modal">
+                                        <label onclick="$('#viewDiscount').removeClass('hidden')">View Discount</label>
+                                    </a>
+                                </div>                                
+                                <div id="viewDiscount" class="alert alert-success row col-md-12 col-sm-12 col-xs-12 hidden">
+                                    <button type="button" class="close" onclick="$('#viewDiscount').addClass('hidden')">&times;</button>
+                                    <div class="col-md-2 col-sm-3 col-xs-3">
+                                        <label>Discount Type</label>
+                                        <select id="DiscType" name="DiscType" class='dcomet-c-s_ddict_discount_type-list jqueryUIToolTip' title="Discount Type"></select>
+                                    </div>
+                                    <div class="col-md-2 col-sm-3 col-xs-3">
+                                        <label>Discount Name</label>
+                                        <input id="DiscName" name="DiscName"/>
+                                    </div>
+                                    <div class="col-md-2 col-sm-3 col-xs-3">
+                                        <label>Discount Value (or)</label>
+                                        <input id="DiscValue" name="DiscValue"  onkeypress="return dcomethealth.validation.isNumberKey(event, this)" onchange="changeDisc()"/> 
+                                    </div>
+                                    <div class="col-md-2 col-sm-3 col-xs-3">
+                                        <label>Discount Percentage</label>
+                                        <input id="DiscPercent" name="DiscPercent" maxlength="3" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" onBlur="changeDisc()" onchange="isPercentaged(this)"/>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info pull-right col-md-12">                                    
+                                    <div class="col-xs-12 col-md-1 col-sm-1"></div>
+                                    <div class="row col-xs-12 col-md-2 col-sm-6">
+                                        <div class="row col-xs-12 col-md-1 col-sm-6"></div>
+                                        <div class="row"><strong>Gross</strong>(<span class="dcomet-c-s_currCode"></span>)</div>
+                                        <div class="">
+                                            <output id="salesGrossAmount" class=" centered col-md-6 col-sm-6 col-xs-12" name="salesGrossAmount" style="border: none"/>
+                                            <input type="hidden" id="row_count_lens" name="row_count_lens" />
+                                            <input type="hidden" id="total_qty_lens" name="total_qty_lens" />                                           
+                                        </div>
+                                    </div>                               
+                                    <div class="col-xs-12 col-md-2 col-sm-6">
+                                        <div class=""><strong>Tax</strong>(<span class="dcomet-c-s_currCode"></span>)</div>
+                                        <div class="">
+                                            <output id="salesTaxAmount" class=" col-md-6 col-sm-6 col-xs-12" name="salesTaxAmount" style="border: none"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-12 col-md-2 col-sm-6">
+                                        <div class=""><strong>Discount</strong>(<span class="dcomet-c-s_currCode"></span>)</div>
+                                        <div class="">
+                                            <output id="salesDiscountAmount" class=" col-md-6 col-sm-6 col-xs-12" name="salesDiscountAmount" style="border: none"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-12 col-md-2 col-sm-6">
+                                        <div class=""><strong>Round Off</strong>(<span class="dcomet-c-s_currCode"></span>)</div>
+                                        <div class="">
+                                            <output id="round_off_amount" class=" col-md-6 col-sm-6 col-xs-12" name="round_off_amount" style="border: none"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-12 col-md-2 col-sm-6">
+                                        <div class=""><strong>Nett</strong>(<span class="dcomet-c-s_currCode"></span>)</div>
+                                        <div class="">
+                                            <output id="salesNetAmount" class=" col-md-6 col-sm-6 col-xs-12" name="salesNetAmount" style="border: none"/>
+                                        </div>
+                                    </div> 
+                                    <div class="col-xs-12 col-md-1 col-sm-6"></div>
+                                    <div class="col-xs-12 col-md-1 col-sm-1"></div>
+                                </div>
+                            </div>                        
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

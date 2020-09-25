@@ -1,0 +1,192 @@
+<script>
+    function div_hide() {
+        $("#BedGroupMasterHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+    }
+    function div_back() {
+        $("#add_new").removeClass("panel panel-primary").addClass("hidden");
+        $("#BedGroupMasterHeader").removeClass("hidden").addClass("panel panel-primary");
+    }
+    function insertRowBed(tableid, elem, value) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dynTableBed');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var bedName = dynTableGetNodeInRow(table.rows[i + 1], "bedName").value;
+            if (bedName == "") {
+                alert("Enter Bed Name");
+                return false;
+            }
+        }
+        if (bedName == "") {
+            alert("Enter Bed Name");
+            return false;
+        } else {
+            var newRow = dynTableAppendRow(tableid);
+            if (value != 1) {
+                dynTableGetNodeInRow(newRow, 'del').className = "ace-icon fa fa-minus";
+            } else {
+                dynTableGetNodeInRow(table.rows[1], 'del').className = "ace-icon fa fa-minus";
+            }
+            dynTableGetNodeInRow(newRow, 'plus').className = "";
+            dynTableGetNodeInRow(table.rows[1], 'bedName').value = "";
+            dynTableGetNodeInRow(table.rows[1], "bedRid").value = "";
+            dynTableGetNodeInRow(table.rows[1], "bedBgmRid").value = "";
+        }
+    }
+    function checkExistBed(elem) {
+        var table = document.getElementById('dynTableBed');
+        var table_length = table.rows.length;
+        var count = 0;
+        for (var i = 0; i < table_length - 1; i++) {
+            var bedName = dynTableGetNodeInRow(table.rows[i + 1], 'bedName').value;
+            if (!!bedName && bedName == elem.value) {
+                count++;
+                if (count == 2) {
+                    dynTableGetNodeInRow(elem, 'bedName').value = "";
+                    addPlus();
+                    return false;
+                }
+            }
+        }
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<div class="row">
+    <div id="BedGroupMasterHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>BedGroup Master</h4>
+            <div class="pull-right edit-all-button-container">
+                <a href="#" class="btn btn-primary " onclick="div_hide()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form">Add New</span></a>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <table id="bedTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Bed Group Name</th>
+                                <th>Unit Name</th>                                
+                            </tr>
+                        </thead>
+                        <tbody id="tbody_head"></tbody> 
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="add_new" class="hidden"> 
+    <div class="row" id="BedMaster">     
+        <div class="panel panel-primary"> 
+            <form action="#" id="edit_user_form" name="edit_user_form" class="form-horizontal row-border">
+                <div class="panel-heading"><h4>Bed Group Master</h4>
+                    <div class="hidden-print">
+                        <div class="edit-all-button-container pull-right">                            
+                            <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('BedGroupMaster');
+                                    dcomethealth.util.base_init();" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Back</span></a>                          
+                            <input type="submit" id="submitData" class="btn btn-primary" value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="panel-body">             
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <span class="text-primary"><strong>Bed Info.</strong></span><hr class="btn-danger">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Bed Group Name</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <input id="bgmBedGroupName" type="text" name="bgmBedGroupName" class="col-md-12 col-sm-12 col-xs-12 form-control" />
+                                <input id="bgmRid" name="bgmRid" type="hidden" class="col-md-12 col-sm-12 col-xs-12 form-control"/>
+                            </div>
+                        </div> 
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Unit Name</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <select id="bgmBedUnitRid" name="bgmBedUnitRid" class="form-control" onchange="dcomethealth.BedGroupMaster.unitWiseServicePoint(this)">
+                                    <option value="0"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Service Unit</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <select id="bgmBedServicePointRid" name="bgmBedServicePointRid" class="form-control">
+                                    <option value="0"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Group</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <select id="bgmBedGroupIndex" name="bgmBedGroupIndex" class="form-control dcomet-c-s_ddict_SERVICE_POINT_GROUP-list">
+                                    <option value="0"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Sub Group</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <select id="bgmBedSubGroupIndex" name="bgmBedSubGroupIndex" class="form-control">
+                                    <option value="0"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Price Type</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <select id="bgmBedPriceTypeIndex" name="bgmBedPriceTypeIndex" class="form-control dcomet-c-s_ddict_SERVICE_POINT_TYPE-list" >
+                                    <option value="0"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 col-sm-12">
+                        <span class="text-primary"><strong>Bed Details</strong></span><hr class="btn-danger">
+                    </div>
+                    <div class="row col-md-6 col-sm-6 col-xs-6">
+                        <div class="row table-responsive">
+                            <table id="dynTableBed" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Bed Name</th>                                                                               
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dynTableTbody">
+                                    <tr>
+                                        <td width="2%">
+                                            <i id="del" style="cursor: pointer;" class="ace-icon fa fa-minus" onclick="dcomethealth.BedGroupMaster.deleteRowBed(this)"></i>
+                                        </td>
+                                        <td width="24%">
+                                            <input type="text" id="bedName" name="bedName" class="col-md-11 col-sm-11 col-xs-11" onchange="checkExistBed(this)"/>
+                                            <input type="hidden" id="bedRid" name="bedRid" value=""/>
+                                            <input type="hidden" id="bedBgmRid" name="bedBgmRid" value=""/>
+                                            <input type="hidden" id="bedState" name="bedState" value=""/>
+                                            <input type="hidden" id="bedStatus" name="bedStatus" value=""/>
+                                        </td>                                          
+                                        <td width="1%">                                
+                                            <i id="plus" class="ace-icon fa fa-plus red" onclick="insertRowBed('dynTableBed', this, 0)"></i>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>                   
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> 
+
+
+<!---->

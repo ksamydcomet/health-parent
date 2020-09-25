@@ -1,0 +1,105 @@
+<script>
+    $("#fromdate").datepicker({
+        showOtherMonths: true,
+        selectOtherMonths: false
+    });
+    $("#todate").datepicker({
+        showOtherMonths: true,
+        selectOtherMonths: false
+    });
+
+//var reportval = document.getElementById("report_head").innerHTML; dcomethealth.ReportView.View(reportval);
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />        
+<div class="row" id="SalesReport">     
+    <div class="panel panel-orange">
+        <div class="panel-heading"><h4 id="report_head">Report View</h4>
+            <div class="hidden-print">
+                <div class="pull-right edit-all-button-container">                     
+                    <button class="btn btn-orange" id="ReportDateRange" style="margin-top: 3px; margin-bottom: 3px;">
+                        <span class="hidden-xs hidden-sm" id="ReportDateRangeSpan"></span> <b class="caret"></b>
+                    </button>
+                    <!--<a href="#" class="btn btn-orange" onclick="dcomethealth.ReportView.View($('#report_head').text());" style="margin-top: 3px; margin-bottom: 3px;"><span>Search </span><i class="fa fa-search"></i></a>-->
+                    <div class="pull-right edit-all-button-container">
+                    </div>
+                    <div class="btn-group hidden-xs">
+                        <a href='#' class="btn btn-orange dropdown-toggle jqueryUIToolTip" title="Download" data-toggle='dropdown' style="margin-top: 3px; margin-bottom: 3px;"><i class="fa fa-cloud-download"></i></a>
+                        <ul class="dropdown-menu">
+                            <li class="overAllExcel hidden" onclick="dcomethealth.ReportView.getExcel();"><a href="#" >Excel File (*.xlsx)</a></li>
+                            <li onclick="dcomethealth.ReportView.exportExcel();"><a href="#" >Over All Excel File (*.xlsx)</a></li>
+                        </ul>
+                        <a href="#" class="btn btn-orange jqueryUIToolTip" title="Exit" onclick="dcomethealth.util.loadpage('Reports');
+                                dcomethealth.util.base_init();" style="margin-top: 3px; margin-bottom: 3px;"><i class="fa fa-times"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="row clearfix"> 
+                            <div class="col-md-12">
+                                <div class="row col-md-2 pull-left"> 
+                                    <span id="payerSpan" class="hidden"><b>Payer:</b></span> 
+                                    <select id="payerWiseSelect" name="payerWiseSelect" class="form-control col-md-2 hidden"><option value="0">All</option></select>  
+                                    <!--<button type="button" id="salesDetails" name="salesDetails" class="btn btn-orange btn-sm hidden" onclick="dcomethealth.ReportView.viewDetails();">View Details</button>-->
+                                    <!--<button type="button" id="summaryDetails" name="summaryDetails" class="btn btn-orange btn-sm hidden" onclick="dcomethealth.ReportView.View('Unit Sales');">Summary</button>-->
+                                    <button type="button" id="collectionDetails" name="collectionDetails" class="btn btn-orange btn-sm hidden" onclick="dcomethealth.ReportView.viewCollectionsDetails();">View Details</button>
+                                    <button type="button" id="colSummaryDetails" name="colSummaryDetails" class="btn btn-orange btn-sm hidden" onclick="dcomethealth.ReportView.View('Collections');">Summary</button>
+                                </div>
+                                <div id="viewRowQty" class="row col-md-12 col-sm-12 col-xs-12">
+                                    <div class="col-md-4" id="dummydiv" ></div>
+                                    <div class="col-md-8 pull-right">
+                                        <div class="col-md-4 pull-right">
+                                            <span id="grossTotalDiv" class="text-left hidden">Total Gross Amount : <span class="text-primary" id="gross_count"></span></span>
+                                            <span id="dueTotalDiv" class="text-left">Total Due Amount : <span class="text-primary" id="due_count"></span></span><br>
+                                            <span id="discTotalDiv" class="text-left">Total Disc. Amount : <span class="text-primary" id="disc_count"></span></span>
+                                        </div>
+                                        <div class="col-md-4 pull-right">
+                                            <span id="netTotalDiv" class="text-left">Total Net Amount : <span class="text-primary" id="net_count"></span></span><br>
+                                            <span id="paidTotalDiv" class="text-left">Total Paid Amount : <span class="text-primary" id="paid_count"></span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--                                <div id="viewRowQty1" class="row col-md-12 col-sm-12 col-xs-12">
+                                
+                                                                </div>-->
+                                <div class="pull-left">
+                                    <!--<span id="unitSpan" class="hidden"><b>Unit:</b></span>-->                                    
+                                    <span id="serviceSpan" class="hidden"><b>Service:</b></span>                                    
+                                    <span id="typeSpan" class="hidden"><b>Type:</b></span> 
+                                </div>
+                                <div class="col-md-2">                                
+                                    <!--<select id="unitWiseSelect" name="unitWiseSelect" class="form-control col-md-2 hidden"><option value="0"></option></select>-->                                    
+                                    <select id="serviceWiseSelect" name="serviceWiseSelect" class="form-control col-md-2 hidden"><option value="0"></option></select>                                    
+                                    <select id="typeWiseSelect" name="typeWiseSelect" class="form-control col-md-2 dcomet-c-s_ddict_payment_mode-list hidden"><option value="0"></option></select>  
+                                </div>                                
+                            </div>
+                            <div class="col-md-12"><p></p></div>
+                            <div class="col-md-12 table-responsive" id="ReportTableDiv">                                
+                                <table id="ReportTable" class="table table-bordered">
+                                    <caption id="reportCaption" class="hidden"></caption>
+                                    <thead style="background-color: #f2f2f2" id="report_thead"></thead>
+                                    <tbody id="report_tbody"></tbody>
+                                </table>
+                            </div>   
+                            <div class="hidden col-md-12 table-responsive" id="ReportTableDivExcel">                                
+                                <table id="ReportTableExcel" class="table table-striped">
+                                    <caption id="reportCaptionExcel" class="hidden"></caption>
+                                    <thead id="report_thead_excel"></thead>
+                                    <tbody id="report_tbody_excel"></tbody>
+                                </table>
+                            </div>                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="printDiv" class="hidden"></div>
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script>
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+<script type='text/javascript' src="js/plugins/form-daterangepicker/daterangepicker.min.js"></script>

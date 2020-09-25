@@ -1,0 +1,94 @@
+<script>
+    function div_hide() {
+        $("#sysParamHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#addNew").removeClass("hidden").addClass("panel panel-primary");
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-select2/select2.css'/>
+<div class="row">
+    <div id="sysParamHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>Sys Param </h4>
+            <div class="pull-right edit-all-button-container">
+                <a href="#" class="btn btn-primary " onclick="div_hide()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form">Add New</span></a>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <table id="sysParamTable" cellpadding="0" cellspacing="0" border="0"  class="table table-striped table-bordered">
+                        <thead>
+                            <tr style="background-color: gainsboro ">
+                                <th style="color: black">Param Name</th>
+                                <th style="color: black">Param Code</th>
+                                <th style="color: black"> Patient Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyHead"></tbody> 
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="addNew" class="hidden"> 
+    <div class="row" id="sysParamMaster"  style="background: ">     
+        <div class="panel panel-primary" style="background: "> 
+            <form action="#" id="edit_user_form" name="edit_user_form" class="form-horizontal row-border ">
+                <div class="panel-heading " ><h4>Sys Param </h4>
+                    <div class="hidden-print">
+                        <div class="edit-all-button-container pull-right">                            
+                            <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('SysParam');
+                                    dcomethealth.util.base_init();" style="margin-top: 3px; margin-bottom: 3px;"><span id="back" >Back</span></a>                          
+                            <input type="submit" id="submitData" class="btn btn-primary" value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="panel-body"  style="background: ">             
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-4 col-sm-4 col-xs-4 ">
+                            <label class="row col-md-12 col-sm-12 col-xs-12  "   style="color: black;">Param code</label>  
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="paramCode" class=" col-md-12 form-control  text-capitalize" name="paramCode"  maxlength="35"/>
+                            </div>
+                        </div> 
+                        <div class="row col-md-4 col-sm-4 col-xs-4 ">
+                            <label class="row col-md-12 col-sm-12 col-xs-12 "  style="color: black">Param Name</label>  
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="paramName" class=" col-md-12 form-control text-capitalize" onchange="checkExsitingPackage(this)" name="paramName" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" maxlength="40"/>
+                                <input type="hidden" id="paramRid" name="paramRid"/> 
+                            </div>
+                        </div> 
+                        <div class="row col-md-4 col-sm-3 col-xs-3">                        
+                            <label class="row col-md-12 col-sm-12 col-xs-12"  style="color: black">Param Description</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="paramDescription"   class=" col-md-12 form-control" name="payerPrice" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" maxlength="75"/>
+                            </div>
+                        </div>                       
+                    </div>  
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-4 col-sm-3 col-xs-3">                        
+                            <label class="row col-md-12 col-sm-12 col-xs-12"  style="color: black">Param Value</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <input type="text" id="paramValue"   class=" col-md-12 form-control" name="paramValue"  maxlength="30"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-4 col-sm-3 col-xs-3">                        
+                            <label class="row col-md-12 col-sm-12 col-xs-12"  style="color: black">Assign Entity</label>
+                            <div class= "row col-md-8 col-sm-8 col-xs-8">
+                                <select id="assignEntity" name="assignEntity" multiple  style="width:100%;" class="row populate assignEntity"></select>
+                            </div>
+                        </div>                       
+                    </div>             
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-select2/select2.min.js'></script>
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script>

@@ -1,0 +1,105 @@
+<script type="text/javascript">
+    function leadingZero(value) {
+        if (value < 10) {
+            return "0" + value.toString();
+        }
+        return value.toString();
+    }
+    var current = moment().format('DD-MM-YYYY');
+    $("#saDate").val(current);
+
+</script>
+<div class="" id="StockAdjustment">     
+    <div class="panel panel-primary">
+        <form action="#" id="edit_user_form" name="edit_user_form" novalidate="novalidate" class="form-horizontal row-border">
+            <div id="head_sc" class="panel-heading"><h4>Stock Adjustment</h4>
+                <div class="hidden-print">
+                    <div class="pull-right edit-all-button-container" id="btns_state">
+                        <input type="submit" class="btn btn-primary" value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="clearfix">
+                                <span class="text-primary"><strong>Search.</strong></span><hr class="btn-danger">
+                                <div class="row col-md-3 col-sm-4 col-xs-4">
+                                    <label>Search By Name</label><br>
+                                    <input type="text" id="itemname"  name="itemname" class="col-md-11 col-sm-11 col-xs-11" placeholder="Search by Item Name..."/>                    
+                                    <input type="hidden" id="skuRid"  name="skuRid"/>
+                                </div>
+                                <div class="row col-md-3 col-sm-4 col-xs-4">
+                                    <label>Reason</label><br>
+                                    <select id="reason" name="reason" class="col-md-10 col-sm-10 col-xs-10">
+                                        <option value="User Needed">User Needed</option>
+                                    </select>
+                                </div>
+                                <div class="pull-right">
+                                    <ul class="text-right list-unstyled">
+                                        <li><strong>Date:</strong>
+                                            <input type="text" style="border:0px" id="saDate" name="saDate" readonly="readonly"/>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <br>
+                            <span class="text-primary"><strong>Adjustment Info.</strong></span><hr class="btn-danger">
+                            <div class=" table-responsive">
+                                <table id="dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                    <thead>
+                                    <th>Unit</th>
+                                    <th>Batch No</th>
+                                    <th>Expiry Date</th>
+                                    <th>Stock Qty</th>
+                                    <th>UOM</th>                                    
+                                    <th>Rate(<span class="dcomet-c-s_currCode"></span>)</th>
+                                    <th>MRP(<span class="dcomet-c-s_currCode"></span>)</th>
+                                    <th>Physical Stock Qty</th>
+                                    </thead>
+                                    <tbody id="stkAdj_tbody">
+                                        <!--<tr >-->
+                                        <!--                                        <td class="hidden">
+                                                                                    <input type="hidden" id="item_code" name="item_code" value=""/>
+                                                                                    <input type="hidden" id="uom_conv" name="uom_conv" value=""/>
+                                                                                </td>                
+                                                                                <td width="10%">
+                                                                                    <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="sadBatchNo" name="sadBatchNo" maxlength="20" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" value=""/>
+                                                                                </td>
+                                                                                <td width="10%">
+                                                                                    <input class="col-md-12 col-sm-12 col-xs-12 jqueryUIToolTip" type="text" id="sadExpiryDate" name="sadExpiryDate" title="MM/YYYY format" onkeyup="return dcomethealth.validation.ValidateDate(this, event.keyCode)" onkeydown="return dcomethealth.validation.DateFormat(this, event.keyCode)"/>
+                                                                                </td>
+                                                                                <td width="10%">
+                                                                                    <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="sadStkQty" name="sadStkQty" maxlength="9" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" />
+                                                                                </td>
+                                                                                <td width="10%">
+                                                                                    <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="uom" name="uom" />
+                                                                                </td>
+                                                                                <td width="10%">
+                                                                                    <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="sadRate" name="sadRate" maxlength="9" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" value=""/>
+                                                                                </td>
+                                                                                <td width="10%">
+                                                                                    <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="sadMrp" maxlength="9" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" name="sadMrp" />
+                                                                                </td>
+                                                                                <td width="10%">
+                                                                                    <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="sadQty" name="sadQty" maxlength="9" onkeypress="return dcomethealth.validation.isNumberKey(event, this)"/>
+                                                                                </td>
+                                                                                <td width="15%">
+                                                                                    <select id="reason" name="reason" class="col-md-12 col-sm-12 col-xs-12">
+                                                                                        <option value="User Needed">User Needed</option>
+                                                                                    </select>
+                                                                                </td>                -->
+                                        <!--</tr>-->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

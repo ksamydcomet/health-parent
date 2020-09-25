@@ -1,0 +1,410 @@
+<script type="text/javascript">
+    $("#pohDeliveryDate").datepicker({
+        showOtherMonths: true,
+        selectOtherMonths: false,
+        format: 'dd-mm-yyyy',
+    });
+
+    $('body').on('focus', "#podExpiryDate", function () {
+        $(this).datepicker({
+            format: 'yyyy/mm',
+            viewMode: "months",
+            minViewMode: "months"
+        });
+    });
+
+    function delete_row(elem) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById('dyn_table_PO');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+
+    function modifyPO(id, status) {
+        if (status !== "PO rejected") {
+            $('#PORid').val(id);
+            $('#POStatus').val(status);
+//            $('#reset').addClass("hidden");
+            $('#Modify').removeClass("hidden");
+            $('#Save').addClass("hidden");
+            if (status === "PO Raised") {
+                $('#Modify').addClass("hidden");
+                $('#Save').addClass("hidden");
+            }
+            $("#PurchaseOrderHeader").removeClass("panel panel-primary").addClass("hidden");
+            $("#AddNew").removeClass("hidden").addClass("panel panel-primary");
+            dcomethealth.PurchaseOrder.getPO(id, 2);
+        } else {
+            alert("Already Rejected");
+            return false;
+        }
+    }
+
+    function div_hide() {
+        $("#PurchaseOrderHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#AddNew").removeClass("hidden").addClass("panel panel-primary");
+        $(':text').val('');
+        document.getElementById("supplierAdd").value = "";
+        document.getElementById("pohTermsOfDelivery").value = "";
+        document.getElementById("pohGrossAmount").innerHTML = "";
+        document.getElementById("pohDiscountAmount").innerHTML = "";
+        document.getElementById("pohTaxAmount").innerHTML = "";
+        document.getElementById("round_off_amount").innerHTML = "";
+        document.getElementById("pohNetAmount").innerHTML = "";
+        $(':checkbox, :radio').prop('checked', false);
+        $('#Modify').addClass("hidden");
+        $('#Save').removeClass("hidden");
+    }
+
+    function div_back() {
+        $("#AddNew").removeClass("panel panel-primary").addClass("hidden");
+        $("#PurchaseOrderHeader").removeClass("hidden").addClass("panel panel-primary");
+
+    }
+
+    function calculation(row) {
+        var itemname = dynTableGetNodeInRow(row, 'item_name').value;
+        var batchno = dynTableGetNodeInRow(row, 'podBatchNo').value;
+        var expiry = dynTableGetNodeInRow(row, 'podExpiryDate').value;
+        var acc_qty_row = dynTableGetNodeInRow(row, 'order_qty').value;
+        var rate_row = dynTableGetNodeInRow(row, 'rate').value;
+        var dis_row = dynTableGetNodeInRow(row, 'dis').value;
+        if (itemname == "") {
+            alert("Enter Item Name");
+            return false;
+        }
+        else if (parseInt(acc_qty_row) <= 0) {
+            alert("Enter Positive Order Qty");
+            dynTableGetNodeInRow(row, 'order_qty').value = 0;
+            dynTableGetNodeInRow(row, 'dis').value = 0;
+            dynTableGetNodeInRow(row, 'tax').value = 0;
+            dynTableGetNodeInRow(row, 'net_amount').value = 0;
+
+            document.getElementById('pohGrossAmount').value = 0;
+            document.getElementById('pohDiscountAmount').value = 0;
+            document.getElementById('pohTaxAmount').value = 0;
+            document.getElementById('round_off_amount').value = 0;
+            document.getElementById('pohNetAmount').value = 0;
+
+            return false;
+        }
+        if (parseFloat(dis_row) < 0) {
+            alert("Enter Positive Disc Value");
+            dynTableGetNodeInRow(row, 'dis').value = 0;
+            return false;
+        }
+        if (itemname != "") {
+            if (parseInt(acc_qty_row) != 0) {
+                if (parseInt(rate_row) != 0) {
+                    var gross = 0, net = 0, disc_total = 0, tax_total = 0, serv_tax_total = 0;
+                    var table = document.getElementById('dyn_table_PO');
+                    var table_length = table.rows.length;
+                    for (var i = 0; i < table_length - 1; i++) {
+                        var qty_row = dynTableGetNodeInRow(table.rows[i + 1], 'order_qty').value;
+                        var cost_row = dynTableGetNodeInRow(table.rows[i + 1], 'rate').value;
+                        var disc_row = dynTableGetNodeInRow(table.rows[i + 1], 'dis').value;
+                        var tax_row = dynTableGetNodeInRow(table.rows[i + 1], 'tax').value;
+                        if (qty_row == '') {
+                            qty_row = 0;
+                        }
+                        if (cost_row == '') {
+                            cost_row = 0;
+                        }
+                        if (disc_row == '') {
+                            disc_row = 0;
+                        }
+                        if (tax_row == '') {
+                            tax_row = 0;
+                        }
+
+                        var gross_row = parseInt(qty_row) * parseFloat(cost_row);
+                        var disc_calc = parseFloat(gross_row) * (parseFloat(disc_row) / 100);
+                        disc_total = parseFloat(disc_total) + parseFloat(disc_calc);
+                        var tax_calc = parseFloat(gross_row) * (parseFloat(tax_row) / 100);
+                        tax_total = parseFloat(tax_total) + parseFloat(tax_calc);
+
+                        gross = parseFloat(gross) + parseFloat(gross_row);
+                        var net_row = parseFloat(gross_row) - parseFloat(disc_calc) + parseFloat(tax_calc);
+                        dynTableGetNodeInRow(table.rows[i + 1], 'net_amount').value = net_row.toFixed(2);
+                        net = parseFloat(net) + parseFloat(net_row);
+                        var round = parseInt(net.toFixed(0)) - parseFloat(net);
+                    }
+                    document.getElementById('pohGrossAmount').value = gross.toFixed(2);
+                    document.getElementById('pohDiscountAmount').value = disc_total.toFixed(2);
+                    document.getElementById('pohTaxAmount').value = tax_total.toFixed(2);
+                    document.getElementById('round_off_amount').value = round.toFixed(2);
+                    document.getElementById('pohNetAmount').value = net.toFixed(0);
+                }
+                else {
+                    alert("Enter Rate");
+                    return false;
+                }
+            }
+            else {
+                alert("Enter order qty");
+                return false;
+            }
+        }
+        else {
+            alert("Enter Itemname");
+            return false;
+        }
+    }
+
+    function insert_row(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dyn_table_PO');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var total = dynTableGetNodeInRow(table.rows[i + 1], 'net_amount').value;
+            var item = dynTableGetNodeInRow(table.rows[i + 1], 'item_name').value;
+        }
+        if (item == "") {
+            alert("Enter Item Name");
+            return false;
+        }
+        if (total == "" || parseInt(total) == 0) {
+
+        }
+        else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "del_PO").className = "ace-icon fa fa-minus";
+            dynTableGetNodeInRow(newRow, "podRID").value = "";
+            dynTableGetNodeInRow(newRow, "itemRID").value = "";
+            dynTableGetNodeInRow(newRow, "item_name").value = "";
+            dynTableGetNodeInRow(newRow, "podExpiryDate").value = "";
+            dynTableGetNodeInRow(newRow, "podBatchNo").value = "";
+            dynTableGetNodeInRow(newRow, "order_qty").value = 0;
+            dynTableGetNodeInRow(newRow, "rate").value = 0;
+            dynTableGetNodeInRow(newRow, "dis").value = 0;
+            dynTableGetNodeInRow(newRow, "tax").value = 0;
+            dynTableGetNodeInRow(newRow, "net_amount").value = "";
+            dcomethealth.PurchaseOrder.autoCompleteItemName();
+
+        }
+    }
+    function deliverydateValidation() {
+        var a = moment();
+        var b = moment($("#pohDeliveryDate").val(), 'DD-MM-YYYY');
+        if (a.isBefore(b)) {
+        } else {
+            alert("Enter Valid Date");
+            return false;
+        }
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<div id="PurchaseOrderHeader" class="panel panel-orange">
+    <div class="panel-heading"><h4>Purchase Order</h4>
+        <div class="hidden-print">
+            <div class="pull-right edit-all-button-container">
+                <button class="btn btn-orange" id="PoDateRange" >
+                    <span class="hidden-xs hidden-sm" id="PoDateRangeSpan"></span> <b class="caret"></b>
+                </button>
+                <a href="#" class="btn btn-orange" style="margin-top: 3px; margin-bottom: 3px;" onclick="dcomethealth.PurchaseOrder.viewPO()">
+                    <span >Search </span><i class="fa fa-search"></i>
+                </a>
+                <a href="#" class="btn btn-orange" onclick="div_hide()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Add New</span></a>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                        <table id="tab_po_details" width="100%" border="0" cellspacing="0" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        Po No
+                                    </th>
+                                    <th>
+                                        Date
+                                    </th>
+                                    <th>
+                                        Status
+                                    </th>
+                                </tr>
+                            </thead>            
+                            <tbody id="po_data">
+                            </tbody> 
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="AddNew" class="hidden">
+    <div class="" id="PurchaseOrder">
+        <div class="panel panel-primary">
+            <div class="panel-heading"><h4>Purchase Order</h4>
+                <div class="hidden-print">
+                    <div class="pull-right edit-all-button-container" id="btns_state">
+                        <!--<a class="btn btn-inverse-alt" onclick="" id="reset"><span  class="">Reset</span></a>-->
+                        <a href="#" class="btn btn-inverse" onclick="div_back()"><span id="savePage4Form" style="margin-top: 3px; margin-bottom: 3px;">Back</span></a>
+                        <button class="btn-primary btn save" id="Save" style="margin-top: 3px; margin-bottom: 3px;">Save</button>
+                        <button class="btn-primary btn modify hidden" id="Modify" style="margin-top: 3px; margin-bottom: 3px;">Modify</button>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="panel panel-default">
+                <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+                    <div class="clearfix">
+                        <div class="row col-md-6 col-sm-6 col-xs-6">
+                            <div>                        
+                                <input type="text" id="supplierName" name="supplierName" placeholder="Supplier Search" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" class="col-md-6 form-control"/>
+                                <input type="hidden" id="supplierId" name="supplierId" value=""/>
+                                <input type="hidden" id="pohNumber" name="pohNumber" value=""/>
+                                <input type="hidden" id="createdDateTime" name="createdDateTime" value=""/>
+                                <input type="hidden" id="PORid" name="PORid" value=""/>
+                                <input type="hidden" id="POStatus" name="POStatus" value=""/>
+                            </div>
+                        </div>
+                        <div class="pull-right">
+                            <ul class="text-right list-unstyled">
+                                <li>Date:
+                                    <a data-original-title="" class="editable editable-click" href="#" id="curDate" ></a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>                    
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="row clearfix col-md-12 col-sm-12 col-xs-12">                               
+                                <div class="row col-md-2 col-sm-4 col-xs-4">
+                                    <label>Delivery Date</label>
+                                    <input type="text" id="pohDeliveryDate" name="pohDeliveryDate" onchange="deliverydateValidation()"  onkeypress="return dcomethealth.validation.ValidateDateEntry(event)" class="col-md-12 col-sm-12 col-xs-12 jqueryUIToolTip"/><!--onclick="datePicker(this)"-->
+                                </div>
+                                <div class="pull-right col-md-3 col-sm-4 col-xs-4">
+                                    <label>Terms of Delivery</label>
+                                    <textarea id="pohTermsOfDelivery" name="pohTermsOfDelivery" cols="30" class="col-md-12 col-sm-12 col-xs-12"></textarea>                                    
+                                </div>
+                                <div class="pull-right col-md-3 col-sm-4 col-xs-4">
+                                    <label>Supplier Info</label>
+                                    <textarea class="col-md-12 col-sm-12 col-xs-12 readonlytext" readonly  id="supplierAdd" name="supplierAdd" cols="30"></textarea>
+                                </div>
+
+                            </div>
+                            <div class="row clearfix col-md-12 col-sm-12 col-xs-12">
+
+                            </div>
+                            <br><br>
+                            <span class="text-primary"><strong>Item Info</strong></span><hr class="btn-danger">
+                            <div class="row">
+                                <div class="col-md-12 col-sm-12 col-xs-12">
+                                    <div class="table-responsive">
+                                        <table id="dyn_table_PO" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                            <thead>
+                                            <th></th>
+                                            <th>Item Name</th>
+                                            <th>Batch No</th>
+                                            <th>Exp Date</th>
+                                            <th>Order Qty</th>
+                                            <th>UOM</th>
+                                            <th>Rate (<span class="dcomet-c-s_currCode"></span>)</th>
+                                            <th>Disc (%)</th>
+                                            <th>Tax (%)</th>
+                                            <th>Nett (<span class="dcomet-c-s_currCode"></span>)</th>
+                                            <th></th>
+                                            </thead>
+                                            <tbody id="pod_tbody">
+                                                <tr>
+                                                    <td width="1%"><i id="del_PO" class="ace-icon fa fa-minus red hidden" onclick="delete_row(this)"></i></td>
+                                                    <td class="hidden">
+                                                        <input type="hidden" id="podRID" name="podRID"/>
+                                                        <input type="hidden" id="itemRID" name="itemRID"/>
+                                                    </td>
+                                                    <td width="20%">
+                                                        <input class="col-md-11 col-sm-11 col-xs-11" type="text" id="item_name" name="item_name" />
+                                                    </td>
+                                                    <td width="7%">
+                                                        <input class="col-md-11 col-sm-11 col-xs-11" type="text" id="podBatchNo" name="item_BatchNo" />
+                                                    </td>
+                                                    <td width="7%">
+                                                        <input class="col-md-11 col-sm-11 col-xs-11" type="text" id="podExpiryDate" onkeypress="return dcomethealth.validation.ValidateDateEntry(event)" name="item_ExpDate" />
+                                                    </td>
+                                                    <td width="7%">
+                                                        <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="order_qty" maxlength="9" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" name="order_qty" onblur="calculation(this)" value=""/>
+                                                    </td>
+                                                    <td width="7%">
+                                                        <select class="dcomet-c-s_ddict_uom-list col-md-12 col-sm-12 col-xs-12" id="UOM_PO" name="UOM_PO" ></select>
+                                                    </td>                            
+                                                    <td width="7%">
+                                                        <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="rate" name="rate" maxlength="9" onkeypress="return dcomethealth.validation.isDecimalKey(event)" onchange="calculation(this)"/>
+                                                    </td>
+                                                    <td width="5%">
+                                                        <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="dis" name="dis" onchange="dcomethealth.validation.isPercentaged(this)" onkeypress="return dcomethealth.validation.isDecimalKey(event)" onBlur="calculation(this)"/>
+                                                    </td>
+                                                    <td width="5%">
+                                                        <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="tax" name="tax" onkeypress="return dcomethealth.validation.isDecimalKey(event)" onchange="dcomethealth.validation.isPercentaged(this)" onBlur="calculation(this)" />
+                                                    </td>
+                                                    <td width="8%">
+                                                        <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="net_amount" name="net_amount" readonly="readonly" onBlur=""/>
+                                                    </td>
+                                                    <td width="1%">                                
+                                                        <i class="ace-icon fa fa-plus red" onclick="insert_row('dyn_table_PO', this)"></i>
+                                                    </td> 
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="text-primary"><strong>Amount Details</strong></span><hr class="btn-danger">
+                            <div class="alert alert-info pull-right col-md-12">
+                                <div class="col-xs-12 col-md-1 col-sm-6"></div>
+                                <div class="col-xs-12 col-md-2 col-sm-6">
+                                    <div class=""><strong>Gross</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <input type="hidden" id="row_count_lens" name="row_count_lens" />
+                                        <input type="hidden" id="total_qty_lens" name="total_qty_lens" />
+                                        <output id="pohGrossAmount" name="pohGrossAmount" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                    </div>
+                                </div>  
+                                <div class="col-xs-12 col-md-2 col-sm-6">
+                                    <div class=""><strong>Discount</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <output id="pohDiscountAmount" name="pohDiscountAmount" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                    </div>
+                                </div>
+                                <div class="col-xs-12 col-md-2 col-sm-6">
+                                    <div class=""><strong>Tax</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <output id="pohTaxAmount" name="pohTaxAmount" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                    </div>
+                                </div>
+                                <div class="col-xs-12 col-md-2 col-sm-6">
+                                    <div class=""><strong> Round Off</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <output id="round_off_amount" name="round_off_amount" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                    </div>
+                                </div>
+                                <div class="col-xs-12 col-md-2 col-sm-6">
+                                    <div class=""><strong> Nett</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                    <div class="">
+                                        <output id="pohNetAmount" name="pohNetAmount" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                    </div>
+                                </div>                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src="js/plugins/form-daterangepicker/daterangepicker.min.js"></script>
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script>

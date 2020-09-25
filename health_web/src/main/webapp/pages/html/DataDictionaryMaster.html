@@ -1,0 +1,178 @@
+<script>
+    function div_hide() {
+        $("#DataDictionaryMasterHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#assignDdictDiv").removeClass("hidden").addClass("panel panel-primary");
+        $("#ms-multi-select").find(".ms-selection").find(".ms-optgroup-container").find("li").each(function () {
+            $(this).removeClass("ms-selected");
+            $(this).attr("style", "display: none")
+        });
+        $(':text').val('');
+        $(':checkbox, :radio').prop('checked', false);
+
+    }
+    function div_back() {
+        dcomethealth.util.loadpage('DataDictionaryMaster');
+        dcomethealth.util.base_init();
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-multiselect/css/multi-select.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-select2/select2.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<div class="row">
+    <div id="DataDictionaryMasterHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>Data Dictionary Master</h4>
+            <div class="pull-right edit-all-button-container">
+                <a href="#" class="btn btn-primary jqueryUIToolTip" onclick="div_hide()" title="Assign Ddict"><i class="fa fa-share-square-o"></i></a>
+                <a href="#" class="btn btn-primary jqueryUIToolTip" onclick="dcomethealth.DataDictionaryMaster.addNew()" title="Add Ddict"><span id="savePage4Form" ><i class="fa fa-plus"></i></span></a>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12">
+                <div class="col-md-12">         
+                    <div id="dDictMasterGrid">
+                        <table id="dDictTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Class Name</th>
+                                    <th>Is Active</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dDictTbody"></tbody> 
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--Assign Ddict Values Code Here--> 
+<div id="assignDdictDiv" class="hidden"> 
+    <div class="row" id="dDictMaster">     
+        <div class="panel panel-primary">
+            <div class="panel-heading"><h4>Data Dictionary Master</h4>
+                <div class="hidden-print">
+                    <div class="edit-all-button-container pull-right">
+                        <div>
+                            <a href="#" id="roleBack" class="btn btn-inverse" onclick="div_back()"><span  >Back</span></a>
+                            <a href="#" class="btn btn-primary" id="saveDdict"><span>Save</span></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-12 col-sm-12 col-xs-12">
+                                    <div class="row col-md-3 col-sm-6 col-xs-6">
+                                        <label class="row col-md-12 col-sm-12 col-xs-12" for="entityName">Entity Name</label>
+                                        <div class="row col-md-12 col-sm-12 col-xs-12">
+                                            <select id="entityName" name="entityName" style="width:100%;" class="form-control col-md-12">
+                                                <option value="0">--Select--</option>
+                                            </select>
+                                            <!-- <select id="entityName" name="entityName" multiple  style="width:100%;" class="row"></select>-->
+                                        </div>
+                                    </div>
+                                    <div class="row col-md-3 col-sm-6 col-xs-6">
+                                        <label class="row col-md-6 col-sm-8 col-xs-8">Ddict Code</label>
+                                        <select id="dDictCode" class="" style="width:100%"></select>
+                                        <input type="hidden" id="dditTypeIndex" name="dditTypeIndex" />
+                                        <input type="hidden" id="ddictId" name="ddictId" />
+                                    </div>                                    
+                                </div>
+                            </div>
+                            <hr class="btn-danger">
+                            <div class="row">
+                                <div id="dDictValueDiv" class="col-md-12 col-sm-12 col-xs-12 hidden">
+                                    <label>Ddict Values</label>
+                                    <form action="#" class="form-horizontal row-border">
+                                        <div class="form-group">
+                                            <!--<select id="dDictValues" class="" multiple="multiple"></select>-->
+                                            <select multiple="multiple" id="multi-select"  class="dDictClass"></select>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>          
+        </div>
+    </div>
+</div>
+<!--Add DdictType And Ddict Values Code Here--> 
+<div id="addDdictDiv" class="hidden"> 
+    <div class="row" id="dDictValueMaster">     
+        <div class="panel panel-primary">
+            <form action="#" id="edit_user_form" name="edit_user_form" novalidate="novalidate" class="form-horizontal row-border">
+                <div class="panel-heading"><h4>Data Dictionary Master</h4>
+                    <div class="hidden-print">
+                        <div class="edit-all-button-container pull-right">
+                            <div>
+                                <a href="#" id="roleBack" class="btn btn-inverse" onclick="div_back()"><span  >Back</span></a>
+                                <a href="#" class="btn btn-primary" id="saveDdictType"><span>Save</span></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="row col-md-3 col-sm-6 col-xs-6">
+                                            <label class="row col-md-6 col-sm-8 col-xs-8">Ddict Code Name</label>
+                                            <input type="text" id="dditCode" name="dditCode" class="form-control col-md-3"/>
+                                            <input type="hidden" id="dDictTypeRid" name="dDictTypeRid" />
+                                        </div>
+                                        <div class="col-md-3 col-sm-6 col-xs-6">
+                                            <label class=" col-md-12 col-sm-8 col-xs-8">Parent Index</label>
+                                            <div class=" col-md-9 col-sm-6 col-xs-6">
+                                                <input type="text" id="ddictParentIndex" name="ddictParentIndex" class="form-control col-md-3"/>
+                                            </div>                                        
+                                        </div>
+                                        <div class="row table-responsive col-md-4 col-sm-12 col-xs-12">
+                                            <table id="dynTable" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                                <thead id="dynThead" class="">
+                                                    <tr>   
+                                                        <th></th>
+                                                        <th>Option Name</th>
+                                                        <th></th>                                                
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="dynTbody">
+                                                    <tr>
+                                                        <td width="2%"><i id="del" class="ace-icon fa fa-minus hidden" onclick="dcomethealth.DataDictionaryMaster.deleteRow(this)"></i></td>
+                                                        <td width="97%"><input id="ddictValue" type="text" name="ddictValue" onChange="" class="col-md-12 col-sm-12 col-xs-12 form-control" maxlength="30"/><input type="hidden" id="dDictRid" name="dDictRid" value=""/></td>
+                                                        <td width="1%"><i class="ace-icon fa fa-plus red" onclick="dcomethealth.DataDictionaryMaster.insertRow(this)"></i></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>                   
+                                        </div> 
+                                        <div class="col-md-2 col-sm-6 col-xs-6">
+                                            <label class="row col-md-12 col-sm-8 col-xs-8 pull-left">Is Valid</label>
+                                            <div class="row col-sm-3 control-label pull-left">  <!-- control-label needed for positioning -->
+                                                <div class="dDictStatus"></div>
+                                            </div>                                                                                
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr class="btn-danger">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/form-multiselect/js/jquery.multi-select.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-select2/select2.min.js'></script> 
+<script type='text/javascript' src='js/plugins/quicksearch/jquery.quicksearch.min.js'></script> 

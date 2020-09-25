@@ -1,0 +1,154 @@
+<script>
+    $('body').on('focus', "#hmHolidayDate", function () {
+        $(this).datepicker({
+            format: 'dd-mm-yyyy',
+        });
+    });
+    function insertRow(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dynTableHoliday');
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            var hmHolidayName = dynTableGetNodeInRow(table.rows[i + 1], 'hmHolidayName').value;
+            var hmHolidayDate = dynTableGetNodeInRow(table.rows[i + 1], 'hmHolidayDate').value;
+            var hmValue = dynTableGetNodeInRow(table.rows[i + 1], 'hmValue').value;
+            var hmValueElem = dynTableGetNodeInRow(table.rows[i + 1], 'hmValue');
+            var hmValueText = hmValueElem.options[hmValueElem.selectedIndex].text;//For get selected option text 
+            var hmWorkingFromTime = dynTableGetNodeInRow(table.rows[i + 1], 'hmWorkingFromTime').value;
+            var hmWorkingToTime = dynTableGetNodeInRow(table.rows[i + 1], 'hmWorkingToTime').value;
+            if (hmValueText == "Half Day") {
+                if (hmWorkingFromTime == "") {
+                    alert("Enter from time");
+                    return false;
+                }
+                if (hmWorkingToTime == "") {
+                    alert("Enter to time");
+                    return false;
+                }
+            }
+        }
+        if (hmHolidayName == "") {
+            alert("Enter holiday name");
+            return false;
+        } else if (hmHolidayDate == "" || parseInt(hmHolidayDate) == 0) {
+            alert("Enter holiday date");
+            return false;
+        } else if (hmValue == "" || parseInt(hmValue) == 0) {
+            alert("Enter holiday type");
+            return false;
+        } else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "hmRid").value = "";
+            dynTableGetNodeInRow(newRow, "hmHolidayName").value = "";
+            dynTableGetNodeInRow(newRow, "hmHolidayDate").value = "";
+            dynTableGetNodeInRow(newRow, "hmValue").value = "";
+            dynTableGetNodeInRow(newRow, "hmWorkingFromTime").value = "";
+            dynTableGetNodeInRow(newRow, "hmWorkingToTime").value = "";
+            dynTableGetNodeInRow(newRow, "hmIsActive").value = "";
+            dynTableGetNodeInRow(newRow, "minus").className = 'ace-icon fa fa-minus';
+        }
+    }
+    function deleteRow(elem) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById('dynTableHoliday');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+    function timeValidation(elem) {
+        var fromTime = dynTableGetNodeInRow(elem, "hmWorkingFromTime").value;
+        var toTime = dynTableGetNodeInRow(elem, "hmWorkingToTime").value;
+        if (fromTime == "") {
+            alert("Enter from time");
+            return false;
+        }
+        if (toTime == "") {
+            alert("Enter to time");
+            return false;
+        }
+        if (toTime == fromTime) {
+            alert("Enter valid time interval");
+            dynTableGetNodeInRow(elem, "hmWorkingToTime").value = "";
+            return false;
+        }
+    }
+    function dateValidation(elem) {
+        var a = moment();
+        var b = dynTableGetNodeInRow(elem, "hmHolidayDate").value;
+        var c = moment(b, 'DD-MM-YYYY');
+        if (c.isBefore(a)) {
+            alert("Enter valid date");
+            dynTableGetNodeInRow(elem, "hmHolidayDate").value = "";
+            return false;
+        }
+    }
+</script>
+<link rel="stylesheet" type="text/css" href="js/plugins/app-calendar/jquery.datetimepicker.css"/>
+<div id="add_new" class=""> 
+    <div class="row" id="HolidayMaster">     
+        <div class="panel panel-primary"> 
+            <form action="#" id="edit_user_form" name="edit_user_form" class="form-horizontal row-border">
+                <div class="panel-heading"><h4>Holiday Master</h4>
+                    <div class="hidden-print">
+                        <div class="edit-all-button-container pull-right">                            
+                            <input type="submit" id="submitData" class="btn btn-primary" value="Save">
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="panel-body">             
+                    <div class="col-md-9 col-sm-12 col-xs-12">
+                        <div class="table-responsive">
+                            <table id="dynTableHoliday"  class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Holiday Name</th>
+                                        <th>Holiday Date</th>
+                                        <th>Holiday Type</th>
+                                        <th>From Time</th>
+                                        <th>To Time</th>
+                                        <th>Active</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="holidayTbody">
+                                    <!--                                    <tr>
+                                                                            <td width="1%"><i id="minus" class="ace-icon fa fa-minus hidden" onclick="deleteRow(this)"></i>
+                                                                            </td>
+                                                                            <td width="10%">
+                                                                                <input type="text" class="col-md-11 col-sm-11 col-xs-11 form-control" id="hmHolidayName"  name="hmHolidayName" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" />
+                                                                                <input type="hidden" id="hmRid" name="hmRid"/> 
+                                                                            </td>
+                                                                            <td width="4%">
+                                                                                <input type="text" id="hmHolidayDate"  name="hmHolidayDate" maxlength="10" title="DD-MM-YYYY Format" onkeypress="return dcomethealth.validation.ValidateDateEntry(event)" onblur="dateValidation(this)" class="col-md-12 col-sm-12 col-xs-12 form-control jqueryUIToolTip">
+                                                                            </td>
+                                                                            <td width="6%">
+                                                                                <select id="hmValue" class="form-control dcomet-c-s_ddict_day_type-list" onchange="dcomethealth.HolidayMaster.checkDayType(this)"><option value="">--Select--</option></select>
+                                                                            </td>
+                                                                            <td width="3%">
+                                                                                <input type="text" class="col-md-12 col-sm-12 col-xs-12 form-control" maxlength="5" id="hmWorkingFromTime" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" name="hmWorkingFromTime" onchange="" disabled/>
+                                                                            </td>
+                                                                            <td width="3%">
+                                                                                <input type="text" class="col-md-12 col-sm-12 col-xs-12 form-control" maxlength="5" id="hmWorkingToTime" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" name="hmWorkingToTime" onchange="timeValidation(this)" disabled/>
+                                                                            </td>         
+                                                                            <td width="2%">
+                                                                                <input type="checkbox" id="hmIsActive" name="hmIsActive" class="col-md-12" checked/>
+                                                                            </td>
+                                                                            <td width="2%">
+                                                                                <i class="ace-icon fa fa-plus red" onclick="insertRow('dynTableHoliday', this)"></i>
+                                                                            </td>
+                                                                        </tr>-->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="js/plugins/app-calendar/jquery.datetimepicker.full.js"></script>

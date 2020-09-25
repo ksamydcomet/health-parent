@@ -1,0 +1,277 @@
+<script type="text/javascript">
+    $("#inv_date").datepicker({
+        showOtherMonths: true,
+        selectOtherMonths: false,
+    });
+    var isShift = false;
+    var seperator = "/";
+
+    function DateFormat(txt, keyCode)
+    {
+        if (keyCode == 16)
+            isShift = true;
+        //Validate that its Numeric
+        if (((keyCode >= 48 && keyCode <= 57) || keyCode == 8 ||
+                keyCode <= 37 || keyCode <= 39 ||
+                (keyCode >= 96 && keyCode <= 105)) && isShift == false)
+        {
+            if (txt.value.length == 1) {
+                if (txt.value > 1) {
+                    txt.value = "0" + txt.value;
+                }
+            }
+            if ((txt.value.length == 2) && (txt.value > 12)) {
+                alert("Invalid Month.....Try Again");
+                return false;
+            }
+            if ((txt.value.length == 2) && keyCode != 8)
+            {
+                txt.value += seperator;
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    function openGrnDetails() {
+        if ($('#prhSupplierName').val() !== "" && $('#suppRid').val() !== "") {
+//            if () {
+            $('#grnDetails').removeClass("hidden");
+        }
+        else {
+            alert("Enter Valid Supplier");
+            $('#grnDetails').addClass("hidden");
+        }
+//        }
+    }
+
+    function calculation(row) {
+        var itemname = dynTableGetNodeInRow(row, 'prdSkuName').value;
+        var mrp_row = dynTableGetNodeInRow(row, 'rate').value;
+        var Stock = dynTableGetNodeInRow(row, 'stk_qty').value;
+        var acc_qty_row = dynTableGetNodeInRow(row, 'ret_qty').value;
+        var returnable_qty_row = dynTableGetNodeInRow(row, 'retable_qty').value;
+        if (returnable_qty_row === "") {
+            returnable_qty_row = 0;
+        }
+        if (acc_qty_row === "") {
+            acc_qty_row = 0;
+        }
+        if (parseInt(acc_qty_row) < 0) {
+            alert("Enter Positive Quantity");
+            return  false;
+        }
+        if (Stock == 0) {
+            alert("Out Of Stock");
+        }
+        if (parseInt(returnable_qty_row) < parseInt(acc_qty_row) && parseInt(acc_qty_row) != 0) {
+            alert("Enter Correct Qty");
+            dynTableGetNodeInRow(row, 'ret_qty').value = 0.00;
+            dynTableGetNodeInRow(row, 'prdNetAmount').value = 0.00;
+            document.getElementById("gross_amount").value = 0.00;
+            document.getElementById("net_dis_amount").value = 0.00;
+            document.getElementById("net_tax").value = 0.00;
+            document.getElementById("round_off_amount").value = 0.00;
+            document.getElementById("net_tot_amount").value = 0.00;
+            return false;
+        } else {
+
+        }
+        if (itemname != "") {
+            if (parseInt(mrp_row) != 0) {
+                if (parseInt(acc_qty_row) != 0) {
+                    var gross = 0, net = 0, disc_total = 0, tax_total = 0, serv_tax_total = 0;
+                    var table = document.getElementById('dyn_table');
+                    var table_length = table.rows.length;
+//                    var y = table_length - 2;
+                    for (var i = 0; i < table_length - 1; i++) {
+                        var qty_row = dynTableGetNodeInRow(table.rows[i + 1], 'ret_qty').value;
+                        var mrp_total = dynTableGetNodeInRow(table.rows[i + 1], 'rate').value;
+                        var tax_row = dynTableGetNodeInRow(table.rows[i + 1], 'prTax').value;
+                        if (qty_row == '') {
+                            qty_row = 0;
+                        }
+                        if (tax_row == '') {
+                            tax_row = 0;
+                        }
+                        var gross_row = parseFloat(qty_row) * parseFloat(mrp_total);
+//                        var tax_calc = parseFloat(gross_row) * (parseFloat(tax_row) / 100);
+//                        tax_total = parseFloat(tax_total) + parseFloat(tax_calc);
+                        gross = parseFloat(gross) + parseFloat(gross_row);
+//                        var net_row = parseFloat(gross_row) + parseFloat(tax_calc);
+                        var net_row = parseFloat(gross_row);
+                        dynTableGetNodeInRow(row, 'prdNetAmount').value = (mrp_row * acc_qty_row).toFixed(2);
+                        net = parseFloat(net) + parseFloat(net_row);
+                        var round = parseInt(net.toFixed(0)) - parseFloat(net);
+                    }
+                    document.getElementById('gross_amount').value = gross.toFixed(2);
+                    document.getElementById('net_dis_amount').value = disc_total.toFixed(2);
+                    document.getElementById('net_tax').value = tax_total.toFixed(2);
+                    document.getElementById('round_off_amount').value = round.toFixed(2);
+                    document.getElementById('net_tot_amount').value = net.toFixed(0);
+                }
+                else {
+                    alert("Enter Qty");
+                    dynTableGetNodeInRow(row, 'ret_qty').value = 0.00;
+                    dynTableGetNodeInRow(row, 'prdNetAmount').value = 0.00;
+                    document.getElementById("gross_amount").value = 0.00;
+                    document.getElementById("net_dis_amount").value = 0.00;
+                    document.getElementById("net_tax").value = 0.00;
+                    document.getElementById("round_off_amount").value = 0.00;
+                    document.getElementById("net_tot_amount").value = 0.00;
+                    return false;
+                }
+            }
+            else {
+                alert("Select MRP");
+                return false;
+            }
+        }
+        else {
+            alert("Enter Itemname");
+            return false;
+        }
+    }
+    function stock() {
+        var Stock = document.getElementById('stk_qty').value;
+        if (Stock <= 0) {
+            alert("Out Of Stock");
+            return false;
+            calculation(this);
+        }
+    }
+</script>
+<div class="row" id="PurchaseReturn">     
+    <div class="panel panel-primary">
+        <div class="panel-heading"><h4>Purchase Return</h4>
+            <div class="hidden-print">
+                <div class="pull-right edit-all-button-container">
+                    <button class="btn-primary btn" style="margin-top: 3px; margin-bottom: 3px;">Save</button>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+                <div class="clearfix">
+                    <div class="row col-md-6 col-sm-6 col-xs-6">
+                        <div>                            
+                            <input class="col-md-6 form-control" type="text" id="prhSupplierName" name="prhSupplierName" placeholder="Supplier Search" onblur="openGrnDetails()"/>
+                            <input type="hidden" id="suppRid" value=""/>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-4 col-xs-4 pull-right">
+                        <ul class="text-right list-unstyled">
+                            <li>Date:
+                                <a class="editable editable-click" id="curDate"></a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="clearfix">
+                            <div id="grnDetails" class="row hidden col-md-12 col-sm-12 col-xs-12">
+                                <div class="row col-md-3 col-sm-6 col-xs-4">                                    
+                                    <label>GRN</label>
+                                    <div>
+                                        <input type="text" id="grnNo" name="grnNo" value=""/>
+                                        <input type="hidden" id="grhSequenceNo" name="grhSequenceNo" value=""/>
+                                        <input type="hidden" id="grhVersion" name="grhVersion" value=""/>
+                                        <input type="hidden" id="grhDcNo" name="grhDcNo" value=""/>
+                                        <input type="hidden" id="grhInvoiceNo" name="grhInvoiceNo" value=""/>
+                                        <input type="hidden" id="grhInvoiceDate" name="grhInvoiceDate" value=""/>
+                                        <input type="hidden" id="grhGrossAmount" name="grhGrossAmount" value=""/>
+                                        <input type="hidden" id="grhDiscountAmount" name="grhDiscountAmount" value=""/>
+                                        <input type="hidden" id="grhTaxAmount" name="grhTaxAmount" value=""/>
+                                        <input type="hidden" id="grhNetAmount" name="grhNetAmount" value=""/>
+                                        <input type="hidden" id="grnRid" name="grnRid" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-6 col-xs-4 ">    
+                                    <div>
+                                        <label class="row col-md-12 col-sm-12 col-xs-12">GRN Date</label>
+                                        <input type="text" id="grhdcdate" readonly="readonly" name="grhdcdate"/>  
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-6 col-xs-4">                                  
+                                    <label class="row col-md-12 col-sm-12 col-xs-12">Gate Pass No</label>
+                                    <div>
+                                        <input type="text" id="prhGatePassNo" name="prhGatePassNo" readonly="readonly" value=""/>
+                                    </div>
+                                </div>
+                            </div>                           
+                        </div>  
+                        <div class="row col-md-12 col-sm-12 col-xs-12"></div>
+                        <span class="text-primary"><strong>Item Info.</strong></span><hr class="btn-danger" style="margin: 0;">
+                        <div class="row">
+                            <br>
+                        </div>
+                        <div class="row">                            
+                            <div class="table-responsive">
+                                <table id="dyn_table" class="table table-condensed table-hover">
+                                    <thead>
+                                    <th>Item Name</th>
+                                    <th>Batch No</th>
+                                    <th>Exp Date</th>
+                                    <th>P.Qty</th>
+                                    <th>S.Qty</th>
+                                    <th>Rable.Qty</th>
+                                    <th>Return Qty</th>
+                                    <th>UOM</th>
+                                    <th>Rate (<span class="dcomet-c-s_currCode"></span>)</th>
+                                    <th>Nett (<span class="dcomet-c-s_currCode"></span>)</th>
+                                    </thead>
+                                    <tbody id="grn_tbody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <span class="text-primary"><strong>Amount Details.</strong></span><hr class="btn-danger">
+                        <div class="alert alert-info pull-right col-md-12">
+                            <div class="col-xs-12 col-md-1 col-sm-6"></div>
+                            <div class="col-xs-12 col-md-2 col-sm-6">
+                                <div class=""><strong>Gross</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                <div class="">                                  
+                                    <output id="gross_amount" name="gross_amount" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                </div>
+                            </div> 
+                            <div class="col-xs-12 col-md-2 col-sm-6">
+                                <div class=""><strong>Discount</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                <div class="">                                  
+                                    <output id="net_dis_amount" name="net_dis_amount" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                </div>
+                            </div> 
+                            <div class="col-xs-12 col-md-2 col-sm-6">
+                                <div class=""><strong>Tax</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                <div class="">                                  
+                                    <output id="net_tax" name="net_tax" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                </div>
+                            </div> 
+                            <div class="col-xs-12 col-md-2 col-sm-6">
+                                <div class=""><strong>Round Off</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                <div class="">                                  
+                                    <output id="round_off_amount" name="round_off_amount" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                </div>
+                            </div> 
+                            <div class="col-xs-12 col-md-2 col-sm-6">
+                                <div class=""><strong>Nett</strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                <div class="">                                  
+                                    <output id="net_tot_amount" name="net_tot_amount" class="col-md-6 col-sm-6 col-xs-12" style="border: none"/>
+                                </div>
+                            </div> 
+                            <div class="col-xs-12 col-md-1 col-sm-6"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

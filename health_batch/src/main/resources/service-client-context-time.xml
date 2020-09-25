@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>	
+    <!-- every 10.02,10.07, 11.02,11.07, 12.02,12.07,...06.02,06.07 minutes 0 2,7 * * * ? -->
+    <entry key="com.dcomet.health.batchjob.DashBoardJob">0 0/5 * * * ?</entry> 
+    <entry key="com.dcomet.health.batchjob.ReportScheduleJob">0 0/5 * * * ?</entry>
+    <entry key="com.dcomet.health.batchjob.DailyReportScheduleJob">0 0/5 * * * ?</entry> 
+    <entry key="com.dcomet.health.batchjob.MailScheduleJob">0 0/5 * * * ?</entry> 
+    
+    <!--	 every 10.03, 11.03, 12.03,...06.03 minutes 
+    <entry key="career.embroyo.batchjob.bh.moveregisterusertouserjob">0 3 * * * ?</entry>
+     every 10.10, 11.10, 12.10,...06.10 minutes 
+    <entry key="career.embroyo.batchjob.bi.deletedatabasedumpjob">0 10 * * * ?</entry>
+     every 10.12,10.22, 11.12,11.22, 12.12,12.22,...06.12,06.22 minutes 
+    <entry key="career.embroyo.batchjob.ba.remaindermonthlycommissionjob">0 12,22 * * * ?</entry>
+     every 10.13,10.23, 11.13,11.23, 12.13,12.23,...06.13,06.23 minutes 
+    <entry key="career.embroyo.batchjob.bb.remaindermonthlyexpensejob">0 13,23 * * * ?</entry>
+     every 10.24, 11.24, 12.24,...06.24 minutes 
+    <entry key="career.embroyo.batchjob.bc.overallmonthlycommissionapprovalnofifyjob">0 24 * * * ?</entry>
+     every 10.25, 11.25, 12.25,...06.25 minutes 
+    <entry key="career.embroyo.batchjob.bd.overallmonthlyexpenseapprovalnofifyjob">0 25 * * * ?</entry>
+     every 10.28, 11.28, 12.28,...06.28 minutes 
+    <entry key="career.embroyo.batchjob.be.closepreviousmonthjob">0 28 * * * ?</entry>
+     every 10.39, 11.39, 12.39,...06.39 minutes 	
+    <entry key="career.embroyo.batchjob.bj.createmonthlysalaryjob">0 39 * * * ?</entry>
+     every 10.41,10.45 11.41,11.45, 12.41,12.45,...06.41,06.45 minutes 		
+    <entry key="career.embroyo.batchjob.bk.remaindermonthlysalaryjob">0 41,45 * * * ?</entry>	
+     every 10.44, 11.44, 12.44,...06.44 minutes 	
+     <entry key="career.embroyo.batchjob.bf.dashboardrefreshjob">0 44 * * * ?</entry>  
+    <entry key="career.embroyo.batchjob.bf.dashboardrefreshjob">0 0/5 * * * ?</entry>	
+     every 10.48, 11.48, 12.48,...06.48 minutes 	
+    <entry key="career.embroyo.batchjob.bl.overallmonthlysalaryapprovalnofifyjob">0 48 * * * ?</entry>
+     every 10.50, 11.50, 12.50,...06.50 minutes 		
+    <entry key="career.embroyo.batchjob.bm.createmonthlycommissionjob">0 50 * * * ?</entry>	
+     every 10.52, 11.52, 12.52,...06.52 minutes 	
+    <entry key="career.embroyo.batchjob.bn.createmonthlyexpensejob">0 52 * * * ?</entry>
+     every 10.54, 11.54, 12.54,...06.54 minutes 		
+    <entry key="career.embroyo.batchjob.bo.createmonthlyreportjob">0 54 * * * ?</entry>	-->
+</properties> 

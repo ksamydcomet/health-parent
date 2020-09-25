@@ -1,0 +1,560 @@
+<script>
+    function delete_row(elem) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+                calculation();
+            }
+        }
+    }
+    function clearAll() {
+        document.getElementById("mrnSearch").value = '';
+        document.getElementById("PatientName").value = '';
+        document.getElementById("PatientAge").value = '';
+        document.getElementById("patientMobile").value = '';
+        document.getElementById("serviceName").value = '';
+        document.getElementById("qtyService").value = '';
+        document.getElementById("serviceDisc").value = '';
+        document.getElementById("MRP").value = '';
+        document.getElementById("netAmount").value = '';
+        document.getElementById("serviceGrossAmount").value = '';
+        document.getElementById("serviceDiscountAmount").value = '';
+        document.getElementById("round_off_amount").value = '';
+        document.getElementById("pmd_amount").value = '';
+        document.getElementById("total_pmd").value = '';
+    }
+    function insert_row(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var serv = dynTableGetNodeInRow(table.rows[i + 1], 'serviceName').value;
+        }
+        if (serv == "") {
+            alert("Enter Service Name");
+            return false;
+        }
+        else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "serviceName").value = "";
+            dynTableGetNodeInRow(newRow, "minus").className = " dct-icon fa fa-minus-circle";
+            dynTableGetNodeInRow(newRow, "serviceOrderRID").value = "";
+            dynTableGetNodeInRow(newRow, "billDRID").value = "";
+            dynTableGetNodeInRow(newRow, "serviceName").readOnly = false;
+            dynTableGetNodeInRow(newRow, "qtyService").innerHTML = 1;
+            dynTableGetNodeInRow(newRow, "serviceDisc").value = 0;
+            dynTableGetNodeInRow(newRow, "serviceRID").value = '0';
+            dynTableGetNodeInRow(newRow, "netAmount").value = "";
+            dynTableGetNodeInRow(newRow, 'MRP').value = 0.00;
+            dcomethealth.ModifyTransaction.AutoCompleteTran();
+        }
+    }
+    function ClearName(row) {
+        if (dynTableGetNodeInRow(row, 'serviceName').value == "") {
+            dynTableGetNodeInRow(row, 'serviceRID').value = 0;
+        }
+    }
+    function viewDicount(value) {
+        $("#lable").hide();
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        var discounttotal = 0;
+        var count = 0;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (value == 1) {
+                var table = document.getElementById('dyn_table');
+                var table_length = table.rows.length;
+                for (var i = 0; i < table_length - 1; i++) {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').readOnly = true;
+                }
+            }
+            if (value == 2) {
+                $('#lable').show();
+                $('#viewDiscount').addClass('hidden');
+                var table = document.getElementById('dyn_table');
+                var table_length = table.rows.length;
+                for (var i = 0; i < table_length - 1; i++) {
+                    dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').readOnly = false;
+                }
+            }
+            var disco = dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').value;
+            if (disco != "" || disco != 0) {
+                dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').value = 0;
+                if (count == 0) {
+                    if (confirm("Do you want to give a total discount amount ")) {
+                        count++;
+                        var discount = !!dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').value ? dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').value : 0;
+                        discounttotal += parseFloat(discount);
+                        calculation();
+
+                    } else {
+                        dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').value = disco;
+                        $('#lable').show();
+                        return false;
+                    }
+                }
+            }
+            $('#DiscPercent').attr('disabled', false);
+            $('#moDiscValue').attr('disabled', false);
+            $('#viewDiscount').removeClass("hidden");
+        }
+    }
+    function changeDisc() {
+        var discValue = 0, net = 0, roundDisc = 0;
+        if ($('#moDiscValue').val() == '' && $('#DiscPercent').val() == '') {
+            $('#DiscPercent').removeAttr('disabled');
+            $('#moDiscValue').removeAttr('disabled');
+        } else {
+            if ($('#DiscPercent').val() == '' && $('#moDiscValue').val() != '') {
+                $('#DiscPercent').attr('disabled', 'disabled');
+                discValue = parseFloat($('#moDiscValue').val());
+                if (discValue > parseFloat($('#serviceGrossAmount').val())) {
+                    alert("Entered amount is greater than Gross amount");
+                    $('#moDiscValue').val("");
+                    return false;
+                }
+            } else if ($('#moDiscValue').val() == '' && $('#DiscPercent').val() != '') {
+                $('#moDiscValue').attr('disabled', 'disabled');
+            }
+        }
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            calculation(dynTableGetNodeInRow(table.rows[i + 1], 'serviceName'));
+        }
+    }
+    function calculation(row) {
+        var discPopup = document.getElementById('DiscPercent').value;
+        if (discPopup > 100) {
+            alert("Enter the valid percent");
+            document.getElementById('DiscPercent').value = 0;
+            document.getElementById('DiscPercent').focus()
+            return false;
+        }
+        var disamount = 0;
+        if (discPopup != "" && discPopup != 0) {
+            var grossamount = document.getElementById('serviceGrossAmount').value;
+            var dis = (discPopup / 100);
+            var disamount = parseFloat(dis) * parseFloat(grossamount);
+        }
+        var discPopupValue = 0;
+        if (!!document.getElementById('moDiscValue').value && document.getElementById('moDiscValue').value != 0) {
+            discPopupValue = document.getElementById('moDiscValue').value;
+        } else if (!!disamount && disamount != 0) {
+            discPopupValue = disamount;
+        }
+        var gross = 0, net = 0, disc_total = 0, tax_total = 0, serv_tax_total = 0, total = 0;
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var qty_row = dynTableGetNodeInRow(table.rows[i + 1], 'qtyService').value;
+            var mrp = dynTableGetNodeInRow(table.rows[i + 1], 'MRP').value;
+            var serviceDisc = dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').value;
+            if (qty_row == 0) {
+                alert("Enter the valid qty");
+                dynTableGetNodeInRow(table.rows[i + 1], 'qtyService').value = 1;
+            }
+            if (serviceDisc > 100) {
+                alert("Enter the valid percent");
+                dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').value = 0;
+                dynTableGetNodeInRow(table.rows[i + 1], 'serviceDisc').focus();
+                dynTableGetNodeInRow(table.rows[i + 1], 'netAmount').value = mrp * qty_row;
+                return false;
+            }
+            var netamount = dynTableGetNodeInRow(table.rows[i + 1], 'netAmount').value;
+            total += parseFloat(netamount);
+            if (qty_row == '') {
+                qty_row = 0;
+            }
+            if (discPopup == '') {
+                discPopup = 0;
+            }
+            if (discPopupValue == '') {
+                discPopupValue = 0;
+            }
+            if (serviceDisc == '') {
+                serviceDisc = 0;
+            }
+            if (discPopup != "" && $('#moDiscValue').attr("readonly") == true) {
+                alert("Enter any one Discount type");
+                document.getElementById('DiscPercent').focus();
+                return false;
+            }
+            if (discPopupValue != "" && $('#DiscPercent').attr("readonly") == true) {
+                alert("Enter any one Discount type");
+                document.getElementById('moDiscValue').focus();
+                return false;
+            }
+            var gross_row = parseFloat(qty_row) * parseFloat(mrp);
+            var disc_calc = 0, disTotalPercent = 0;
+            disTotalPercent = parseFloat(serviceDisc);
+            disc_calc = parseFloat(gross_row) * (parseFloat(disTotalPercent) / 100);
+            disc_total = parseFloat(disc_total) + parseFloat(disc_calc);
+            gross = parseFloat(gross) + parseFloat(gross_row);
+            var net_row = parseFloat(gross_row) - parseFloat(disc_calc);
+            dynTableGetNodeInRow(table.rows[i + 1], 'netAmount').value = net_row.toFixed(2);
+            net = parseFloat(net) + parseFloat(net_row);
+            var round = parseInt(net.toFixed(0)) - parseFloat(net);
+        }
+        if (discPopupValue != 0) {
+            net = net - discPopupValue;
+            discPopupValue = discPopupValue + ".00"
+            disc_total = parseFloat(discPopupValue);
+        }
+        var payerAmt = document.getElementById('payer_amount').value;
+        var paidAmt = document.getElementById('billHPaidAmount').value;
+        var totalPaid = parseFloat(payerAmt) + parseFloat(paidAmt);
+        var due = net - totalPaid;
+        document.getElementById('serviceGrossAmount').value = gross.toFixed(2);
+        document.getElementById('serviceDiscountAmount').value = disc_total.toFixed(2);
+        document.getElementById('serviceNetAmount').value = net.toFixed(0);
+        document.getElementById('billHDueAmount').value = due.toFixed(0);
+    }
+</script>
+
+<div class="row" id="modify_transaction">     
+    <div class="panel panel-primary">
+        <div class="panel-heading"><h4>Modify Transaction</h4>
+            <div class="hidden-print">
+                <div class="pull-right edit-all-button-container">
+                    <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('ViewTransaction')" style="margin-top: 5px; "><span id="savePage4Form" class="edit-all-button">Back</span></a>
+                    <a href="#" class="btn btn-primary hidden" id="modify" style="margin-top: 5px; "><span id="savePage4Form" class="edit-all-button">Modify</span></a>
+                    <a href="#" class="btn btn-primary hidden" id="cancel" style="margin-top: 5px; "><span id="savePage4Form" class="edit-all-button">Cancel</span></a>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+                <div class="row hidden" id="itemDetails">
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="col-md-3 col-sm-3 col-xs-3">
+                            <span class="row text-primary  col-md-5 col-sm-5 col-xs-5"><strong>UHID</strong></span>
+                            <input type="text" id="mrnSearch" name="mrnSearch" class="row col-md-7 col-sm-7 col-xs-7" readonly style="border: none"/>
+                        </div>
+                        <div class="col-md-4 col-sm-4 col-xs-4">
+                            <span class="text-primary  col-md-3 col-sm-3 col-xs-3"><strong>Name </strong></span>
+                            <input type="text" id="PatientName" name="PatientName" class="row col-md-9 col-sm-9 col-xs-9" readonly style="border: none"/>
+                        </div>
+                        <div class="col-md-2 col-sm-2 col-xs-2">
+                            <span class="text-primary col-md-4 col-sm-4 col-xs-4"><strong>Age</strong></span>
+                            <input type="text" id="PatientAge" name="PatientAge" class="row col-md-8 col-sm-8 col-xs-8" readonly="readonly" style="border: none"/>
+                        </div>
+                        <div class="col-md-3 col-sm-3 col-xs-3">
+                            <span class="text-primary col-md-6 col-sm-6 col-xs-6"><strong>Contact No.</strong></span>
+                            <input type="text" id="patientMobile" name="patientMobile" class="row col-md-6 col-sm-6 col-xs-6" readonly="readonly" style="border: none"/>
+                        </div> 
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-12"><hr class="btn-danger" style=""></div>
+                    <div id="billDetailsH" class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-12 col-sm-12 col-xs-12">
+                            <div class="col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12"><strong>Bill No.</strong></label>
+                                <input id="billNo" type="text" style="border: none;" class="" name="billNo" placeholder="Bill No" readonly/>
+                                <input id="bhPrintableBillNo" type="hidden" value=""/>
+                                <input id="bhPrefix" type="hidden" value=""/>
+                                <input id="bhType" type="hidden" value=""/>
+                                <input id="bhIsDraft" type="hidden" value=""/>
+                                <input id="billHRID" type="hidden" value=""/>
+                                <input id="patientRID" type="hidden" value=""/>
+                                <input id="visitRID" type="hidden" value=""/>
+                                <input id="payerRid" type="hidden" value=""/>                            
+                                <input id="payerType" type="hidden" value=""/>                            
+                                <input id="bhDocRefRID" type="hidden" value=""/>                                     
+                            </div>
+                            <div class=" col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12"><strong>Net Amount(<span class="dcomet-c-s_currCode"></span>)</strong></label>
+                                <input type="text" id="netAmtBill" name="netAmtBill" readonly style="border: none"/>
+                                <input type="hidden" id="grossAmtBill" name="grossAmtBill"/>
+                            </div>
+                            <div class=" col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12"><strong>Payer Amount(<span class="dcomet-c-s_currCode"></span>)</strong></label>
+                                <input type="text" id="payerAmtBill" name="payerAmtBill" readonly style="border: none"/>
+                                <input type="hidden" id="bhApprovalNo" name="bhApprovalNo"/>
+                            </div>
+                            <div class=" col-md-3 col-sm-3 col-xs-3">
+                                <label class="row col-md-12 col-sm-12 col-xs-12" ><strong>Paid Amount(Patient)(<span class="dcomet-c-s_currCode"></span>)</strong></label>
+                                <input type="text" id="paidAmtBill" name="paidAmtBill" readonly style="border: none"/>
+                            </div>
+                        </div>
+                        <div class=" row col-md-12 col-sm-12 col-xs-12">
+                            <div class=" col-md-3 col-sm-3 col-xs-3">
+                                <div class=" row col-md-12 col-sm-12 col-xs-12">
+                                </div>
+                            </div>
+                            <div class=" col-md-3 col-sm-3 col-xs-3">
+                                <br>
+                                <label class=" row col-md-12 col-sm-12 col-xs-12"><strong>Due Amount(<span class="dcomet-c-s_currCode"></span>) </strong></label>
+                                <input type="text" id="dueAmtBill" name="dueAmtBill" readonly style="border: none"/>
+                            </div> 
+                            <div class=" col-md-3 col-sm-3 col-xs-3">
+                                <br>
+                                <label class="row col-md-8 col-sm-12 col-xs-12"><strong>Discount Value(<span class="dcomet-c-s_currCode"></span>) </strong></label>
+                                <input id="DiscValue" name="DiscValue" style="border: none"  /> 
+                            </div>
+                        </div>
+
+                    </div>                   
+                    <div class=" col-md-12 col-sm-12 col-xs-12">
+                        <label class="text-primary"> <strong>Item Details</strong></label>
+                        <hr class="btn-danger" style="margin:0;">
+                    </div>                    
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <table id="dyn_table" class="table table-striped table-hover" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>
+                                        Description
+                                    </th>
+                                    <th>
+                                        Qty
+                                    </th>
+                                    <th>
+                                        Discount(%)
+                                    </th>
+                                    <th>
+                                        MRP(<span class="dcomet-c-s_currCode"></span>)
+                                    </th>
+                                    <th>
+                                        Net Amount(<span class="dcomet-c-s_currCode"></span>)
+                                    </th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="modifyBill_tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="viewDiscountDetails" class="row hidden col-md-12 col-sm-12 col-xs-12" >          
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <a data-toggle="modal">
+                            <label id='lable' style="cursor: pointer" class="text-danger" onclick="viewDicount(this);
+                                    viewDicount(1)"><strong>View Discount(Click to enable) </strong></label>
+                        </a>
+                    </div>
+                    <div id="viewDiscount" class="alert alert-success col-md-12 col-sm-12 col-xs-12 hidden">
+                        <button type="button" class="close" onclick="viewDicount(2);">&times;</button>
+
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Discount Type</label>
+                            <select id="DiscType" name="DiscType" class='dcomet-c-s_ddict_discount_type-list jqueryUIToolTip' title="Discount Type"></select>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Discount Name</label>
+                            <input id="DiscName" name="DiscName" maxlength="30"/>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Discount Value (or)</label>
+                            <input id="moDiscValue" name="moDiscValue"  onkeypress="return dcomethealth.validation.isNumberKey(event, this)"  maxlength="10" onchange="changeDisc()"/> 
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Discount Percentage</label>
+                            <input id="DiscPercent" name="DiscPercent" maxlength="3" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" onchange="changeDisc(), calculation(this)"/>
+                        </div>
+                    </div>  
+                </div>      
+
+                <!--                            <div class=""><strong>Due </strong> (<span class="dcomet-c-s_currCode"></span>)</div>
+                                            <div class="">
+                                                <output id="billHDueAmount" name="billHDueAmount" class="col-md-1 col-sm-6 col-xs-12" style="border: none"/>
+                                            </div>-->
+                <div id="viewDiscountDetails1" class="alert alert-info pull-right col-md-12 col-md-12 ">  
+                    <div class="row col-xs-2 col-md-2 col-sm-4">
+                        <strong>Gross</strong>(<span class="dcomet-c-s_currCode"></span>)
+                        <div class="">   
+                            <input type="hidden" id="row_count_lens" name="row_count_lens" />
+                            <input type="hidden" id="total_qty_lens" name="total_qty_lens" />
+                            <output id="serviceGrossAmount" name="serviceGrossAmount" class="left col-md-3 col-sm-6 col-xs-12"   style="border: none"/>
+                        </div>
+                    </div>
+                    <div class="row col-xs-12 col-md-2 col-sm-4">
+                        <strong>Discount</strong>(<span class="dcomet-c-s_currCode"></span>)
+                        <div class="">                             
+                            <output id="serviceDiscountAmount" name="serviceDiscountAmount" class="col-md-3 col-sm-6 col-xs-12"  style="border: none"/>
+                        </div>
+                    </div>                       
+                    <!--                        <div class="col-xs-12 col-md-2 col-sm-6">
+                        <div class=""><strong>Round Off </strong>(<span class="dcomet-c-s_currCode"></span>)</div>
+                        <div class="">                             
+                            <output id="round_off_amount" name="round_off_amount" class="col-md-3 col-sm-6 col-xs-12" style="border: none"/>
+                        </div>
+                    -->
+                    <div class="row col-xs-12 col-md-2 col-sm-4">
+                        <strong>Net</strong>(<span class="dcomet-c-s_currCode"></span>)
+                        <div class="">                             
+                            <output id="serviceNetAmount" name="serviceNetAmount" class="col-md-3 col-sm-6 col-xs-12" style="border: none"/>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-2 col-sm-5">
+                        <strong>Payer Amount</strong>(<span class="dcomet-c-s_currCode"></span>)
+                        <div class="">                             
+                            <output id="payer_amount" name="payer_amount" class="col-md-3 col-sm-6 col-xs-12" style="border: none"/>
+                            <input type="hidden" id="payer_amount" name="payer_amount" style="border: none"/>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-2 col-sm-4">
+                        <strong>Paid(Patient) </strong> (<span class="dcomet-c-s_currCode"></span>)
+                        <div class="">
+                            <output id="billHPaidAmount" name="billHPaidAmount" class="col-md-3 col-sm-3 col-xs-12" style="border: none"/>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-2 col-sm-4">
+                        <strong>Due </strong> (<span class="dcomet-c-s_currCode"></span>)
+                        <div class="">
+                            <output id="billHDueAmount" name="billHDueAmount" class="col-md-1 col-sm-6 col-xs-12" style="border: none"/>
+                        </div>
+                    </div>                       
+                </div>
+                <!--</div>-->
+                <div class="row hidden" id="receiptDetails">
+                    <label class="col-md-12 text-primary"><strong>Payer Info</strong></label>
+                    <div class="col-sm-12">
+                        <hr class="btn-danger" style="margin:0;">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="col-md-2 col-sm-12 col-xs-12">
+                                <label><strong>Name </strong></label> &nbsp; 
+                                <input type="text" id="PatientNameRec" readonly style="border: none"/>
+                                <input type="hidden" id="patientRIDRec" name="patientRIDRec" value=""/>
+                                <input type="hidden" id="billHRidRec" name="billHRidRec" value=""/>
+                                <input type="hidden" id="billNoRec" name="billNoRec" value=""/>
+                            </div>
+                            <div class="col-md-2 col-sm-12 col-xs-12">
+                                <label><strong>Contact No. </strong></label>                            
+                                <input type="text" id="patientMobileRec" readonly style="border: none"/>
+                            </div>
+                            <div class="col-md-2 col-sm-12 col-xs-12"></div>
+                            <div class="col-md-2 col-sm-12 col-xs-12"></div>
+                        </div>
+                    </div>
+                    <label class="col-md-3 text-primary"><strong>Receipt Details </strong></label>
+                    <div class="col-sm-12">
+                        <hr class="btn-danger" style="margin:0;">
+                    </div>
+                    <div id="recDiv" class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="col-md-2 col-sm-12 col-xs-12">
+                            <label><strong>Receipt No </strong></label>
+                            <input type="text" id="RecNo" readonly style="border: none"/>
+                        </div>
+                        <div class="col-md-2 col-sm-12 col-xs-12">
+                            <label><strong>Receipt Date</strong></label>
+                            <input type="text" id="RecDate" readonly style="border: none"/>
+                            <input type="hidden" id="RecRid" value=""/>
+                        </div>
+                        <div class="col-md-2 col-sm-12 col-xs-12">
+                            <label><strong>Net Amount </strong></label>
+                            <input type="text" id="RecNet" readonly style="border: none"/>
+                        </div>
+                        <div class="col-xs-12 col-md-2 col-sm-6">
+                            <div class=""><strong>Payer Amount(<span class="dcomet-c-s_currCode"></span>)</strong></div>
+                            <div class="row">                             
+                                <output id="payerAmount" name="payerAmount" class="col-md-3 col-sm-6 col-xs-12" style="border: none"></output>
+                                <input type = "hidden" id="rhPayerType">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-md-2 col-sm-6">
+                            <div class=""><strong>Paid(Patient)  (<span class="dcomet-c-s_currCode"></span>)</strong></div>
+                            <div class="row">
+                                <output id="recptPaidAmount" name="recptPaidAmount" class="col-md-1 col-sm-6 col-xs-12" style="border: none"></output>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row hidden" id="advanceDetails">
+                    <label class="col-md-12 text-primary"><strong>Payer Info</strong></label>
+                    <div class="col-sm-12">
+                        <hr class="btn-danger" style="margin:0;">
+                    </div>
+                    <div class="row">
+                        <!--                        <div class="col-md-3 col-sm-12 col-xs-12">
+
+                                                    <input type="text" id="mrnSearch" name="mrnSearch" readonly style="border: none"/>
+                                                </div>-->
+                        <div class=" col-md-12 col-sm-12 col-xs-12">
+                            <div class=" row col-md-3 col-sm-3 col-xs-12">
+                                <label class="col-md-12 col-sm-12 col-xs-12"><strong>Name </strong></label>
+                                <input type="text" id="PatientNameAdv" class="col-md-12 col-sm-12 col-xs-12" name="PatientName" readonly style="border: none"/>
+                                <input type="hidden" id="patientRIDAdv" name="patientRIDAdv" value=""/>
+                            </div>
+                            <div class="col-md-3 col-sm-3 col-xs-12">
+                                <label class="col-md-12 col-sm-12 col-xs-12"><strong>Contact No. </strong></label>
+                                <input type="text" id="patientMobileAdv" class="col-md-12 col-sm-12 col-xs-12" readonly style="border: none" name="patientMobile"/>
+                            </div>
+                            <div class="col-md-2 col-sm-12 col-xs-12"></div>
+                            <div class="col-md-2 col-sm-12 col-xs-12"></div>
+                        </div>
+                    </div>
+                    <label class="col-md-12 text-primary"><strong> Advance Details </strong></label>
+                    <div class="col-sm-12">
+                        <hr class="btn-danger" style="margin:0;">
+                    </div>
+                    <div class="col-md-12">
+                        <table width="100%">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        Advance No
+                                    </th>
+                                    <th>
+                                        Advance Amount
+                                    </th>
+                                    <th>
+                                        Adjusted Amount
+                                    </th>
+                                    <th>
+                                        Refunded Amount
+                                    </th>                                   
+                                </tr>
+                            </thead>
+                            <tbody id="modifyAdv_tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row hidden" id="refundDetails">
+                    <label class="col-md-12 text-primary"><strong>Payer Info</strong></label>
+                    <div class="col-sm-12">
+                        <hr class="btn-danger" style="margin:0;">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class=" row col-md-3 col-sm-3 col-xs-12">
+                                <label class="col-md-12 col-sm-12 col-xs-12"><strong>Name </strong></label>
+                                <input type="text" id="PatientNameRef" name="PatientNameRef" readonly style="border: none"/>
+                                <input type="hidden" id="patientRIDRef" name="patientRIDRef" value=""/>
+                            </div>
+                            <div class="col-md-3 col-sm-3 col-xs-12">
+                                <label class="row col-md-12 col-sm-12 col-xs-12"><strong>Contact No. </strong></label>
+                                <input type="text" id="patientMobileRef" readonly style="border: none" name="patientMobile"/>
+                            </div>
+                            <div class="col-md-2 col-sm-12 col-xs-12"></div>
+                            <div class="col-md-2 col-sm-12 col-xs-12"></div>
+                            <!--<input type="text" id="mrnSearch" name="mrnSearch" readonly style="border: none"/>-->
+                        </div>
+                    </div>
+                    <label class="col-md-12 text-primary blue"><strong>Refund Details</strong> </label>
+                    <div class="col-sm-12">
+                        <hr class="btn-danger" style="margin:0;">
+                    </div>
+                    <div class="row col-md-12">
+                        <table id="Refund_details_table" class="table table-striped table-hover" width="100%" cellspacing="0">
+                            <thead> 
+                                <tr>
+                                    <th>Refund No</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>User ID</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ref_tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

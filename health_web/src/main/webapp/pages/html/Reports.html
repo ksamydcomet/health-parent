@@ -1,0 +1,46 @@
+<script>
+    function newVisits() {
+        $("#ReportInfo").removeClass("panel panel-primary").addClass("hidden");
+        $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+    }
+</script>
+<div class="panel panel-primary" id="ReportInfo">    
+    <div class="panel-heading"><h4>Reports</h4>            
+    </div>
+    <br>
+    <div class="panel panel-default">
+        <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+            <div class="panel panel-gray col-md-4">
+                <div class="panel-heading">
+                    <span>Front Office</span>
+                </div>
+                <div class="panel-body">
+                    <table id="frontOfficeTbl" class="table table-hover">
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="panel panel-gray col-md-4">
+                <div class="panel-heading">
+                    <span>Billing</span>
+                </div>
+                <div class="panel-body">
+                    <table id="billingTbl" class="table table-hover">
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="panel panel-gray col-md-4">
+                <div class="panel-heading">
+                    <span>Laboratory</span>
+                </div>
+                <div class="panel-body">
+                    <table id="laboratoryTbl" class="table table-hover">
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div> 
+    </div>
+</div>
+

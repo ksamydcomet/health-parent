@@ -1,0 +1,455 @@
+<script>
+    $("#patDOB").datepicker({
+        showOtherMonths: true,
+        selectOtherMonths: true,
+        dateFormat: 'dd-mm-yy',
+        showAnim: 'slideDown',
+    });
+    $("#cheqdate").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    $("#expdate").datepicker({
+        format: 'yyyy/mm',
+        viewMode: "months",
+        minViewMode: "months"
+    });
+    function ifEmpty() {
+        if ($('#billSearch').val() != $("#billSearch_hid").val()) {
+            document.getElementById('form_cr').reset();
+            $("#checkboxDetails").removeClass("col-md-12").addClass("col-md-12 hidden");
+        }
+    }
+    function checkPayerWise() {
+        var placeholder
+        if ($('#isReorder').val() == 0) {
+            placeholder = "Payer Name"
+            $('#billSearch').attr('placeholder', placeholder);
+        } else {
+            placeholder = "Bill No.."
+            $('#billSearch').attr('placeholder', placeholder);
+        }
+    }
+    function insertRowPay(id, elem) {
+        var table = document.getElementById('pmd_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length; i++) {
+            var total = dynTableGetNodeInRow(table.rows[i], 'pmd_amount').value;
+        }
+        if (total != "" && parseInt(total) != 0) {
+            var x = dynTableRow(elem);
+            dynTableCloneRow(id, x);
+            var newRow = dynTableAppendRow(id);
+            dynTableGetNodeInRow(newRow, "pmd_amount").value = 0;
+            dynTableGetNodeInRow(newRow, "cheqno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "bankname").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "bankname1").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "cheqdate").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "branchname").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "cardtype").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "approvalno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "cardno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "mobileno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "expdate").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(newRow, "approvalno").value = "";
+            dynTableGetNodeInRow(newRow, "bankname").value = "";
+            dynTableGetNodeInRow(newRow, "cardno").value = "";
+            dynTableGetNodeInRow(newRow, "mobileno").value = "";
+            dynTableGetNodeInRow(newRow, "expdate").value = "";
+            dynTableGetNodeInRow(newRow, "cheqno").value = "";
+            dynTableGetNodeInRow(newRow, "cheqdate").value = "";
+            dynTableGetNodeInRow(newRow, "branchname").value = "";
+            dynTableGetNodeInRow(newRow, "del").className = 'ace-icon fa fa-minus';
+        } else {
+            alert("Enter Amount");
+            return false;
+        }
+    }
+
+    function deleterowPay(elem) {
+        var x = dynTableRow(elem);
+        dynTableDeleteRow(x);
+        pmdPaid(x);
+    }
+
+    function pmdPaid(elem) {
+        var totalAmd = 0;
+        var pmd_amount = 0;
+        var table = document.getElementById('pmd_table');
+        var pmd_amount_c = 0;
+        var pmd_amount1 = 0;
+        for (var i = 0; i < table.rows.length; i++) {
+            if (dynTableGetNodeInRow(table.rows[i], 'pmd_amount').value != "") {
+                pmd_amount1 = dynTableGetNodeInRow(table.rows[i], 'pmd_amount').value;
+                var curRid = dynTableGetNodeInRow(table.rows[i], 'pay_mode_currency').value;
+                if (curRid != dcomethealth.sCurrencyRid) {
+                    $.each(currencyExchange, function (idx, cur) {
+                        if (cur.cerDispCurRid == curRid) {
+                            pmd_amount1 = dynTableGetNodeInRow(table.rows[i], 'pmd_amount').value * cur.cerBaseToDispFactor;
+                            pmd_amount_c = parseInt(pmd_amount_c) + parseInt(pmd_amount1);
+                        }
+                    });
+                } else {
+                    pmd_amount_c = parseInt(pmd_amount_c) + parseInt(pmd_amount1);
+                }
+            }
+        }
+        var advTotal = 0;
+        var table = document.getElementById('adv_table');
+        if (table !== null) {
+            for (var i = 0; i < table.rows.length - 1; i++) {
+                if (dynTableGetNodeInRow(table.rows[i + 1], 'adjustedAmt').value != "") {
+                    advTotal += parseFloat(dynTableGetNodeInRow(table.rows[i + 1], 'adjustedAmt').value);
+                }
+            }
+        }
+        totalAmd = parseFloat(advTotal) + parseFloat(pmd_amount_c);
+        document.getElementById('total_pmd').value = totalAmd.toFixed(2);
+    }
+
+    function calculation() {
+        var pmd_amount = 0;
+        var due_amount = 0;
+        var net_amount = 0;
+        var gross_amount = 0;
+        var table = document.getElementById('dyn_table');
+
+        var pmd_amount1 = 0;
+        var due_amount1 = 0;
+        var net_amount1 = 0;
+        var gross_amount1 = 0;
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            if (dynTableGetNodeInRow(table.rows[i + 1], 'selectRow').checked) {
+                if (dynTableGetNodeInRow(table.rows[i + 1], 'billHPaidAmount').innerHTML != "") {
+                    pmd_amount1 = dynTableGetNodeInRow(table.rows[i + 1], 'billHPaidAmount').innerHTML;
+                    due_amount1 = dynTableGetNodeInRow(table.rows[i + 1], 'billHDueAmount').innerHTML;
+                    net_amount1 = dynTableGetNodeInRow(table.rows[i + 1], 'billHNetAmount').innerHTML;
+                    gross_amount1 = dynTableGetNodeInRow(table.rows[i + 1], 'billGrossAmount').innerHTML;
+
+                    pmd_amount = parseFloat(pmd_amount) + parseFloat(pmd_amount1);
+                    due_amount = parseFloat(due_amount) + parseFloat(due_amount1);
+                    net_amount = parseFloat(net_amount) + parseFloat(net_amount1);
+                    gross_amount = parseFloat(gross_amount) + parseFloat(gross_amount1);
+
+                }
+            }
+        }
+        $("#paidAmtBill").val(pmd_amount);
+        $("#netAmtBill").val(net_amount);
+        $("#grossAmtBill").val(gross_amount);
+        $("#dueAmtBill").val(due_amount);
+    }
+
+    function advPaid(elem) {
+        document.getElementById('total_pmd').value = 0.00;
+        var adv_amount_c = 0.00;
+        var table = document.getElementById('adv_table');
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            if (dynTableGetNodeInRow(table.rows[i + 1], 'adjustedAmt').value != "") {
+                adv_amount_c += parseFloat(dynTableGetNodeInRow(table.rows[i + 1], 'adjustedAmt').value);
+            }
+        }
+        document.getElementById('total_pmd').value = adv_amount_c.toFixed(2);
+    }
+
+    function loadMode(ele) {
+        var val = ele.value;
+        if (parseInt(val) == 13) {
+            $("#card_tr").removeClass("hidden").addClass("");
+            $("#cheque_tr").removeClass("").addClass("hidden");
+        } else if (parseInt(val) == 14) {
+            $("#cheque_tr").removeClass("hidden").addClass("");
+            $("#card_tr").removeClass("").addClass("hidden");
+        }
+    }
+
+    function openAdvDiv() {
+        var zero = document.getElementById('openAdv');
+        if (zero.checked) {
+            document.getElementById('advancePayment').value = 1;
+            $("#advanceDetails").removeClass("row hidden").addClass("row");
+        } else {
+            document.getElementById('advancePayment').value = 0;
+            $("#advanceDetails").removeClass("row").addClass("row hidden");
+        }
+    }
+
+    function openRecDiv() {
+        var zero = document.getElementById('openRec');
+        if (zero.checked) {
+            $("#receiptDetails").removeClass("row hidden").addClass("row");
+        } else {
+            $("#receiptDetails").removeClass("row").addClass("row hidden");
+        }
+    }
+
+    function resetBtn() {
+        document.getElementById('form_cr').reset();
+        $("#checkboxDetails").removeClass("col-md-12").addClass("col-md-12 hidden");
+    }
+
+    function openCardInfo() {
+        var tab_id = document.getElementById('pmd_table');
+        var tab_length = tab_id.rows.length;
+        var val = dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').value;
+        if (dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').options.item(dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').selectedIndex).text == 'Card') {
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname").className = "col-md-12";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname1").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqdate").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "branchname").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "mobileno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardtype").className = "col-md-12";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "approvalno").className = "col-md-12";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardno").className = "col-md-12";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "expdate").className = "col-md-12";
+        }
+        else if (dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').options.item(dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').selectedIndex).text == 'Cheque') {
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqno").className = "col-md-12";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname1").className = "col-md-12";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqdate").className = "col-md-12";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "branchname").className = "col-md-12";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "expdate").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardtype").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "approvalno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "mobileno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardno").className = "col-md-12 hidden";
+        } else if (dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').options.item(dynTableGetNodeInRow(tab_id.rows[tab_length - 1], 'pay_mode_ddict').selectedIndex).text == 'M-pesa') {
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname1").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqdate").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "branchname").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "expdate").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardtype").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "approvalno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "mobileno").className = "col-md-12";
+        } else {
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "bankname1").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cheqdate").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "branchname").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardtype").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "approvalno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "cardno").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "expdate").className = "col-md-12 hidden";
+            dynTableGetNodeInRow(tab_id.rows[tab_length - 1], "mobileno").className = "col-md-12 hidden";
+        }
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<div class="" id="ReceiptInfo">
+    <div class="panel panel-primary">
+        <div class="panel-heading"><h4>Create Receipt</h4>
+            <div class="hidden-print">
+                <div class="edit-all-button-container pull-right">
+                    <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('CreateReceipt');
+                            dcomethealth.util.base_init()" style="margin-top: 3px; margin-bottom: 3px;"><span class="reset-all">Clear Form</span></a>
+                    <a href="#" class="btn btn-primary btnPrimary" style="margin-top: 3px; margin-bottom: 3px;"><span class="edit-all-button">Save</span></a>
+                </div>
+            </div>
+        </div>
+        <br>
+        <form id="form_cr"> 
+            <div class="panel panel-default">
+                <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+                    <div class="clearfix">
+                        <div class="row col-md-6 col-sm-6 col-xs-6">
+                            <div>
+                                <input id="billSearch" type="text" name="billSearch" class="col-md-6 form-control" placeholder="Bill No.."  onkeypress="return dcomethealth.validation.ValidateAlphaNumeric(event)"/>
+                                <input id="billSearch_hid" type="hidden" value=""/>
+                                <input id="billHRID" type="hidden" value=""/>
+                                <input id="patientRID" type="hidden" value=""/>
+                                <input id="visitRID" type="hidden" value=""/>
+                                <input id="payerRid" type="hidden" value=""/>
+                                <input id="payerType" type="hidden" value=""/>
+                                <input id="DocRefRid" type="hidden" value=""/>
+                            </div>
+                        </div>
+                        <div class="row col-md-2 col-sm-6 col-xs-12 pull-right" id="repalacementDiv">                           
+                            <label class="row col-md-12 col-sm-12 col-xs-12"><strong>Payer Wise</strong></label>
+                            <div class="col-sm-3 control-label"> 
+                                <div onmousedown="checkPayerWise();" class="reorderStatus"></div>
+                            </div>                          
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-body col-md-12 col-sm-12 col-xs-12">        
+                    <div class="row clearfix col-md-12 col-sm-12 col-xs-12">                    
+                        <span id="patientInfo2" class="text-primary"><strong>Patient Info</strong></span>
+                        <div id="patientInfo" class="row col-md-12  col-sm-12">    
+
+                            <div class="row col-md-3 col-sm-12 col-xs-12">
+                                <label class="text-primary">Name </label>
+                                <input type="text" id="PatientName" name="PatientName" readonly style="border: none"/>
+                            </div>
+                            <div class="col-md-3 col-sm-12 col-xs-12">
+                                <label class="text-primary">Age </label>
+                                <input type="text" id="PatientAge" readonly style="border: none" name="PatientAge"/>
+                            </div>
+
+                            <div class="col-md-3 col-sm-12 col-xs-12">
+                                <label class="text-primary">Contact No </label>
+                                <input type="text" id="PatientMobile" readonly style="border: none" name="PatientMobile"/>
+                            </div>
+                        </div>
+                        <div class="row form-group"></div>
+                        <span class="text-primary"><strong>Billing Info.</strong></span><hr class="btn-danger">
+                        <div id="billingInfoTable" class="row col-md-12  col-sm-12 hidden">
+                            <table id="dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover ">
+                                <thead id="dynThead">
+                                    <tr>
+                                        <th class="col-xs-1 col-sm-1"><input id="selectAll" type="checkbox" onclick="dcomethealth.CreateReceipt.SelectAll(this)"></th>
+                                        <th>Bill N0</th>
+                                        <th>Gross amount</th>
+                                        <th>Paid amount</th>                                                                                                        
+                                        <th>Due Amount</th>                                                                                                
+                                        <th>Net Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dynTbody"></tbody>
+                            </table> 
+                        </div>
+                        <div class="row col-md-12  col-sm-12">
+                            <div class="row col-md-3 col-sm-12 col-xs-12">
+                                <label class="text-primary">Net Amount </label>
+                                <input type="text" id="netAmtBill" name="netAmtBill" readonly style="border: none"/>
+                                <input type="hidden" id="grossAmtBill" name="grossAmtBill"/>
+                                <!--<input type="hidden" id="serviceEligibleAmount" name="serviceEligibleAmount"/>-->
+                                <input type="hidden" id="payerPaidAmount" name="payerPaidAmount"/>
+                                <input type="hidden" id="bhApprovalNumber" name="bhApprovalNumber"/>
+                            </div>
+                            <div class="col-md-3 col-sm-12 col-xs-12">
+                                <label class="text-primary">Paid Amount </label>
+                                <input type="text" id="paidAmtBill" name="paidAmtBill" readonly style="border: none"/>
+                                <input type="hidden" id="discountAmountBill" name="discountAmountBill" />
+
+                            </div>
+                            <div id="payerAmountDue" class="col-md-3 col-sm-12 col-xs-12 hidden">
+                                <label class="text-primary">Payer Amount </label>
+                                <input type="text" id="serviceEligibleAmount" name="serviceEligibleAmount" readonly style="border: none"/>
+                            </div>
+                            <div class="col-md-3 col-sm-12 col-xs-12">
+                                <label class="text-primary">Due Amount </label>
+                                <input type="text" id="dueAmtBill" name="dueAmtBill" readonly style="border: none"/>
+                            </div>
+                        </div>                       
+                        <div class="row clearfix col-md-12 col-sm-12 col-xs-12">
+                            <!--                            <div class="row form-group"></div>-->
+                            <!--<div id="checkboxDetails" class="col-md-12 col-sm-12 col-xs-12 hidden">-->
+                            <!--<div class="col-md-offset-3">-->
+                            <div id="advDetailsCheck" class="row col-md-3 col-sm-4 col-xs-12 hidden ">
+                                <input type="hidden" id="advancePayment" value="0"/>
+                                <input type="checkbox" id="openAdv" name="openAdv" onclick="openAdvDiv()"/> <span class="control-label"><strong>View Advance</strong></span>
+                            </div>
+                            <!--<div class="col-md-3 col-sm-3"></div>-->
+                            <div id="recDetailsCheck" class="row col-md-3 col-sm-4 col-xs-12 hidden">
+                                <input type="checkbox" id="openRec" name="openRec" onclick="openRecDiv()"/> <span class="control-label"><strong>View Receipt</strong></span> 
+                            </div>
+                            <!--</div>-->
+                            <!--</div>-->
+                            <div class="row form-group"></div>
+                            <div id="receiptDetails" class="row hidden">
+                                <div class="col-md-12 col-sm-12 col-xs-12">
+                                    <div class="panel-group panel-green" id="accordion"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 col-sm-12"></div>
+                            <div class="col-md-12 col-sm-12"></div>
+                            <div id="advanceDetails" class="row hidden">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="panel-group panel-grape" id="accordion">
+                                            <div class="panel panel-default">
+                                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+                                                    <div class="panel-heading"><h4>Advance Details <i class="fa fa-cogs"></i></h4></div>
+                                                </a>
+                                                <div id="collapseOne" class="panel-collapse collapse in">
+                                                    <div class="panel-body">
+                                                        <div id="accordioninpanel" class="accordion-group"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--                            <div id="advanceDetails" class="row hidden">
+                                                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                                                <div class="panel panel-danger">
+                                                                    <div class="panel-heading">
+                                                                        <h4>Advance Details</h4>
+                                                                        <div class="options">
+                                                                            <a href="#"><i class="fa fa-cogs"></i></a>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row">
+                                                                        <div class="col-md-12 col-sm-12 col-xs-12">
+                                                                            <div class="panel-body">
+                                                                                <div id="accordioninpanel" class="accordion-group">
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>-->
+                        </div>
+                        <div class="form-group row"></div>
+                        <hr class="btn-danger">
+                        <div class="">
+                            <span class="text-primary"><strong>Payment Details</strong></span>
+                        </div><br> 
+                        <div class="alert alert-info pull-right col-md-12">                  
+                            <div id="paymentMode" class="row col-md-12 col-sm-12 col-xs-12">
+                                <table id="pmd_table" class="table table-condensed table-hover" width="100%" border="0" cellspacing="0" cellpadding="0">
+                                    <tr>
+                                        <td width="2%"><i id="del" class="ace-icon fa fa-minus hidden" onclick="deleterowPay(this)"></i></td>
+                                        <td width="5%" onclick=""><div class="btn-group">
+                                                <select id="pay_mode_ddict" name="pay_mode_ddict" class="dcomet-c-s_ddict_payment_mode-list" onchange="openCardInfo()" >
+                                                </select></div>
+                                        </td>
+                                        <td width="8%" id="td_1"><select id="cardtype" name="cardtype" class="form-control dcomet-c-s_ddict_credit_card_type-list col-md-12 hidden" ></select><input class="form-control col-md-12 hidden" id="cheqno" name="cheqno" maxlength="20" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" placeholder="Cheque No"/></td>
+                                        <td width="7%" id="td_2"><input class="col-md-12 hidden" id="bankname" name="bankname" placeholder="Bank Name" onkeypress="return dcomethealth.validation.ValidateAlpha(event)"/><input class="col-md-12 hidden" id="bankname1" name="bankname1" placeholder="Bank Name" onkeypress="return dcomethealth.validation.ValidateAlpha(event)"/></td>
+                                        <td width="10%" id="td_3"><input class="col-md-12 hidden" id="approvalno" name="approvalno" placeholder="Approval No." maxlength="20" onkeypress="return dcomethealth.validation.isNumberKey(event)"/><input class="col-md-12 hidden jqueryUIToolTip"  title="DD/MM/YYYY Format" id="cheqdate" name="cheqdate" placeholder="Cheque Date" maxlength="10" onkeypress="return dcomethealth.validation.ValidateDateEntry(event)"/></td>
+                                        <td width="10%" id="td_4"><input class="col-md-12 hidden" id="cardno" name="cardno" placeholder="Card No" maxlength="20" onkeypress="return dcomethealth.validation.isNumberKey(event, this)"/><input class="col-md-12 hidden" id="branchname" name="branchname" placeholder="Branch Name" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" /></td>
+                                        <td class="" width="8%" id="td_6"><input class="col-md-12 hidden" id="mobileno" name="mobileno" maxlength="12" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" placeholder="Mobiole No"/></td>
+                                        <td width="8%" id="td_5"><input class="col-md-12 hidden jqueryUIToolTip"  title="YYYY / MM Format" id="expdate" name="expdate" placeholder="Exp Date" maxlength="7" onkeypress="return dcomethealth.validation.ValidateDateEntry(event)"/><input type="text" class="form-control col-md-12 hidden"/></td>
+                                        <td width="5%" onclick=""><div class="btn-group">
+                                                <select id="pay_mode_currency" name="pay_mode_currency" class="" onchange="pmdPaid()" >
+                                                </select>
+                                            </div>
+                                        </td>
+                                        <td width="14%"><input class="input-small width-100" id="pmd_amount" name="pmd_amount" maxlength="9" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" type="text" style="text-align: right" onblur="pmdPaid()"/></td>
+                                        <td width="2%"><i class="ace-icon fa fa-plus" onclick="insertRowPay('pmd_table', this)"></i></td>
+                                    </tr>
+                                </table>
+                            </div> 
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <table class="table table-condensed table-hover" width="100%" border="0" cellspacing="0" cellpadding="0">
+                                    <tr>
+                                        <td width="2%"></td>
+                                        <td width="5%"></td>
+                                        <td width="8%"></td>
+                                        <td width="8%"></td>
+                                        <td width="10%"></td>
+                                        <td width="10%"></td>
+                                        <td width="8%"></td>
+                                        <td width="8%"></td>
+                                        <td width="10%"> <label class=""><strong>Total</strong> (<span class="dcomet-c-s_currCode"></span>)</label></td>
+                                        <td width="15%"><input id="total_pmd" class="" name="total_pmd" readonly style="border: none;text-align:right;"/></td>
+                                        <td width="2%"></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 

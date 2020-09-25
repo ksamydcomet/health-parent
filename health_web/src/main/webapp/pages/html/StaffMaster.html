@@ -1,0 +1,616 @@
+<script>
+    $("#staffDOB").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    $("#staffDOJ").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    $("#staffDOL").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    $("#resAvilDateTo").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    $("#resAvilDateFrom").datepicker({
+        format: 'dd-mm-yyyy',
+    });
+    function div_hide() {
+        $("#StaffMasterHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+        $("select.dcomet-c-s_roles-list").empty();
+        $("select.dcomet-c-s_roles-list", $("#StaffMaster")).each(function (idx, elem) {
+            $.each(dcometRoles, function (index, roles) {
+                if (parseInt(dcomethealth.loginuser.entityRid) == parseInt(roles.roleEntityRID) && !!roles.roleValid) {
+                    $(elem).append('<option value="' + roles.id + '">' + roles.roleName + '</option>');
+                }
+            });
+            var opts = $("#source").html(), opts2 = "<option></option>" + opts;
+            $("select.populate").each(function () {
+                var e = $(this);
+                e.html(e.hasClass("placeholder") ? opts2 : opts);
+            });
+        });
+        $('#tbody_hidden').empty();
+        $('.select2-choices').find('.select2-search-choice').each(function () {
+            $(this).remove();
+        });
+        $('#tbody_hidden').append('<tr><td><input type="hidden" id="urRoleMapRid" name="urRoleMapRid" value=""/></td></tr>');
+        $(':checkbox, :radio').prop('checked', false);
+    }
+    function dateValidation() {
+        var a = moment();
+        var b = moment($("#userDOB").val(), 'DD-MM-YYYY');
+        if (a.isBefore(b)) {
+            alert("Enter Valid Date");
+        }
+        return false;
+    }
+    function sur() {
+        if (parseInt($("#staffIsSurgeon").val()) === 0) {
+            $("#doctorDiv").removeClass("hidden");
+        } else {
+            $("#doctorDiv").addClass("hidden");
+        }
+    }
+    function daywiseStatus() {
+        var zero = document.getElementById('openPmd');
+        if (zero.checked) {
+            $('#datew').prop('checked', false);
+            document.getElementById('collect').value = 1;
+            $("#daywise").removeClass("hidden").addClass("panel panel-primary");
+            document.getElementById('availdate').value = 0;
+            $("#datewise").removeClass("panel panel-primary").addClass("hidden");
+        } else {
+            document.getElementById('collect').value = 0;
+            $("#daywise").removeClass("panel panel-primary").addClass("hidden");
+        }
+    }
+    function datewiseStatus() {
+        var zero1 = document.getElementById('datew');
+        if (zero1.checked) {
+            $('#openPmd').prop('checked', false);
+            document.getElementById('availdate').value = 1;
+            $("#datewise").removeClass("hidden").addClass("panel panel-primary");
+            document.getElementById('collect').value = 0;
+            $("#daywise").removeClass("panel panel-primary").addClass("hidden");
+        } else {
+            document.getElementById('availdate').value = 0;
+            $("#datewise").removeClass("panel panel-primary").addClass("hidden");
+        }
+    }
+    function delete_row(elem, tableId) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById(tableId);
+        var table_length = table.rows.length;
+        for (var i = 0; i <= table_length - 1; i++) {
+            if (table_length > 1) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+
+
+    function insert_row(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById(tableid);
+        if (tableid == 'dyn_table_date') {
+            var table_length = table.rows.length;
+            for (var i = 0; i < table_length - 1; i++) {
+                var resAvilDateFrom = dynTableGetNodeInRow(table.rows[i + 1], 'resAvilDateFrom').value;
+                var resAvilDateTo = dynTableGetNodeInRow(table.rows[i + 1], 'resAvilDateTo').value;
+                var fromTime = dynTableGetNodeInRow(table.rows[i + 1], 'fromTime').value;
+                var ToTime = dynTableGetNodeInRow(table.rows[i + 1], 'ToTime').value;
+            }
+            if (resAvilDateFrom == "") {
+                alert("Enter From Date");
+                return false;
+            } else if (resAvilDateTo == "") {
+                alert("Enter To Date");
+                return false;
+            } else if (fromTime == "") {
+                alert("Enter From Time");
+                return false;
+            } else if (ToTime == "") {
+                alert("Enter To Time");
+                return false;
+            } else {
+                var newRow = dynTableAppendRow(tableid);
+                dynTableGetNodeInRow(newRow, "del_saleR").className = "ace-icon fa fa-minus";
+                dynTableGetNodeInRow(newRow, "resAvilRid").value = "";
+                dynTableGetNodeInRow(newRow, "resAvilWhRid").value = "";
+                dynTableGetNodeInRow(newRow, "resAvilDateFrom").value = "";
+
+                dynTableGetNodeInRow(newRow, "resAvilDateTo").value = "";
+                dynTableGetNodeInRow(newRow, "fromTime").value = "";
+                dynTableGetNodeInRow(newRow, "ToTime").value = "";
+                $("#resAvilDateFrom").datepicker({
+                    format: 'dd-mm-yyyy',
+                });
+                $("#resAvilDateTo").datepicker({
+                    format: 'dd-mm-yyyy',
+                });
+            }
+        } else if (tableid == 'dyn_table_day') {
+            var table_length = table.rows.length;
+            for (var i = 0; i < table_length - 1; i++) {
+                var fromTime = dynTableGetNodeInRow(table.rows[i + 1], 'fromTime').value;
+                var ToTime = dynTableGetNodeInRow(table.rows[i + 1], 'ToTime').value;
+            }
+            if (fromTime == "") {
+                alert("Enter From Time");
+                return false;
+            } else if (ToTime == "") {
+                alert("Enter To Time");
+                return false;
+            } else {
+                var newRow = dynTableAppendRow(tableid);
+                dynTableGetNodeInRow(newRow, "del_saleR").className = "ace-icon fa fa-minus";
+                dynTableGetNodeInRow(newRow, "resAvilDays").innerHTML = "";
+                dynTableGetNodeInRow(newRow, "resAvilDays").className = "col-md-11 col-sm-11 col-xs-11 dcomet-c-s_ddict_days-list form-control";
+                dynTableGetNodeInRow(newRow, "resAvilRid").value = "";
+                dynTableGetNodeInRow(newRow, "resAvilWhRid").value = "";
+                dynTableGetNodeInRow(newRow, "fromTime").value = "";
+                dynTableGetNodeInRow(newRow, "ToTime").value = "";
+                dcomethealth.datatypes.init($("#" + "StaffMaster"));
+                $("select option").each(function () { //For remove duplicates
+                    $(this).siblings("[value='" + this.value + "']").remove();
+                });
+            }
+        }
+    }
+    function dateValidation() {
+        var a = moment();
+        var b = moment($("#staffDOJ").val(), 'DD-MM-YYYY');
+        if (a.isBefore(b)) {
+            alert("Enter Valid Date");
+        }
+        return false;
+    }
+    function delete_row_fc(elem) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById('dyn_table_fc');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+    function insert_row_fc(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dyn_table_fc');
+        var table_length = table.rows.length;
+        var vCount = dynTableGetNodeInRow(elem, 'fcVisitCount').value;
+        var newVcount = parseInt(vCount) + 1;
+        for (var i = 0; i < table_length - 1; i++) {
+            var vCnt = dynTableGetNodeInRow(table.rows[i + 1], 'fcVisitCount').value;
+            var fcServiceName = dynTableGetNodeInRow(table.rows[i + 1], 'fcServiceName').value;
+            var fcServiceRid = dynTableGetNodeInRow(table.rows[i + 1], 'fcServiceRID').value;
+        }
+        if (fcServiceName == "") {
+            alert("Select Service Name");
+            return false;
+        } else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "fcDel").className = "ace-icon fa fa-minus";
+            dynTableGetNodeInRow(newRow, "fcVisitCount").value = newVcount;
+            dynTableGetNodeInRow(newRow, 'fcServiceName').value = "";
+            dynTableGetNodeInRow(newRow, 'fcServiceRID').value = "";
+            dcomethealth.StaffMaster.service_AutoComplete();
+        }
+    }
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-multiselect/css/multi-select.css' />
+<link rel='stylesheet' type='text/css' href='js/plugins/form-select2/select2.css' />
+<div class="row">
+    <div id="StaffMasterHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>Staff Master</h4>
+            <div class="pull-right edit-all-button-container">
+                <a href="#" class="btn btn-primary " onclick="div_hide()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Add New</span></a>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12 col-sm-12 col-xs-12">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div id="userMasterDetails" class="">
+                        <div class="table-responsive">
+                            <table id="staffTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Staff Code</th>
+                                        <th>Staff Name</th>                                 
+                                        <th>Designation</th>
+                                        <th>Contact Number</th>
+                                    </tr>
+                                </thead>            
+                                <tbody id="tbody_head"></tbody> 
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="add_new" class="hidden"> 
+    <div class="row" id="ItemMaster">     
+        <div class="panel panel-primary">
+            <table id="dyn_table" class="hidden">
+                <tbody id="tbody_hidden"></tbody>
+            </table>
+            <form action="#" id="edit_user_form" name="edit_user_form" novalidate="novalidate" class="form-horizontal row-border">
+                <div class="panel-heading"><h4>Staff Master</h4>
+                    <div class="hidden-print">
+                        <div class="edit-all-button-container pull-right">                            
+                            <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('StaffMaster');
+                                    dcomethealth.util.base_init();" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form" >Back</span></a>
+                            <!--<a href="#" class="btn btn-primary edit-all-button"><span id="savePage4Form">Save</span></a>-->
+                            <input type="submit" class="btn btn-primary" value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="panel-body">  
+                    <span class="text-primary"><strong>Staff Info.</strong></span><hr class="btn-danger">
+                    <div class="col-md-3 col-sm-3 col-xs-3 input-group unity-input">
+                        <label class="row col-md-12 col-sm-12 col-xs-12">Title / Staff Name</label>   
+                        <div class="row col-md-4 col-sm-4 col-xs-4 col-sm-4 col-xs-4">     
+                            <span class="row input-group-btn">
+                                <select id="staffTitle" name="staffTitle" class="input-group-addon dcomet-c-s_ddict_title-list jqueryUIToolTip form-control" title="Title">
+                                </select>
+                                <input type="hidden" id="staffCode" name="staffCode"/>
+                                <input type="hidden" name="staffRID" id="staffRID" value=""/>
+                                <input type="hidden" name="userRid" id="userRid" value=""/>
+                                <input type="hidden" name="resRid" id="resRid" value=""/>
+                            </span>
+                        </div>
+                        <div class="row col-sm-8 col-md-8 col-xs-8">                                    
+                            <input type="text" id="staffName" name="staffName" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" class="form-control"/>
+                        </div>
+                    </div>
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Category</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <select id="staffCategory" name="staffCategory" class="form-control dcomet-c-s_ddict_staff_category-list">
+                                    <option value="0"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-md-12 col-xs-12">Speciality</label>
+                            <div class="row col-md-12 col-md-12 col-xs-12">
+                                <select id="staffAbbrv" name="staffAbbrv" class="form-control dcomet-c-s_ddict_staff_speciality-list"><option value="0"></option></select>
+                            </div>
+                        </div>                          
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Primary Unit</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <select id="primaryUnit" name="primaryUnit" class="form-control"><option value="0"></option></select>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Desingnation</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <input type="text" id="staffDesignation" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" name="staffDesignation" class="form-control"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">DOJ</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <input type="text" id="staffDOJ" maxlength="10" name="staffDOJ" title="DD-MM-YYYY Format" onchange="dateValidation()" onkeypress="return dcomethealth.validation.ValidateDateEntry(event)" class="form-control jqueryUIToolTip"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">DOL</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <input type="text" id="staffDOL" maxlength="10" name="staffDOL" title="DD-MM-YYYY Format" onkeypress="return dcomethealth.validation.ValidateDateEntry(event)" class="form-control jqueryUIToolTip"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Contact No</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <input type="text" id="staffContactNumber" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" name="staffContactNumber" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">E-mail</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <input type="text" id="staffEmail" name="staffEmail" class="form-control"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row col-md-12 col-sm-12 col-xs-12">                       
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Country</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <input type="text" id="staffCountry" list="patCountry" name="staffCountry" class="form-control" onchange="dcomethealth.StaffMaster.getStates()"/>
+                                <input type="hidden" id="countryCode"/>
+                                <datalist id="patCountry" class="dcomet-c-s_countries-list" style="display: none;"></datalist>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Zip code</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <input type="text" id="staffPcode" maxlength="10" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" name="staffPcode" class="form-control" onchange="dcomethealth.StaffMaster.searchPostalCode()"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Province / State</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <input type="hidden" id="State"/>
+                                <datalist id="patState" class="dcomet-c-s_ddict_state-list" style="display: none;"></datalist>
+                                <input type="text" id="staffState" list="patState" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" onchange="dcomethealth.StaffMaster.getCity()" class="form-control dcomet-c-s_ddict_state-list"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">City</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">                                
+                                <input type="hidden" id="City"/>
+                                <datalist id="Cities" class="dcomet-c-s_cities-list" style="display: none;"></datalist>
+                                <input id="staffCity" name="staffCity" type="text" list="Cities" class="form-control dcomet-c-s_ddict_city-list jqueryUIToolTip col-md-12 col-sm-12 col-xs-12" title = "City"/>                                   
+                            </div>
+                        </div>                          
+                    </div>
+                    <div class="row col-md-12 col-sm-12 col-xs-12"> 
+                        <hr class="btn-danger">
+                    </div>
+                    <div class="row col-md-12 col-sm-12 col-xs-12">                        
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">User Name</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <input type="text" id="staffUname" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" name="staffUname" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Unit Access</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <table id="unit_dyn_table">
+                                    <tbody id="unit_tbody">
+                                        <tr>
+                                            <td><input type="checkbox" id="unitCheck" name="unitCheck"></td>
+                                            <td><input type="text" id="unitName" name="unitName"><input type="hidden" id="unitRid" name="unitRid"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="text-primary"><strong>Roles</strong></span><hr class="btn-danger">
+                    <div class="row col-md-12 col-sm-12 col-xs-12">                        
+                        <div class="row col-md-4 col-sm-4 col-xs-4">
+                            <label class="row col-md-6 col-sm-6 col-xs-6">Roles</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <select id="roles" name="roles" multiple style="width:100%" class="populate dcomet-c-s_roles-list"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <!--                        <span class="text-primary"><strong>Unit</strong></span><hr class="btn-danger">
+                                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                                <div class="row col-md-4 col-sm-4 col-xs-4 col-sm-4 col-xs-4">
+                                                    <label class="col-md-6 col-sm-6 col-xs-6">Unit</label>
+                                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                                        <select id="units" class="dcomet-c-s_UserUnit-list" multiple style="width:100%"></select>
+                                                    </div>
+                                                </div>
+                                            </div>-->
+                    <span class="text-primary"><strong>Bank Details</strong></span><hr class="btn-danger">
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="alert alert-info pull-right col-md-12">
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                                  
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <input type="text" id="staffAccountNumber" maxlength="20" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" name="staffAccountNumber" placeholder="Account No" class="form-control"/>
+                                </div>
+                            </div>
+                            <div class="row col-md-2 col-sm-2 col-xs-2">                                  
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <input type="text" id="staffBankName" name="staffBankName" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" placeholder="Bank Name" class="form-control"/>
+                                </div>
+                            </div>
+                            <div class="row col-md-3 col-sm-3 col-xs-3">                                  
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <input type="text" id="staffBankBranch"  name="staffBankBranch" onkeypress="return dcomethealth.validation.ValidateAlpha(event)" placeholder="Branch Name" class="form-control"/>
+                                </div>
+                            </div>                                
+                            <div class="row col-md-2 col-sm-2 col-xs-2">                                  
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <input type="text" id="staffIfscCode" maxlength="20" name="staffIfscCode" onkeypress="return dcomethealth.validation.ValidateAlphaNumeric(event)" placeholder="IFSC Code" class="form-control"/>
+                                </div>
+                            </div>                                
+                            <div class="row col-md-2 col-sm-2 col-xs-2">                                  
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <input type="text" id="staffPanCardNo" maxlength="20" name="staffPanCardNo" onkeypress="return dcomethealth.validation.ValidateAlphaNumeric(event)" placeholder="Pan Card No" class="form-control"/>
+                                </div>
+                            </div>                                
+                        </div>                            
+                    </div>
+                    <span class="text-primary"><strong> Doctor Details.</strong></span><hr class="btn-danger">
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Compensation</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <input type="text" id="staffCompensation" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" maxlength="10" name="staffCompensation" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="row col-md-3 col-sm-4 col-xs-4">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Consultation Interval(Mins) </label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <input type="text" id="resSchedInterval" maxlength="2" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" name="resSchedInterval" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Is Consultant</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8"> 
+                                <div class="activeStatus"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-2 col-xs-3">  
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Is Surgeon</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8"> 
+                                <div class="surgeonStatus" onclick="sur()"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row col-md-12 col-sm-12 col-xs-12">                        
+                        <div class="row col-md-4 col-sm-4 col-xs-4 hidden" id="doctorDiv">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Is Admitting Doctor</label>
+                            <div class="row col-md-8 col-sm-8 col-xs-8"> 
+                                <div class="doctorStatus"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="text-primary"><strong>Free Consultation Details</strong></span><hr class="btn-danger">
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-3 col-sm-3 col-xs-3">
+                            <label class="row col-md-12 col-sm-12 col-xs-12">Validity in days</label>
+                            <div class="row col-md-12 col-sm-12 col-xs-12">
+                                <select id="fcCondition" class=" col-md-8 form-control">
+                                    <option value='0'>--Select--</option>
+                                </select>                    
+                                <input type="hidden" id="fcCategory" name="fcCategory" value=""/>    
+                            </div>
+                        </div>
+                        <div class="row col-md-6 col-sm-6 col-xs-6">
+                            <div class="table-responsive">
+                                <table id="dyn_table_fc" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Visit Count</th>                                                  
+                                            <th>Service</th>                                            
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="fcTbody">
+                                        <tr>
+                                            <td>
+                                                <i id="fcDel" class="ace-icon fa fa-minus hidden" onclick="delete_row_fc(this)"></i>
+                                                <!--<input type="hidden" id="fcCategoryRid" name="fcCategoryRid" value=""/>-->                                                
+                                            </td>
+                                            <td width="30%">
+                                                <input class="col-md-11 col-sm-10 col-xs-12" type="text" onkeypress="return dcomethealth.validation.isNumberKey(this)" id="fcVisitCount" name="fcVisitCount" value="1"/>                                                        
+                                            </td>
+                                            <td width="60%">
+                                                <input class="col-md-11 col-sm-11 col-xs-12" type="text" id="fcServiceName" name="fcServiceName" value="" onchange="dcomethealth.StaffMaster.checkServiceValid(this)"/>
+                                                <input type="hidden" id="fcServiceRID" name="fcServiceRID" value=""/>   
+                                            </td>                                                   
+                                            <td>
+                                                <i class="ace-icon fa fa-plus blue" onclick="insert_row_fc('dyn_table_fc', this)"></i>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div> 
+                    <span class="text-primary"><strong>Availability Timing</strong></span><hr class="btn-danger">
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="row col-md-5 col-sm-5 col-xs-5">
+                            <div class="row col-md-2 col-sm-2 col-xs-2">
+                                <input type="hidden" id="collect" name="collect" value="0"/>
+                                <input type="checkbox" id="openPmd" name="openPmd" class="row" onclick="daywiseStatus()"/>
+                            </div>
+                            <div class="col-md-10 col-sm-10 col-xs-10">
+                                <label class="col-md-10 col-sm-10 col-xs-10"><strong>Day wise</strong></label>
+                            </div>
+                        </div>
+                        <div class="row col-md-5 col-sm-5 col-xs-5">
+                            <div class="row col-md-2 col-sm-2 col-xs-2">
+                                <input type="hidden" id="availdate" name="availdate" value="0"/>
+                                <input type="checkbox" id="datew" name="datew" class="row" onclick="datewiseStatus()"/>
+                            </div>
+                            <div class="col-md-10 col-sm-10 col-xs-10">
+                                <label class="col-md-12 col-sm-12 col-xs-12"><strong>Date wise</strong></label>                            
+                            </div>
+                        </div>                              
+                    </div>
+                    <div class="row col-md-8 col-sm-8 col-xs-8">
+                        <div class="alert alert-info pull-right col-md-12 hidden" id="daywise">
+                            <div id="CustomerTable" >
+                                <table id="dyn_table_day" class="col-md-12 col-sm-12 col-xs-12 table table-responsive table-striped table-hover">
+                                    <thead>                                           
+                                        <tr>
+                                            <th></th>
+                                            <th>Day</th>
+                                            <th>From Time</th>
+                                            <th>To Time</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody_days"> 
+                                        <tr>
+                                            <td width="1%"><i id="del_saleR" class="dct-icon fa fa-minus-circle hidden" onclick="delete_row(this, 'dyn_table_day')"></i>
+                                                <input type="hidden" id="resAvilRid" name="resAvilRid" value=""/>
+                                                <input type="hidden" id="resAvilWhRid" name="resAvilWhRid" value=""/></td>
+                                            <td width="15%">
+                                                <Select class="col-md-11 col-sm-11 col-xs-11 dcomet-c-s_ddict_days-list form-control"  id="resAvilDays" name="resAvilDays">                                                            
+                                                </select>
+                                            </td>                                                    
+                                            <td width="10%">
+                                                <input type="time" class="col-md-12 col-sm-12 col-xs-12 form-control" id="fromTime" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" name="fromTime"/>
+                                            </td>
+                                            <td width="10%">
+                                                <input type="time" class="col-md-12 col-sm-12 col-xs-12 form-control" id="ToTime" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" name="ToTime"/>
+                                            </td>                                             
+                                            <td width="1%"><i class="dct-icon fa fa-plus-square red" onclick="insert_row('dyn_table_day', this)"></i></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row col-md-8 col-sm-8 col-xs-8">
+                        <div class="alert alert-success pull-right col-md-12 hidden" id="datewise">
+                            <div id="CustomerTable">
+                                <table id="dyn_table_date" class="col-md-12 col-sm-12 col-xs-12 table table-responsive table-striped table-hover">
+                                    <thead>                                           
+                                        <tr>
+                                            <th></th>
+                                            <th>From Date</th>
+                                            <th>To Date</th>
+                                            <th>From Time</th>
+                                            <th>To Time</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id='tbody_date'> 
+                                        <tr>
+                                            <td width="1%"><i id="del_saleR" class="dct-icon fa fa-minus-circle hidden" onclick="delete_row(this, 'dyn_table_date')"></i>
+                                                <input type="hidden" id="resAvilRid" name="resAvilRid" value=""/>
+                                                <input type="hidden" id="resAvilWhRid" name="resAvilWhRid" value=""/></td>
+                                            <td width="15%">
+                                                <input class="col-md-11 col-sm-11 col-xs-11 dcomet-c-s_ddict_days-list form-control"  id="resAvilDateFrom" name="resAvilDateFrom" placeholder="From Date"/>                                                        
+                                            </td>                                                    
+                                            <td width="15%">
+                                                <input class="col-md-11 col-sm-11 col-xs-11 dcomet-c-s_ddict_days-list form-control"  id="resAvilDateTo" name="resAvilDateTo" placeholder="To Date"/>                                                        
+                                            </td>                                                    
+                                            <td width="10%">
+                                                <input type="time" class="col-md-12 col-sm-12 col-xs-12 form-control" id="fromTime" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" name="fromTime"/>
+                                            </td>
+                                            <td width="10%">
+                                                <input type="time" class="col-md-12 col-sm-12 col-xs-12 form-control" id="ToTime" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" name="ToTime"/>
+                                            </td>                                             
+                                            <td width="1%"><i class="dct-icon fa fa-plus-square red" onclick="insert_row('dyn_table_date', this)"></i></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-select2/select2.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-multiselect/js/jquery.multi-select.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> 

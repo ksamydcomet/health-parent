@@ -1,0 +1,714 @@
+<script>
+    function div_hide() {
+        $("#ServiceHeader").removeClass("panel panel-primary").addClass("hidden");
+        $("#add_new").removeClass("hidden").addClass("panel panel-primary");
+        $(':text').val('');
+        $(':checkbox, :radio').prop('checked', false);
+        clearAll();
+        dcomethealth.ServiceMaster.resource_autocomplete()
+    }
+    function clearAll() {
+        document.getElementById("edit_user_form").reset();
+        $('.schedulable').toggles({on: false}, "isShedulable");
+        $('.manualTest').toggles({on: false}, "isManual");
+        $('.result').toggles({on: false}, "isResultExpected");
+        $('.conversion').toggles({on: false}, "isConversion");
+        $('.priceBilling').toggles({on: false}, "BillPriceEditable");
+        $('.priceOrdering').toggles({on: false}, "OrderPriceEditable");
+        $('.qtyBilling').toggles({on: false}, "BillQtyEditable");
+        $('.qtyOrdering').toggles({on: false}, "OrderQtyEditable");
+        $('.activeStatus').toggles({on: true}, "isActive");
+    }
+    function div_back() {
+        $("#add_new").removeClass("panel panel-primary").addClass("hidden");
+        $("#ServiceHeader").removeClass("hidden").addClass("panel panel-primary");
+    }
+    function Lab() {
+        if (parseInt($("#isResultExpected").val()) === 1) {
+            $("#labDiv").addClass("hidden");
+        } else {
+            $("#labDiv").removeClass("hidden");
+        }
+    }
+    function isExistResourceCheck(elem) {
+        var table = document.getElementById('dyn_table_Resource_map');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 2; i++) {
+            if (parseInt(dynTableGetNodeInRow(elem, 'rsmDocRid').value) == parseInt(dynTableGetNodeInRow(table.rows[i + 1], 'rsmDocRid').value)) {
+                alert("Already Exist Resource");
+                dynTableGetNodeInRow(elem, 'rsmDoctorName').value = "";
+                dynTableGetNodeInRow(elem, 'rsmDocRid').value = "";
+                return false;
+            }
+        }
+    }
+    function tabKeyPress(e, tableName, event) {
+        var keyCode = event.keyCode || event.which;
+        if (keyCode == 9) {
+            insert_row_Package(tableName, e);
+        }
+    }
+    function insert_row_Package(tableId, elem) {
+        var pre, tableid, postfix;
+        if (tableId == "package_service_dyn_table") {
+            pre = "packageService";
+            postfix = " service"
+        }
+        if (tableId == "package_item_dyn_table") {
+            pre = "packageItem";
+            postfix = " item"
+        }
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableId, x);
+        var table = document.getElementById(tableId);
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var serv = dynTableGetNodeInRow(table.rows[i + 1], pre + 'Name').value;
+            var itemQty = dynTableGetNodeInRow(table.rows[i + 1], pre + 'Qty').value;
+            var serviceRID = dynTableGetNodeInRow(table.rows[i + 1], pre + 'RID').value;
+
+            if (serv == "") {
+                alert("Enter " + postfix + " name");
+                dynTableGetNodeInRow(table.rows[i + 1], pre + 'Name').focus();
+                return false;
+            }
+        }
+        if (itemQty == "") {
+            alert("Enter " + postfix + " Qty");
+            dynTableGetNodeInRow(table.rows[i + 1], pre + 'Qty').focus();
+            return false;
+        }
+        if (serviceRID == "") {
+            alert("Enter " + postfix + " name correctly");
+            return false;
+        }
+        else {
+            var newRow = dynTableAppendRow(tableId);
+            dynTableGetNodeInRow(table.rows[1], pre + "Name").value = "";
+            dynTableGetNodeInRow(table.rows[1], pre + "Qty").value = 1;
+            dynTableGetNodeInRow(table.rows[1], pre + "RID").value = "";
+            dynTableGetNodeInRow(newRow, pre + "Name").readOnly = true;
+            dynTableGetNodeInRow(newRow, pre + "Del").className = "fa fa-minus-circle";
+            dynTableGetNodeInRow(newRow, pre + "Plus").className = "";
+            if (tableId == "package_service_dyn_table") {
+                dcomethealth.ServiceMaster.autocompleteService();
+            }
+            if (tableId == "package_item_dyn_table") {
+                dcomethealth.ServiceMaster.autocompleteItem();
+            }
+        }
+    }
+    function insert_row(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dyn_table');
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            var methodName = dynTableGetNodeInRow(table.rows[i + 1], 'MethodName').value;
+            var GroupName = dynTableGetNodeInRow(table.rows[i + 1], 'GroupName').value;
+            var fAge = dynTableGetNodeInRow(table.rows[i + 1], 'fromAge').value;
+            var toAge = dynTableGetNodeInRow(table.rows[i + 1], 'toAge').value;
+            var Gender = dynTableGetNodeInRow(table.rows[i + 1], 'Gender').value;
+            var fromrange = dynTableGetNodeInRow(table.rows[i + 1], 'fromrange').value;
+            var toRange = dynTableGetNodeInRow(table.rows[i + 1], 'toRange').value;
+            var Uom = dynTableGetNodeInRow(table.rows[i + 1], 'Uom').value;
+        }
+
+        if (methodName == "" || parseInt(methodName) == 0) {
+            alert("Enter Method Name");
+            return false;
+        }
+        else if (GroupName == "" || parseInt(GroupName) == 0) {
+            alert("Enter Group Name");
+            return false;
+        } else if (fAge == "" || parseInt(fAge) == 0) {
+            alert("Enter From Age");
+            return false;
+        } else if (toAge == "" || parseInt(toAge) == 0) {
+            alert("Enter To Age");
+            return false;
+        } else if (Gender == "" || parseInt(Gender) == 0) {
+            alert("Enter Gender");
+            return false;
+        } else if (fromrange == "" || parseInt(toAge) == 0) {
+            alert("Enter Min Range");
+            return false;
+        } else if (toRange == "" || parseInt(toAge) == 0) {
+            alert("Enter Max Range");
+            return false;
+        } else if (Uom == "" || parseInt(Uom) == 0) {
+            alert("Enter Uom");
+            return false;
+        }
+        else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "fromAge").value = "";
+            dynTableGetNodeInRow(newRow, "id").value = "";
+            dynTableGetNodeInRow(newRow, "toAge").value = "";
+            dynTableGetNodeInRow(newRow, "fromrange").value = "";
+            dynTableGetNodeInRow(newRow, "toRange").value = "";
+            dynTableGetNodeInRow(newRow, "Description").value = "";
+            dynTableGetNodeInRow(newRow, "Uom").value = "";
+            dynTableGetNodeInRow(newRow, "Gender").innerHTML = "";
+            dynTableGetNodeInRow(newRow, "Gender").className = "dcomet-c-s_ddict_gender-list col-md-12 col-sm-12 col-xs-12";
+            dcomethealth.datatypes.init($("#" + "ServiceMaster"));
+            $("select option").each(function () { //For remove duplicates
+                $(this).siblings("[value='" + this.value + "']").remove();
+            });
+        }
+    }
+    function delete_row(elem) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById('dyn_table');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+    function deleteRowPackageService(elem, tableId) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById(tableId);
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+    function delete_row_resource_map(elem) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById('dyn_table_Resource_map');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+    function deleteRowSrPrice(elem) {
+        var x = dynTableRow(elem);
+        var table = document.getElementById('dynTableServicePriceType');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            if (table_length > 2) {
+                dynTableDeleteRow(x);
+            }
+        }
+    }
+    function insert_row_resourceMap(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById('dyn_table_Resource_map');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var resName = dynTableGetNodeInRow(table.rows[i + 1], 'rsmDoctorName').value;
+            var resRid = dynTableGetNodeInRow(table.rows[i + 1], 'rsmDocRid').value;
+            var normalPrice = dynTableGetNodeInRow(table.rows[i + 1], 'rsmNormalPrice').value;
+            var emergPrice = dynTableGetNodeInRow(table.rows[i + 1], 'rsmEmergencyPrice').value;
+            var docShare = dynTableGetNodeInRow(table.rows[i + 1], 'rsmDoctorShare').value;
+        }
+        if (resName == "") {
+            alert("Select Doctor Name");
+            return false;
+        } else if (normalPrice == "") {
+            alert("Enter Normal Price");
+            return false;
+        } else if (emergPrice == "") {
+            alert("Enter Emergency Price");
+            return false;
+        } else if (docShare == "") {
+            alert("Enter Doctor Share percentage");
+            return false;
+        }
+        else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "serviceRMapDel").className = "ace-icon fa fa-minus";
+            dynTableGetNodeInRow(newRow, "rsmDoctorName").value = "";
+            dynTableGetNodeInRow(newRow, 'rsmDocRid').value = "";
+            dynTableGetNodeInRow(newRow, 'rsmRid').value = "";
+            dynTableGetNodeInRow(newRow, "rsmNormalPrice").value = 0;
+            dynTableGetNodeInRow(newRow, "rsmEmergencyPrice").value = 0;
+            dynTableGetNodeInRow(newRow, "rsmDoctorShare").value = 0;
+            dcomethealth.ServiceMaster.resource_autocomplete();
+        }
+    }
+    function checkExistType(elem) {
+        var table = document.getElementById('dynTableServicePriceType');
+        var table_length = table.rows.length;
+        for (var i = 1; i < table_length - 1; i++) {
+            var srPriceType = dynTableGetNodeInRow(table.rows[i + 1], 'srPriceType').value;
+            if (!!srPriceType && dynTableGetNodeInRow(table.rows[i], 'srPriceType').value == elem.value) {
+                alert("Service Already Added");
+                dynTableGetNodeInRow(elem, 'srPriceType').value = "";
+                return false;
+            }
+        }
+    }
+
+
+    function insertRowServicePriceType(tableid, elem) {
+        var x = dynTableRow(elem);
+        dynTableCloneRow(tableid, x);
+        var table = document.getElementById(tableid);
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var srPriceServiceRid = dynTableGetNodeInRow(table.rows[i + 1], 'srPriceServiceRid').value;
+            var srPriceType = dynTableGetNodeInRow(table.rows[i + 1], 'srPriceType').value;
+            var srPriceAmount = dynTableGetNodeInRow(table.rows[i + 1], 'srPriceAmount').value;
+        }
+        if (srPriceType == "0" || srPriceType == "") {
+            alert("Select Price Type");
+            return false;
+        } else if (srPriceAmount == "" || srPriceAmount == "0") {
+            alert("Enter Price Amount");
+            return false;
+        } else {
+            var newRow = dynTableAppendRow(tableid);
+            dynTableGetNodeInRow(newRow, "serviceRMapDel").className = "ace-icon fa fa-minus";
+            dynTableGetNodeInRow(newRow, 'srPriceServiceRid').value = "";
+            dynTableGetNodeInRow(newRow, 'srPriceRid').value = "";
+            dynTableGetNodeInRow(newRow, "srPriceType").innerHTML = "<option value='0'>--Select--</option>";
+            dynTableGetNodeInRow(newRow, "srPriceAmount").value = 0;
+            dcomethealth.datatypes.init($("#ServiceMaster"));
+        }
+    }
+    function validQty(id, value) {
+        if (value == 1) {
+            var itemQty = dynTableGetNodeInRow(id, "packageItemQty").value;
+            if (itemQty == "") {
+                alert("Enter the valid item qty");
+                dynTableGetNodeInRow(id, "packageItemQty").value = 1;
+                dynTableGetNodeInRow(id, "packageItemQty").focus();
+                return false;
+            }
+        }
+        if (value == 2) {
+            var serviceQty = dynTableGetNodeInRow(id, "packageServiceQty").value;
+            if (serviceQty == "") {
+                alert("Enter the valid service qty");
+                dynTableGetNodeInRow(id, "packageServiceQty").value = 1;
+                dynTableGetNodeInRow(id, "packageServiceQty").focus();
+                return false;
+            }
+        }
+    }
+
+
+</script>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-toggle/toggles.css'/>
+<link rel='stylesheet' type='text/css' href='js/plugins/form-select2/select2.css'/>
+<link rel='stylesheet' type='text/css' href='js/plugins/datatables/dataTables.css'/>
+<div class="row">
+    <div id="ServiceHeader" class="panel panel-primary">
+        <div class="panel-heading"><h4>Service Master</h4>
+            <div class="pull-right edit-all-button-container">
+                <a href="#" class="btn btn-primary " onclick="div_hide()" style="margin-top: 3px; margin-bottom: 3px;"><span id="savePage4Form">Add New</span></a>
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-body col-md-12">
+                <div id="serviceMasterFooter">
+                    <input type="hidden" name="jsFile" id="jsFile" value="<%= request.getContextPath()%>/js/master/ServiceMaster.js" />
+                    <input type="hidden" id="onloadFn" name="onLoadFn" value="serviceMaster.initPage()" >
+                    <table id="servicesTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Service Code
+                                </th>
+                                <th>
+                                    Service Name
+                                </th>
+                            </tr>
+                        </thead>            
+                        <tbody id="tbody_head">
+                        </tbody> 
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="add_new" class="hidden"> 
+    <div class="row" id="ServiceMaster">     
+        <div class="panel panel-primary">
+            <form action="#" id="edit_user_form" name="edit_user_form" novalidate="novalidate" class="form-horizontal row-border">
+                <div class="panel-heading"><h4>Service Master</h4>
+                    <div class="hidden-print">
+                        <div class="edit-all-button-container pull-right">                            
+                            <a href="#" class="btn btn-primary" onclick="dcomethealth.util.loadpage('ServiceMaster');
+                                    dcomethealth.util.base_init();" style="margin-top: 3px; margin-bottom: 3px;"><span id="backsupp" >Back</span></a>
+                            <input type="submit" class="btn btn-primary" value="Save" style="margin-top: 3px; margin-bottom: 3px;"/>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <span class="text-primary"><strong>Service Info.</strong></span><hr class="btn-danger">
+                            <div class="row col-md-4 col-sm-4 col-xs-4">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Service Code</label>
+                                <div class="row col-md-8 col-sm-8 col-xs-8">
+                                    <input type="text" id="bsCode" name="bsCode" class="form-control"/>
+                                    <input type="hidden" id="serviceRid" name="serviceRid"  />
+                                </div>
+                            </div>
+                            <div class="row col-md-4 col-sm-4 col-xs-4">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Service Name</label>
+                                <div class="row col-md-8 col-sm-8 col-xs-8">
+                                    <input type="text" id="bsName" maxlength="100" name="bsName" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="row col-md-4 col-sm-4 col-xs-4">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Unit</label>
+                                <div class="row col-md-8 col-sm-8 col-xs-8">
+                                    <select class="form-control jqueryUIToolTip" title="Service Unit" name="bsUnit" id="bsUnit" onchange="dcomethealth.ServiceMaster.addTest()"> <!--dcomet-c-s_ddict_unit_type-list-->
+                                        <option value="0"></option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="row col-md-4 col-sm-4 col-xs-4">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Category</label>
+                                <div class="row col-md-8 col-sm-8 col-xs-8">
+                                    <select id="bsCategory" onchange="dcomethealth.ServiceMaster.addTest()" name="bsCategory" class="form-control dcomet-c-s_ddict_service_category-list jqueryUIToolTip" title="Service Category">
+                                        <option value="0"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row col-md-4 col-sm-4 col-xs-4">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Type</label>
+                                <div class="row col-md-8 col-sm-8 col-xs-8">
+                                    <select id="bsServiceType" name="bsServiceType" class="form-control dcomet-c-s_ddict_unit_type-list jqueryUIToolTip" title="Service Type" onchange="dcomethealth.ServiceMaster.serviceWiseGroup()"><!--dcomet-c-s_ddict_service_type-list-->
+                                        <option value="0"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row col-md-4 col-sm-4 col-xs-4">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Group</label>
+                                <div class="row col-md-8 col-sm-8 col-xs-8">
+                                    <select id="bsGroup" name="bsGroup" class=" jqueryUIToolTip form-control" title="Service Group"><!--dcomet-c-s_ddict_service_group-list-->
+                                        <option value="0"></option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row col-md-12 hidden" id="testDiv">
+                            <div class="row col-md-3 col-sm-3 col-xs-3">
+                                <div class="row col-md-12 col-sm-12 col-xs-12">
+                                    <label class="col-md-12 col-sm-12 col-xs-12">Add Service</label>
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <select id="serviceTest" multiple style="width:100%" class="populate"></select>
+                                    </div>
+                                </div>
+                            </div> 
+                        </div>                     
+                    </div>
+                    <br>
+                    <div id="packageDetailsDiv" class="hidden col-md-12 col-sm-12 col-xs-12">   
+                        <span class="text-primary"><strong>Package Details</strong></span>
+                        <div>
+                            <hr class="btn-danger">                           
+                        </div> 
+                        <div id="packageServiceTable" class="col-md-6 col-sm-12 col-xs-12">
+                            <table id="package_service_dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Service Name</th>
+                                        <th>Quantity</th>                                      
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="package_service_tbody"> 
+                                    <tr>
+                                        <td width="3%"><i id="packageServiceDel" style="color: royalblue" class="fa fa-minus-square hidden" onclick="deleteRowPackageService(this, 'package_service_dyn_table')"></i></td>
+                                        <td width="35%">
+                                            <input type="text" id="packageServiceName" name="packageServiceName" placeholder="Enter Service Name" class="col-md-11 col-sm-11 col-xs-11" maxlength="50"/>
+                                            <input type="hidden" id="packageServiceRID" name="packageServiceRID" value="0"/>
+                                            <input type="hidden" id="packageBdGroupRID" name="packageBdGroupRID"/>
+                                            <input type="hidden" id="packageServicePrice" name="packagesServicePrice"/>
+                                            <input type="hidden" id="packageServiceIsSchedulable" name="packageServiceIsSchedulable"/>
+                                            <input type="hidden" id="psRid" name="psRid"/>
+                                        </td>
+                                        <td width="5%">
+                                            <input id="packageServiceQty" type="text" value = "1" name="packageServiceQty" onkeydown="tabKeyPress(this, 'package_service_dyn_table', event)"  onkeypress="return dcomethealth.validation.isNumberKey(event, this)" style="text-align:right"  onchange="validQty(this, 2)" class="col-md-12 col-sm-12 col-xs-12" maxlength="2">
+                                        </td>  
+                                        <td width="5%"><i id="packageServicePlus" style="color: royalblue" class="fa fa-plus-square" onclick="insert_row_Package('package_service_dyn_table', this)"></i></td>
+                                        <td width="10%" style="visibility: hidden"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="packageItemTable" class="col-md-6 col-sm-12 col-xs-12">
+                            <table id="package_item_dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Material Name</th>
+                                        <th>Quantity</th>                                      
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="package_item_tbody">     
+                                    <tr>
+                                        <td width="3%"><i id="packageItemDel" style="color: royalblue" class="fa fa-minus-square hidden" onclick="deleteRowPackageService(this, 'package_item_dyn_table')"></i></td>
+                                        <td width="35%">
+                                            <input type="text" id="packageItemName" name="packageItemName" placeholder="Enter Drug Name" class="col-md-11 col-sm-11 col-xs-11" maxlength="50"/>
+                                            <input type="hidden" id="packageItemRID" name="packageItemRID" value="0"/>
+                                            <input type="hidden" id="packageItemPrice" name="packageItemPrice"/>
+                                            <input type="hidden" id="piRid" name="piRid"/>
+                                        </td>
+                                        <td width="5%">
+                                            <input id="packageItemQty" type="text" value = "1" name="packageItemQty" onkeydown="tabKeyPress(this, 'package_item_dyn_table', event)" onkeypress="return dcomethealth.validation.isNumberKey(event, this)" style="text-align:right" onchange="validQty(this, 1)" class="col-md-12 col-sm-12 col-xs-12" maxlength="3">
+                                        </td>
+                                        <td width="5%"><i id="packageItemPlus" style="color: royalblue" class="fa fa-plus-square" onclick="insert_row_Package('package_item_dyn_table', this)"></i></td>
+                                        <td width="10%" style="visibility: hidden"></td>
+                                    </tr>
+                                </tbody>
+                            </table>                        
+                        </div>
+                    </div>
+                    <span class="text-primary"><strong>Service Details</strong></span><hr class="btn-danger">
+                    <div class="row col-md-3 col-sm-3 col-xs-3">
+                        <label class="row col-md-12 col-sm-12 col-xs-12">Is Schedulable</label>
+                        <div class="row col-md-12 col-sm-12 col-xs-12 "> 
+                            <div class="schedulableStatus"></div>
+                        </div>
+                    </div>
+                    <div class="row col-md-3 col-sm-3 col-xs-3">
+                        <label class="row col-md-12 col-sm-12 col-xs-12">Is Manual Test</label>
+                        <div class="row col-md-12 col-sm-12 col-xs-12 "> 
+                            <div class="manualTestStatus"></div>
+                        </div>
+                    </div>
+                    <div class="row col-md-3 col-sm-3 col-xs-3">
+                        <label class="row col-md-12 col-sm-12 col-xs-12">Is Result Expected</label>
+                        <div class="row col-md-12 col-sm-12 col-xs-12 "> 
+                            <div class="resultStatus" onmousedown="Lab()"></div>
+                        </div>
+                    </div>
+                    <div class="row col-md-3 col-sm-4 col-xs-3">
+                        <label class="row col-md-12 col-sm-12 col-xs-12">Is Conversion Required</label>
+                        <div class="row col-md-12 col-sm-12 col-xs-12 "> 
+                            <div class="conversionStatus"></div>
+                        </div>
+                    </div>
+                    <br>
+                    <br>
+                    <div class="row col-md-3 col-sm-3 col-xs-3">
+                        <label class="row col-md-12 col-sm-12 col-xs-12">Bill Price Editable</label>
+                        <div class="row col-md-12 col-sm-12 col-xs-12 "> 
+                            <div class="priceBillingStatus"></div>
+                        </div>
+                    </div>
+                    <div class="row col-md-3 col-sm-3 col-xs-3">
+                        <label class="row col-md-12 col-sm-12 col-xs-12">Order Price Editable</label>
+                        <div class="row col-md-12 col-sm-12 col-xs-12 "> 
+                            <div class="priceOrderingStatus"></div>
+                        </div>
+                    </div>
+                    <div class="row col-md-3 col-sm-3 col-xs-3">
+                        <label class="row col-md-12 col-sm-12 col-xs-12">Bill Qty Editable</label>
+                        <div class="row col-md-12 col-sm-12 col-xs-12 "> 
+                            <div class="qtyBillingStatus"></div>
+                        </div>
+                    </div>
+                    <div class="row col-md-3 col-sm-3 col-xs-3">
+                        <label class="row col-md-12 col-sm-12 col-xs-12">Order Qty Editable</label>
+                        <div class="row col-md-12 col-sm-12 col-xs-12 "> 
+                            <div class="qtyOrderingStatus"></div>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <span class="text-primary"><strong>Price</strong></span><hr class="btn-danger">
+                            <div class="row col-md-4 col-sm-4  col-xs-4">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Price</label>
+                                <div class="input-group input-group-sm col-md-8 col-sm-8 col-xs-8">
+                                    <span class="input-group-addon dcomet-c-s_currCode"></span>
+                                    <input type="text" id="price" name="price" maxlength="9" onkeypress="return dcomethealth.validation.isDecimalKey(event)" class="col-md-8 col-sm-8 col-xs-6 form-control " value=""/>
+                                </div>
+                            </div>
+                            <div class="row col-md-4 col-sm-4 col-xs-4">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Emergency Price</label>
+                                <div class="input-group input-group-sm col-md-8 col-sm-8 col-xs-8">
+                                    <span class="input-group-addon dcomet-c-s_currCode"></span>
+                                    <input type="text" id="emergencyPrice" name="emergencyPrice" maxlength="9" onkeypress="return dcomethealth.validation.isDecimalKey(event)" class="col-md-8 col-sm-8 col-xs-6 form-control " value=""/>
+                                </div>
+                            </div>
+                            <div class="row col-md-4 col-sm-4 col-xs-4 pull-right">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Is Active</label>
+                                <div class="row col-md-12 col-sm-12 col-xs-12 "> 
+                                    <div class="activeStatus"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="hidden" id="labDiv">
+                        <div class="row col-md-12 col-sm-12 col-xs-12">
+                            <span class="text-primary"><strong>Lab Test Info.</strong></span><hr class="btn-danger">                
+                        </div>
+                        <div class="row col-md-12 col-sm-12 col-xs-12">
+                            <div class="table-responsive">
+                                <table id="dyn_table" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Method Tech Type</th>
+                                            <th>Group Name</th>
+                                            <th>From Age</th>
+                                            <th>To Age</th>
+                                            <th>Gender</th>
+                                            <th>From Range</th>
+                                            <th>To Range</th>
+                                            <th>Description</th>
+                                            <th>Uom</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="serviceMasterTbody">
+                                        <tr>
+                                            <td>
+                                                <i id="delete" class="ace-icon fa fa-minus hidden" onclick="delete_row(this)"></i>                                                       
+                                            </td>
+                                            <td width="24%">
+                                                <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="MethodName" name="MethodName" value=""/>
+                                                <input type="hidden" id="id" name="id" value=""/>
+                                            </td>
+                                            <td width="24%">
+                                                <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="GroupName" name="GroupName" value=""/>                                                            
+                                            </td>
+                                            <td width="6%">
+                                                <input class="col-md-12 col-sm-11 col-xs-12" type="text" id="fromAge" maxlength="9" name="fromAge" onkeypress="return dcomethealth.validation.isDecimalKey(event)" value=""/>
+                                            </td>
+                                            <td width="6%">
+                                                <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="toAge" maxlength="9" name="toAge" onkeypress="return dcomethealth.validation.isNumberKey(event)" value=""/>
+                                            </td>
+                                            <td width="10%">
+                                                <select class="dcomet-c-s_ddict_gender-list col-md-11 col-sm-11 col-xs-11" id="Gender" name="Gender">
+                                                    <option value="0"></option>
+                                                </select>
+                                            </td>
+                                            <td width="6%">
+                                                <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="fromrange" maxlength="9" name="fromrange" onkeypress="return dcomethealth.validation.isDecimalKey(event)" value=""/>
+                                            </td>
+                                            <td width="6%">
+                                                <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="toRange" maxlength="9" name="toRange" onkeypress="return dcomethealth.validation.isDecimalKey(event)" onchange="describtion()"/>
+                                            </td>
+                                            <td width="10%">
+                                                <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="Description" maxlength="100" name="Description" value=""/>
+                                            </td>
+                                            <td width="8%">
+                                                <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="Uom" maxlength="9" name="Uom" value=""/>
+                                            </td>
+                                            <td>
+                                                <i class="ace-icon fa fa-plus blue" onclick="insert_row('dyn_table', this)"></i>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div> 
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="col-md-4 col-sm-4 col-xs-4 pull-left">
+                                <label class="row col-md-12 col-sm-12 col-xs-12">Is Sample Required</label>
+                                <div class="row col-md-3 col-sm-3 col-xs-3 "> 
+                                    <div class="sampleStatus"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <span class="text-primary"><strong>Resource Specific</strong></span><hr class="btn-danger">                
+                    </div> 
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <div class="table-responsive">
+                            <table id="dyn_table_Resource_map" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Resource Name</th>
+                                        <th>Normal Price(<span class="dcomet-c-s_currCode"></span>)</th>
+                                        <th>Emergency Price(<span class="dcomet-c-s_currCode"></span>)</th>
+                                        <th>Resource Share(%)</th>                                            
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rsmTbody">
+                                    <tr>
+                                        <td>
+                                            <i id="serviceRMapDel" class="ace-icon fa fa-minus hidden" onclick="delete_row_resource_map(this)"></i>
+                                            <input type="hidden" id="rsmRid" name="rsmRid" value=""/>                                                
+                                        </td>
+                                        <td width="40%">
+                                            <input class="col-md-11 col-sm-11 col-xs-11" type="text" onkeypress="return dcomethealth.validation.ValidateAlpha(event);" id="rsmDoctorName" name="rsmDoctorName" value="" onchange="isExistResourceCheck(this)"/>
+                                            <input type="hidden" id="rsmDocRid" name="rsmDocRid" value=""/>
+                                        </td>
+                                        <td width="20%">
+                                            <input class="col-md-11 col-sm-11 col-xs-11" type="text" id="rsmNormalPrice" maxlength="9" name="rsmNormalPrice" onkeypress="return dcomethealth.validation.isDecimalKey(event)" value=""/>
+                                        </td>
+                                        <td width="20%">
+                                            <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="rsmEmergencyPrice" maxlength="9" name="rsmEmergencyPrice" onkeypress="return dcomethealth.validation.isDecimalKey(event)" value=""/>
+                                        </td>
+                                        <td width="20%">
+                                            <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="rsmDoctorShare" maxlength="2" name="rsmDoctorShare" onkeypress="return dcomethealth.validation.isNumberKey(event)" value=""/>
+                                        </td>
+                                        <td>
+                                            <i class="ace-icon fa fa-plus blue" onclick="insert_row_resourceMap('dyn_table_Resource_map', this)"></i>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>                       
+                    <div class="row col-md-12 col-sm-12 col-xs-12">
+                        <span class="text-primary"><strong>Service Price Type</strong></span><hr class="btn-danger">
+                        <div class="row col-md-6 col-sm-6 col-xs-6">
+                            <div class="table-responsive">
+                                <table id="dynTableServicePriceType" class="col-md-12 col-sm-12 col-xs-12 table table-condensed table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Price Type</th>
+                                            <th>Service Price Amount(<span class="dcomet-c-s_currCode"></span>)</th>                                                                                  
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="srPriceTbody">
+                                        <tr>
+                                            <td>
+                                                <i id="serviceRMapDel" class="ace-icon fa fa-minus hidden" onclick="deleteRowSrPrice(this)"></i>
+                                                <input type="hidden" id="srPriceRid" name="srPriceRid"/>                                               
+                                            </td>
+                                            <td width="50%">
+                                                <select class="col-md-11 col-sm-11 col-xs-11 dcomet-c-s_ddict_SERVICE_POINT_TYPE-list" id="srPriceType" name="srPriceType" onchange="checkExistType(this)"><option value="0">--Select--</option></select>
+                                            </td>
+                                            <td width="50%">
+                                                <input class="col-md-12 col-sm-12 col-xs-12" type="text" id="srPriceAmount" name="srPriceAmount" onkeypress="return dcomethealth.validation.isDecimalKey(event)" value=""/>
+                                                <input type="hidden" id="srPriceServiceRid" name="srPriceServiceRid"/>
+                                            </td>                                       
+                                            <td>
+                                                <i class="ace-icon fa fa-plus blue" onclick="insertRowServicePriceType('dynTableServicePriceType', this)"></i>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type='text/javascript' src='js/plugins/form-toggle/toggle.min.js'></script> 
+<script type='text/javascript' src='js/plugins/form-select2/select2.min.js'></script>
+<script type='text/javascript' src='js/plugins/datatables/jquery.dataTables.min.js'></script> 
+<script type='text/javascript' src='js/plugins/datatables/dataTables.bootstrap.js'></script> 

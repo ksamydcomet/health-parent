@@ -1,0 +1,630 @@
+var dcomethealth = dcomethealth || {};
+dcomethealth.Patients = (function () {
+    var id = "Patients";
+    function init() {
+        $("#main_navigation_bar").append('<div id="' + id + '" class="main_container">');
+        $("#" + id).load("pages/html/" + id + ".html", function () {
+            dcomethealth.datatypes.applyDataTypes($("#" + id));
+            $("#processServiceOn").datepicker({format: 'dd-mm-yyyy'});
+            $('#processServiceOn').val(moment().format('DD-MM-YYYY'));
+            patientSearch();
+            autocompleteService();
+            autoCompleteDrug();
+            getPatientDetails();
+            $('#div2,#div3,#div4,#div5,#div6').hide();
+        });
+    }
+    function patientSearch() {
+        $("#" + id + " input[id='patSearch']").autocomplete({
+            select: function (event, ui) {
+                var uiData = ui.item.data;
+                $("#patRid").val(uiData.id);
+                $("#patName").text(uiData.patName);
+                $("#patDemoInfo").text("(Gender: " + uiData.patGender + ", Age: " + uiData.patAge + ")");
+                loadPatientVisitTab(uiData.id);
+            },
+            source: function (request, response) {
+                var queryString = request.term;
+                queryString = queryString.trim();
+                var searchParams = {"q": queryString};
+                dcomethealth.PatientResource.searchPatient(searchParams, function (data) {
+                    response($.grep($.map(data, function (data) {
+                        return {label: (data.patMrnNo || "") + (data.patMrnNo && data.patPhoneNo ? " - " : "") + (data.patPhoneNo || ""),
+                            value: (data.patMrnNo || ""), name: (data.patTitle || "") + (data.patTitle && data.patFullName ? " - " : ""), data: data
+                        };
+                    }), function (data, index) {
+                        return index < 10;
+                    }));
+                });
+            },
+            minLength: 1
+        });
+    }
+    function getPatientDetails() {
+        var patientBox = ["success", "info", "danger", "warning"], doctorName = "";
+        var searchObj = {"visDate": moment().format('DD-MM-YYYY')};
+        dcomethealth.PatientResource.searchVisit(searchObj, function (data) {
+            if (!!data) {
+                $.each(data, function (pIdx, visits) {
+//                    if (visits.visConsDocRid == 2)
+//                    {
+//                        doctorName = "Dr. Gilberto Manhica";
+//                    } else if (visits.visConsDocRid == 3) {
+//                        doctorName = "Dr. Vitroria";
+//                    } else if (visits.visConsDocRid == 4) {
+//                        doctorName = "Dr. Kiran Samnani";
+//                    } else if (visits.visConsDocRid == 5) {
+//                        doctorName = "Keth Oneil Francisco David";
+//                    }
+                    $.each(visits.patient, function (pdx, patients) {
+                        $.each(patientBox, function (Idx, patBox) {
+                            if (pdx == Idx) {
+                                $("#patientDiv").append('<a href="#"><div class="col-md-2 patientBox patientBox-' + patBox + '"><span class="pull-right"><i class="fa fa-caret"></i></span><span id="patientsName"><b>' + patients.patName + '</b></span><br><span id="patientsMrnNo"><b><small>' + patients.patMrnNo + '</small></b></span><br><span id="patientsAge"><small>' + patients.patAge + ' / ' + patients.patGender + '</small></span><br><span id="visitedDoctor"><small> DoctorName </small></span></div></a>');
+                            }
+                        });
+                    });
+                });
+            }
+        });
+        var searchObj = {"patRegDate": moment().format('DD-MM-YYYY')};
+        dcomethealth.PatientResource.searchPatient(searchObj, function (data) {
+            if (!!data) {
+                $.each(data, function (pIdx, patients) {
+                    $.each(patients.serviceOrders, function (pIdx, sOrder) {
+//                        if (sOrder.soOrderDocRID == 2)
+//                        {
+//                            doctorName = "Dr. Gilberto Manhica";
+//                        } else if (sOrder.soOrderDocRID == 3) {
+//                            doctorName = "Dr. Vitroria";
+//                        } else if (sOrder.soOrderDocRID == 4) {
+//                            doctorName = "Dr. Kiran Samnani";
+//                        } else if (sOrder.soOrderDocRID == 5) {
+//                            doctorName = "Keth Oneil Francisco David";
+//                        }
+                        $.each(patientBox, function (Idx, patBox) {
+                            if (pIdx == Idx) {
+                                $("#patientDiv").append('<a href="#"><div class="col-md-2 patientBox patientBox-' + patBox + '"><span class="pull-right"><i class="fa fa-caret"></i></span><span id="patientsName"><b>' + patients.patName + '</b></span><br><span id="patientsMrnNo"><b><small>' + patients.patMrnNo + '</small></b></span><br><span id="patientsAge"><small>' + patients.patAge + ' / ' + patients.patGender + '</small></span><br><span id="visitedDoctor"><small>' + doctorName + '</small></span></div></a>');
+                            }
+                        });
+                    });
+                });
+            }
+        });
+        dcomethealth.AppointmentsResource.searchAppointments({"apptFromDate": moment().format('DD-MM-YYYY')}, function (data) {
+            if (!!data) {
+                $.each(data, function (pIdx, apptmnt) {
+//                    if (apptmnt.apptDocRID == 2)
+//                    {
+//                        doctorName = "Dr. Gilberto Manhica";
+//                    } else if (apptmnt.apptDocRID == 3) {
+//                        doctorName = "Dr. Vitroria";
+//                    } else if (apptmnt.apptDocRID == 4) {
+//                        doctorName = "Dr. Kiran Samnani";
+//                    } else if (apptmnt.apptDocRID == 5) {
+//                        doctorName = "Keth Oneil Francisco David";
+//                    }
+                    $.each(patientBox, function (Idx, patBox) {
+                        if (pIdx == Idx) {
+                            $("#patientDiv").append('<a href="#"><div class="col-md-2 patientBox patientBox-' + patBox + '"><span class="pull-right"><i class="fa fa-caret"></i></span><span id="patientsName"><b>' + apptmnt.apptPatientName + '</b></span><br><span id="patientsMrnNo"><b><small>' + apptmnt.apptPatientMrn + '</small></b></span><br><span id="patientsAge"><small>' + patients.patAge + ' / ' + patients.patGender + '</small></span><br><span id="visitedDoctor"><small>' + doctorName + '</small></span></div></a>');
+                        }
+                    });
+                });
+            }
+        });
+    }
+    function autocompleteService() {
+        $("#" + id + " input[name='serviceName']").item_autocomplete({
+            select: function (event, ui) {
+                dynTableGetNodeInRow(this, 'serviceName').value = ui.item.value;
+                dynTableGetNodeInRow(this, 'itemRID').value = ui.item.data.id;
+            },
+            open: function (event, ui) {
+                $(document).tooltip({
+                    position: {
+                        my: "center bottom-20",
+                        at: "right center",
+                        using: function (position, feedback) {
+                            $(this).css(position);
+                        }
+                    }
+                });
+            },
+            close: function () {
+                $(document).tooltip("destroy");
+            },
+            source: function (request, response) {
+                var queryString = request.term;
+                queryString = queryString.trim();
+                var searchParams = {"bsName": queryString, "bsServiceActive": 1};
+                dcomethealth.MasterResource.searchServices(searchParams, function (data) {
+                    response($.grep($.map(data, function (item) {
+                        return {
+                            label: item.bsName || "",
+                            value: item.bsName || "",
+                            name: (item.bsName || "") + (item.bsName && item.id ? " - " : "") + (item.id || ""),
+                            data: item
+                        };
+                    }), function (item, index) {
+                        return index < 10;
+                    }));
+                });
+            },
+            minLength: 1
+        });
+    }
+    function autoCompleteDrug() {
+        $("#" + id + " input[name='drugName']").item_autocomplete({
+            select: function (event, ui) {
+                dynTableGetNodeInRow(this, 'drugName').value = ui.item.value;
+                dynTableGetNodeInRow(this, 'SkuRID').value = ui.item.data.id;
+            },
+            open: function (event, ui) {
+                $(document).tooltip({
+                    position: {
+                        my: "center bottom-20",
+                        at: "right center",
+                        using: function (position, feedback) {
+                            $(this).css(position);
+                        }
+                    }
+                });
+            },
+            close: function () {
+                $(document).tooltip("destroy");
+            },
+            source: function (request, response) {
+                var queryString = request.term;
+                queryString = queryString.trim();
+                var searchParams = {"skuName": queryString};
+                dcomethealth.MasterResource.searchSkus(searchParams, function (data) {
+                    response($.grep($.map(data, function (item) {
+                        return {
+                            label: item.skuName || "",
+                            value: item.skuName || "",
+                            name: (item.skuName || "") + (item.skuName && item.id ? " - " : "") + (item.id || ""),
+                            data: item
+                        };
+                    }), function (item, index) {
+                        return index < 75;
+                    }));
+                });
+            },
+            minLength: 1
+        });
+    }
+    function loadPatientVisitTab(visPatRid) {
+        var totalLen = 0;
+        var search = {"visPatRid": visPatRid, "sortOrder": ["createdDateTime"], "sortDesc": "desc"};
+        dcomethealth.PatientResource.searchVisit(search, function (visits) {
+            if (!!visits) {
+                $("#patient_visit_tab").empty();
+                totalLen = visits.length;
+                $.each(visits, function (pIdx, visit) {
+                    if (pIdx === 0) {
+                        $('#patient_visit_tab').append('<li class="" onclick="dcomethealth.Patients.loadPatientVisit(' + visit.id + ', ' + visPatRid + ',' + visit.visSpecialityIndex + ')"><a href="#visit1" data-toggle="tab">' + moment(visit.createdDateTime, 'DD-MM-YYYY HH:mm:ss').format('DD-MM-YYYY') + '</a><input id="visitRid" name="visitRid" class="activeVisitRid" type="hidden" value="' + visit.id + '"></li>');
+                    } else {
+                        $('#patient_visit_tab').append('<li onclick="dcomethealth.Patients.loadPatientVisit(' + visit.id + ', ' + visPatRid + ' , ' + visit.visSpecialityIndex + ')"><a href="#visit1" data-toggle="tab">' + moment(visit.createdDateTime, 'DD-MM-YYYY HH:mm:ss').format('DD-MM-YYYY') + '</a><input id="visitRid" name="visitRid" class="hiddenVisitRid" type="hidden" value="' + visit.id + '"></li>');
+                    }
+
+                });
+                if (totalLen > 10) {
+                    $('#patient_visit_tab li:nth-child(1)').append('<li style="margin-top:-7px;"><a href="#" id="prev" onclick="movePage()"><i class="fa fa-arrow-left"></i></a></li>');
+                    $('#patient_visit_tab').last().append('<li><a href="#" id="next" onclick="movePage()"><i class="fa fa-arrow-right"></i></a></li>');
+            }
+            }
+        });
+    }
+    function loadPatientVisit(visitRid, visPatRid, visSpecialityIndex) {
+        $('.activeVisitRid').val(visitRid);
+        $("#template").empty();
+        dcomethealth.DataDictionaryResource.searchTemplate({"id": visSpecialityIndex}, function (templates) {
+            $.each(templates, function (index, template) {
+                $("#template").append(template.tempNodes);
+                var searchObj = {"vistVisitRID": visitRid, "vistPatRID": visPatRid};
+                dcomethealth.ClinicalResource.searchVisitTemplate(searchObj, function (visitTemplate) {
+                    if (!!visitTemplate) {
+                        $.each(visitTemplate, function (index, t_visit_template) {
+                            $('#visitTempRID').val(t_visit_template.id);
+                            var visit_template_data = jQuery.parseJSON(t_visit_template.vistNodes);
+                            if (!!visit_template_data) {
+                                $.each(visit_template_data, function (idx, o) {
+                                    if (template.tempType == "Dental") {
+                                        dcomethealth.DataDictionaryResource.searchTemplate({"id": 229}, function (templates) {
+                                            $.each(templates, function (index, template) {
+                                                $("#" + o.id + "div").empty();
+                                                $("#" + o.id + "div").append(template.tempNodes);
+                                                setValue(o.id, visit_template_data);
+                                            });
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        if (template.tempType == "Dental") {
+                            dcomethealth.DataDictionaryResource.searchTemplate({"id": 229}, function (templates) {
+                                $.each(templates, function (index, template) {
+                                    $("#totalDiv").find("form").each(function (idx, inputId) {
+                                        var id = $(inputId).attr("id");
+                                        $("#" + id + "div").append(template.tempNodes);
+                                    });
+                                });
+                            });
+                        }
+                        $('#savebtn').removeClass("hidden");
+                        setValue(jQuery.parseJSON(template.tempDefaultData));
+                    }
+                    dcomethealth.datatypes.applyDataTypes($("#" + id));
+                });
+            }
+            );
+        });
+        getVisitvitals(visitRid);
+        getComplaintsValue(visitRid);
+        getService(visitRid);
+        getrxOrder(visitRid);
+    }
+    function  getService(id) {
+        var searchobj = {"serReqOpVisitRID": id};
+        dcomethealth.ServiceRequestResource.searchServiceRequest(searchobj, function (data) {
+            $("#serviceOrderTbody").empty();
+            if (!!data) {
+                $.each(data, function (ifdx, serviceval) {
+                    $("#serviceOrderTbody").append('<tr><td><i id="minus" class="ace-icon fa fa-minus hidden" onclick="delete_servicerow(this)"></i></td>\n\
+                                    <td><input type="text" id="serviceName" name="serviceName" value="' + serviceval.serReqItemName + '" class="col-md-12"/><input type="hidden" id="itemRID" value="' + serviceval.serReqItemRID + '"/><input type="hidden" id="serviceReqId" value="' + serviceval.id + '"/><br><span><small><a href="#">show Teeth</a></small></span></td>\n\
+                                    <td><input type="text" id="qtyService" value="' + serviceval.serReqItemQty + '" class="col-md-12"/></td>\n\
+                                    <td><input type="text" id="processServiceOn" value="' + serviceval.serReqProcessDate + '" class="col-md-12"/></td>\n\
+                                    <td><span id="addInstructions"><small><a href="#">add Instructions</a></small></span></td>\n\
+                                    <td><i class="ace-icon fa fa-plus red" onclick="insert_servicerow(\'serviceOrderTable\', this)"></i></td></tr>');
+                });
+            }
+            else {
+                $("#serviceOrderTbody").append('<tr><td><i id="minus" class="ace-icon fa fa-minus hidden" onclick="delete_servicerow(this)"></i></td>\n\
+                                    <td><input type="text" id="serviceName" name="serviceName" value="" class="col-md-12"/><input type="hidden" id="itemRID" value=""/><input type="hidden" id="serviceReqId" value=""/><br><span><small><a href="#">show Teeth</a></small></span></td>\n\
+                                    <td><input type="text" id="qtyService" value="" class="col-md-12"/></td>\n\
+                                    <td><input type="text" id="processServiceOn" value="" class="col-md-12"/></td>\n\
+                                    <td><span id="addInstructions"><small><a href="#">add Instructions</a></small></span></td>\n\
+                                    <td><i class="ace-icon fa fa-plus red" onclick="insert_servicerow(\'serviceOrderTable\', this)"></i></td></tr>');
+                autocompleteService();
+            }
+        });
+    }
+    function  getrxOrder(visitId) {
+        var searchobj = {"drugReqHOpVBisitRID": visitId};
+        dcomethealth.ClinicalResource.getDrugs(searchobj, function (data) {
+            $("#rxOrderTbody").empty();
+            if (!!data) {
+                $.each(data, function (igx, drugH) {
+                    $("#drugId").val(drugH.id);
+                    $.each(drugH.drugRequestDList, function (igs, drugD) {
+                        $("#rxOrderTbody").append('<tr id="rxOrders' + igs + '"><td><i id="minus" class="ace-icon fa fa-minus hidden" onclick="delete_rxrow(this)"></i></td>\n\
+                                               <td><input type="text" id="drugName" name="drugName" value="' + drugD.drugReqDItemName + '" class="col-md-12"/><input type="hidden" id="SkuRID" value="' + drugD.drugReqDItemRID + '" name="SkuRID"/><input type="hidden" id="drugHRid" value="' + drugD.druReqDSrhRID + '" name="drugHRid"/><input type="hidden" id="drugDid" value="' + drugD.id + '" name="drugDid"/><br><span><small><a href="#">add Notes</a></small></span></td>\n\
+                                               <td><input type="text" id="strength" class="col-md-12"/></td>\n\
+                                               <td><select id="strengthSelect" class="col-md-12"><option>mg</option></select></td>\n\
+                                               <td><input type="text" id="duration" class="col-md-12"/></td>\n\
+                                               <td><select id="durataionSelect" class="col-md-12 dcomet-c-s_ddict_duration-list"></select></td>\n\
+                                               <td><select id="whenSelect" class="col-md-12 dcomet-c-s_ddict_dosage_time-list"></select></td>\n\
+                                               <td><input type="text" id="morning" value="' + drugD.drugReqDMrng + '" class="col-md-12"/></td>\n\
+                                               <td><input type="text" id="afternoon" value="' + drugD.drugReqDAfternoon + '" class="col-md-12"/></td>\n\
+                                               <td><input type="text" id="evening" value="' + drugD.drugReqDNight + '" class="col-md-12"/></td>\n\
+                                               <td><input type="text" id="night" value="' + drugD.drugReqDEve + '" class="col-md-12"/></td>\n\
+                                               <td><input type="text" id="drugQty" value="' + drugD.drugReqDItemQty + '" class="col-md-12"/></td>\n\
+                                               <td><i class="ace-icon fa fa-plus red" onclick="insert_rxrow(\'rxOrderTable\', this)"></i></td></tr>');
+                        dcomethealth.datatypes.applyDataTypes($("#rxOrders" + igs));
+                        $('select[id="durataionSelect"]:eq(' + igs + ')').val(drugD.drugReqDDurationTime);
+                        $('select[id="whenSelect"]:eq(' + igs + ')').val(drugD.drugReqDDosageTime);
+                    });
+                });
+            }
+            else {
+                $("#rxOrderTbody").append('<tr id="rxOrders"><td><i id="minus" class="ace-icon fa fa-minus hidden" onclick="delete_rxrow(this)"></i></td>\n\
+                                               <td><input type="text" id="drugName" name="drugName" value="" class="col-md-12"/><input type="hidden" id="SkuRID" value="" name="SkuRID"/><input type="hidden" id="drugHRid" value="" name="drugHRid"/><input type="hidden" id="drugDid" value="" name="drugDid"/><br><span><small><a href="#">add Notes</a></small></span></td>\n\
+                                               <td><input type="text" id="strength" class="col-md-12"/></td>\n\
+                                               <td><select id="strengthSelect" class="col-md-12"><option>mg</option></select></td>\n\
+                                               <td><input type="text" id="duration" class="col-md-12"/></td>\n\
+                                               <td><select id="durataionSelect" class="col-md-12 dcomet-c-s_ddict_duration-list"></select></td>\n\
+                                               <td><select id="whenSelect" class="col-md-12 dcomet-c-s_ddict_dosage_time-list"></select></td>\n\
+                                               <td><input type="text" id="morning" value="" class="col-md-12"/></td>\n\
+                                               <td><input type="text" id="afternoon" value="" class="col-md-12"/></td>\n\
+                                               <td><input type="text" id="evening" value="" class="col-md-12"/></td>\n\
+                                               <td><input type="text" id="night" value="" class="col-md-12"/></td>\n\
+                                               <td><input type="text" id="drugQty" value="" class="col-md-12"/></td>\n\
+                                               <td><i class="ace-icon fa fa-plus red" onclick="insert_rxrow(\'rxOrderTable\', this)"></i></td></tr>');
+                dcomethealth.datatypes.applyDataTypes($("#rxOrderTbody"));
+                autoCompleteDrug();
+            }
+        });
+    }
+
+    function getVisitvitals(val) {
+        var search = {"vitVisRID": val};
+        dcomethealth.ClinicalResource.searchVisitVitals(search, function (data) {
+            if (!!data) {
+                $('#height,#blood,#heart,#respiratory,#bodyTemp,#weight').removeClass('hidden');
+                $.each(data, function (index, visitVital) {
+                    var obj = jQuery.parseJSON(visitVital.vitValue);
+                    $("#visitVitalId").val(visitVital.id);
+                    $("#od_vital_height").val(!!obj.od_vital_height ? obj.od_vital_height : '');
+                    $("#od_vital_height_unit").val(!!obj.od_vital_height_unit ? obj.od_vital_height_unit : '');
+                    $("#od_vital_weight").val(!!obj.od_vital_weight ? obj.od_vital_weight : '');
+                    $("#od_vital_weight_unit").val(!!obj.od_vital_weight_unit ? obj.od_vital_weight_unit : '');
+                    $("#od_vital_blood_pressure").val(!!obj.od_vital_blood_pressure ? obj.od_vital_blood_pressure : '');
+                    $("#od_vital_blood_pressure_unit").val(!!obj.od_vital_blood_pressure_unit ? obj.od_vital_blood_pressure_unit : '');
+                    $("#od_vital_heart_rate").val(!!obj.od_vital_heart_rate ? obj.od_vital_heart_rate : '');
+                    $("#od_vital_heart_rate_unit").val(!!obj.od_vital_heart_rate_unit ? obj.od_vital_heart_rate_unit : '');
+                    $("#od_vital_resporatory_rate").val(!!obj.od_vital_resporatory_rate ? obj.od_vital_resporatory_rate : '');
+                    $("#od_vital_body_temp").val(!!obj.od_vital_body_temp ? obj.od_vital_body_temp : '');
+                    $("#od_vital_body_temp_unit").val(!!obj.od_vital_body_temp_unit ? obj.od_vital_body_temp_unit : '');
+                    $("#od_vital_bmi").val(!!obj.od_vital_bmi ? obj.od_vital_bmi : '');
+                    $("#od_vital_bmi_unit").val(!!obj.od_vital_bmi_unit ? obj.od_vital_bmi_unit : '');
+                });
+            }
+        });
+    }
+    function getComplaintsValue(id) {
+        var searchObj = {"cplVisitRID": id};
+        dcomethealth.ClinicalResource.getComplaints(searchObj, function (data) {
+            $("#complaintsTbody").empty();
+            if (!!data) {
+                $.each(data, function (pIdx, comp) {
+                    $("#complaintsTbody").append('<tr id="pd_complaints_tbody' + pIdx + '"><td><i id="minus" class="ace-icon fa fa-minus hidden" onclick="delete_row(this)"></i></td>\n\
+                                            <td><input type="text" id="complaintsValue" value="' + comp.cplName + '" class="col-md-12" /><br><span><small><a href="#">show Teeth</a></small></span><input type="hidden" id="compId" value="' + comp.id + '"/></td>\n\
+                                            <td><input type="text"  id="complaintsDurations" value="' + comp.cplNameIndex + '" class="col-md-12"/></td>\n\
+                                            <td><select id="compDurataionSelect" name="compDurataionSelect" class="col-md-12 dcomet-c-s_ddict_duration-list"></select></td>\n\
+                                            <td><select id="compCurrentStatus" name="compCurrentStatus" class="col-md-12 dcomet-c-s_ddict_complaint_status-list"></select></td>\n\
+                                            <td><span id="addnotes"><small><a href="#">add Notes</a></small></span></td>\n\
+                                            <td><i class="ace-icon fa fa-plus red" onclick="insert_row(\'complaintsTable\', this)"></i></td></tr>');
+                    dcomethealth.datatypes.applyDataTypes($("#pd_complaints_tbody" + pIdx));
+                    $('select[name="compDurataionSelect"]:eq(' + pIdx + ')').val(comp.cplDescRangeIndex);
+                    $('select[name="compCurrentStatus"]:eq(' + pIdx + ')').val(comp.cplCurrentStatusIndex);  //                    onclick="dcomethealth.Patients.getComplaints();"
+                });
+            }
+            else {
+                $("#complaintsTbody").append('<tr id="pd_complaints_tbody"><td><i id="minus" class="ace-icon fa fa-minus hidden" onclick="delete_row(this)"></i></td>\n\
+                                            <td><input type="text" id="complaintsValue" value="" class="col-md-12" /><br><span><small><a href="#">show Teeth</a></small></span><input type="hidden" id="compId" value=""/></td>\n\
+                                            <td><input type="text"  id="complaintsDurations" value="" class="col-md-12"/></td>\n\
+                                            <td><select id="compDurataionSelect" name="compDurataionSelect" class="col-md-12 dcomet-c-s_ddict_duration-list"></select></td>\n\
+                                            <td><select id="compCurrentStatus" name="compCurrentStatus" class="col-md-12 dcomet-c-s_ddict_complaint_status-list"></select></td>\n\
+                                            <td><span id="addnotes"><small><a href="#">add Notes</a></small></span></td>\n\
+                                            <td><i class="ace-icon fa fa-plus red" onclick="insert_row(\'complaintsTable\', this)"></i></td></tr>');
+                dcomethealth.datatypes.applyDataTypes($("#complaintsTbody"));
+            }
+        });
+    }
+    function setValue(obj) {
+        var table = document.getElementById('teethTable');
+        var length = table.rows.length;
+        for (var j = 0; j < length; j++) {
+            var tr = dynTableGetNodeInRow(table.rows[j]);
+            $(tr).find("td").find("input").each(function (idx, input) {
+                var inputId = $(input).attr("id");
+                if (inputId == $(input).attr("id")) {
+                }
+                var valu = !!obj.inputId ? obj.inputId : 0;
+                //			 dynTableGetNodeInRow(table.rows[j], input51).value = !!val ? val : "";
+            });
+            // $("#s_family_history").val(!!obj.s_family_history?obj.s_family_history:'');
+            //	$("#s_family_history").val(!!obj.s_family_history?obj.s_family_history:'');
+        }
+        $("#s_family_history").val(!!obj.s_family_history ? obj.s_family_history : '');
+    }
+    function getComplaints() {
+        dcomethealth.PatientResource.searchVisit({"visPatRid": $("#patRid").val()}, function (data) {
+            if (!!data) {
+                $("#page-rightbar").empty();
+                $("#page-rightbar").append("<div id='complaintsRB'></div>");
+                $.each(dcomethealth.visit = data, function (pIdx, visits) {
+                    $("#complaintsRB").append('<a href="#" onclick="dcomethealth.Patients.setComplaints(' + visits.id + ')">' + visits.visSpecialityName + '</a>');
+                });
+            }
+        });
+        dcomethealth.util.callRightPanel();
+    }
+    function setComplaints(elem) {
+        $("#complaintsDurations").val(elem);
+        dcomethealth.util.callRightPanel();
+    }
+
+    function submit() {
+        var visitVitals = {}, vitalsInfo = {};
+        visitVitals.id = !!$("#visitVitalId").val() ? $("#visitVitalId").val() : null;
+        visitVitals.vitPatRID = $("#patRid").val();
+        visitVitals.vitName = $("#patName").text();
+        visitVitals.vitVisRID = $("#visitRid").val();
+        vitalsInfo.od_vital_height = $("#od_vital_height").val();
+        vitalsInfo.od_vital_height_unit = $("#od_vital_height_unit").val();
+        vitalsInfo.od_vital_weight = $("#od_vital_weight").val();
+        vitalsInfo.od_vital_weight_unit = $("#od_vital_weight_unit").val();
+        vitalsInfo.od_vital_blood_pressure = $("#od_vital_blood_pressure").val();
+        vitalsInfo.od_vital_blood_pressure_unit = $("#od_vital_blood_pressure_unit").val();
+        vitalsInfo.od_vital_heart_rate = $("#od_vital_heart_rate").val();
+        vitalsInfo.od_vital_heart_rate_unit = $("#od_vital_heart_rate_unit").val();
+        vitalsInfo.od_vital_resporatory_rate = $("#od_vital_resporatory_rate").val();
+        vitalsInfo.od_vital_resporatory_rate_unit = $("#od_vital_resporatory_rate_unit").val();
+        vitalsInfo.od_vital_body_temp = $("#od_vital_body_temp").val();
+        vitalsInfo.od_vital_body_temp_unit = $("#od_vital_body_temp_unit").val();
+        visitVitals.vitValue = JSON.stringify(vitalsInfo);
+        dcomethealth.ClinicalResource.saveVisitVitals(visitVitals).done(function (data, textStatus, jqXHR) {
+            alert("saved");
+//            dcomethealth.util.loadpage('Patients');
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            alert("failed");
+        });
+    }
+    function submitComplaints() {
+        var complaintsList = [];
+        var table = document.getElementById('complaintsTable');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var complaints = {};
+            complaints.id = !!dynTableGetNodeInRow(table.rows[i + 1], 'compId').value ? dynTableGetNodeInRow(table.rows[i + 1], 'compId').value : null;
+            complaints.cplPatRID = $("#patRid").val();
+            complaints.cplVisitRID = $("#visitRid").val();
+            complaints.cplNameIndex = dynTableGetNodeInRow(table.rows[i + 1], 'complaintsDurations').value;
+            complaints.cplCurrentStatusIndex = dynTableGetNodeInRow(table.rows[i + 1], 'compCurrentStatus').value;
+            complaints.cplDescRangeIndex = dynTableGetNodeInRow(table.rows[i + 1], 'compDurataionSelect').value;
+            complaints.cplName = dynTableGetNodeInRow(table.rows[i + 1], 'complaintsValue').value;
+            complaintsList.push(complaints);
+        }
+        dcomethealth.ClinicalResource.saveComplaints(complaintsList).done(function (data, textStatus, jqXHR) {
+            alert("Data Saved");
+//            dcomethealth.util.loadpage('Patients');
+        }).fail(function (jqXHR, textStatus, Patients) {
+            alert("failed to save data");
+        });
+    }
+    function submitService() {
+        var serviceList = [];
+        var table = document.getElementById('serviceOrderTable');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var service = {};
+            service.id = !!dynTableGetNodeInRow(table.rows[i + 1], 'serviceReqId').value ? dynTableGetNodeInRow(table.rows[i + 1], 'serviceReqId').value : null;
+            service.serReqItemRID = dynTableGetNodeInRow(table.rows[i + 1], 'itemRID').value;
+            service.serReqItemName = dynTableGetNodeInRow(table.rows[i + 1], 'serviceName').value;
+            service.serPatientName = $("#patName").text();
+            service.serPatientMrn = $("#patSearch").val();
+            service.serReqOpVisitRID = $("#visitRid").val();
+            service.serReqItemQty = dynTableGetNodeInRow(table.rows[i + 1], 'qtyService').value;
+            service.serReqProcessDate = dynTableGetNodeInRow(table.rows[i + 1], 'processServiceOn').value;
+            serviceList.push(service);
+        }
+        dcomethealth.ServiceRequestResource.saveService(serviceList).done(function (data, textStatus, jqXHR) {
+            alert("Data Saved");
+//            dcomethealth.util.loadpage('Patients');
+        }).fail(function (jqXHR, textStatus, Patients) {
+            alert("failed to save data");
+        });
+    }
+    function submitRxOrder() {
+        var drugH = {};
+        var drugDList = [];
+        drugH.id = !!$("#drugId").val() ? $("#drugId").val() : null;
+        drugH.drugReqHOpVBisitRID = $("#visitRid").val();
+        drugH.drugReqHPatMrn = $("#patSearch").val();
+        drugH.drugReqHPatName = $("#patName").text();
+        var table = document.getElementById('rxOrderTable');
+        var table_length = table.rows.length;
+        for (var i = 0; i < table_length - 1; i++) {
+            var drugD = {};
+            drugD.id = !!dynTableGetNodeInRow(table.rows[i + 1], 'drugDid').value ? dynTableGetNodeInRow(table.rows[i + 1], 'drugDid').value : null;
+            drugD.druReqDSrhRID = !!dynTableGetNodeInRow(table.rows[i + 1], 'drugHRid').value ? dynTableGetNodeInRow(table.rows[i + 1], 'drugHRid').value : null;
+            drugD.drugReqDItemRID = dynTableGetNodeInRow(table.rows[i + 1], 'SkuRID').value;
+            drugD.drugReqDItemName = dynTableGetNodeInRow(table.rows[i + 1], 'drugName').value;
+            drugD.drugReqDItemQty = dynTableGetNodeInRow(table.rows[i + 1], 'drugQty').value;
+//            drugD.drugReqDDosageTime = dynTableGetNodeInRow(table.rows[i + 1], 'whenSelect').value;
+            drugD.drugReqDMrng = dynTableGetNodeInRow(table.rows[i + 1], 'morning').value;
+            drugD.drugReqDAfternoon = dynTableGetNodeInRow(table.rows[i + 1], 'afternoon').value;
+//            drugD.drugReqDDuration = dynTableGetNodeInRow(table.rows[i + 1], 'duration').value;
+//            drugD.drugReqDDurationTime = dynTableGetNodeInRow(table.rows[i + 1], 'durataionSelect').value;
+            drugD.drugReqDEve = dynTableGetNodeInRow(table.rows[i + 1], 'evening').value;
+            drugD.drugReqDNight = dynTableGetNodeInRow(table.rows[i + 1], 'night').value;
+
+            drugDList.push(drugD);
+        }
+        drugH.drugRequestDList = drugDList;
+        dcomethealth.ClinicalResource.saveDrugs(drugH).done(function (data, textStatus, jqXHR) {
+            alert("Data Saved");
+//            dcomethealth.util.loadpage('Patients');
+        }).fail(function (jqXHR, textStatus, Patients) {
+            alert("failed to save data");
+        });
+    }
+    function setValue(id, obj) {
+        var a = $("#" + id).serializeArray();
+        $.each(obj, function (idx, obj) {
+            if (obj.id == id) {
+                $.each(obj.teeth, function (cdx, o) {
+                    $.each(a, function () {
+                        if (!!o[this.name]) {
+                            $("#" + id).find("#" + this.name).val(o[this.name]);
+                            $("#" + id).find("#s" + this.name).css("background-color", "#1bc4a3");
+                        }
+                    });
+                });
+            }
+        });
+    }
+    function getValue() {
+        var htm = $("#totalDiv").html();
+        var dataList = [];
+        $(htm).find("form").each(function (indx, frm) {
+            var id = $(frm).attr("id");
+            var teethList = [];
+            var o = {}, formSet = {};
+            var a = $("#" + id).serializeArray();
+            $.each(a, function () {
+                if (o[this.name]) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || null);
+                } else {
+                    if (!!this.value) {
+                        o[this.name] = this.value || null;
+                    }
+                }
+            });
+            if (Object.keys(o).length > 0) {
+                teethList.push(o);
+                formSet.id = id;
+                formSet.teeth = teethList;
+                dataList.push(formSet);
+            }
+        });
+        return dataList;
+    }
+    function save() {
+        var visit = {};
+        var visitTemplateList = [];
+        var visitTemplate = {};
+        if (!!$('#visitTempRID').val()) {
+            visitTemplate.id = $('#visitTempRID').val();
+        }
+        visitTemplate.vistVisitRID = $('.activeVisitRid').val();
+        visitTemplate.vistPatRID = $('#patRid').val();
+        visitTemplate.vistNodes = JSON.stringify(getValue());
+        visitTemplate.vistSeqNum = 1;
+        visitTemplateList.push(visitTemplate);
+        visit.visitTemplate = visitTemplateList;
+//        visit.complaints = dcomethealth.complainttemplate.getValue();
+//        visit.visitVitals = dcomethealth.vitaltemplate.getValue();
+//        visit.serviceRequest = dcomethealth.soordertemplate.getValue();
+//        visit.serviceRequestDrug = dcomethealth.rxordertemplate.getValue();
+//        visit.visitPlan = dcomethealth.rxordertemplate.getValue();        
+
+//        console.log(JSON.stringify(visit));
+
+        dcomethealth.ClinicalResource.saveMyPatient(visit).done(function (data, textStatus, jqXHR) {
+
+//            dcomethealth.util.loadpage('Patients');
+            dcomethealth.util.base_init();
+            loadNotification();
+            alert("Saved");
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            alert("Failed");
+        });
+    }
+    function refreshData() {
+    }
+    return {
+        init: init,
+        submit: submit,
+        submitComplaints: submitComplaints,
+        submitService: submitService,
+        submitRxOrder: submitRxOrder,
+        autocompleteService: autocompleteService,
+        autoCompleteDrug: autoCompleteDrug,
+        patientSearch: patientSearch,
+        getPatientDetails: getPatientDetails,
+        getComplaints: getComplaints,
+        setComplaints: setComplaints,
+        loadPatientVisit: loadPatientVisit,
+        loadPatientVisitTab: loadPatientVisitTab,
+        save: save,
+        getValue: getValue,
+        setValue: setValue,
+        refreshData: refreshData
+    };
+}());
+dcomethealth.Patients.init();

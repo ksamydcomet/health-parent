@@ -1,0 +1,96 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:ehcache="http://www.springmodules.org/schema/ehcache" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+       http://www.springmodules.org/schema/ehcache
+       http://www.springmodules.org/schema/cache/springmodules-ehcache.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-2.5.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+       http://www.springframework.org/schema/util  
+       http://www.springframework.org/schema/beans/spring-util-2.5.xsd">  
+    <tx:annotation-driven />
+    <import resource="classpath:health-db-applicationcontext.xml" />
+    <import resource="classpath:health-dao-applicationcontext.xml" />
+    
+    <bean id="propertyPlaceHolder" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location">
+            <value>classpath:service-client-context-time.xml</value>
+        </property>
+    </bean> 
+    <context:component-scan base-package="com.dcomet.health.batch.adapter" />
+    <context:component-scan base-package="com.dcomet.health.batch.service" />    
+    <context:component-scan base-package="com.dcomet.fw.email" />
+    <context:component-scan base-package="com.dcomet.health.batch.aop" />
+    
+    <bean id="serviceProxy" class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">
+        <property name="beanNames" value="*Service" />
+        <property name="interceptorNames">
+            <list>
+                <value>serviceAdvisor</value>
+            </list>
+        </property>
+    </bean>
+    <bean id="serviceAdvisor" class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
+        <property name="patterns">
+            <list>
+                <value>.*</value>
+            </list>
+        </property>
+
+        <property name="advice" ref="batchAdviceAroundMethodBeanAdvice" />
+    </bean>
+    <bean lazy-init="true" id="abstractJob" abstract="true">
+        <property name="executions" value="1"/>
+        <property name="shouldContinue" value="true"/>
+    </bean>
+    
+    <bean name="batch_job1" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dcomet.health.batch.job.scheduler.DashBoard"/>
+    </bean> 
+    <bean name="batch_job2" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dcomet.health.batch.job.scheduler.ReportSchedule"/>
+    </bean>
+    <bean name="batch_job3" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dcomet.health.batch.job.scheduler.DailyReportSchedule"/>
+    </bean>
+    <bean name="batch_job4" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dcomet.health.batch.job.scheduler.MailSchedule"/>
+    </bean>
+   
+    <bean id="BADashBoardJob" class="com.dcomet.health.batch.job.DashBoardJob" parent="abstractJob"> </bean>
+    <bean id="BBReportScheduleJob" class="com.dcomet.health.batch.job.ReportScheduleJob" parent="abstractJob"> </bean>
+    <bean id="BCDailyReportScheduleJob" class="com.dcomet.health.batch.job.DailyReportScheduleJob" parent="abstractJob"> </bean>
+    <bean id="BDMailScheduleJob" class="com.dcomet.health.batch.job.MailScheduleJob" parent="abstractJob"> </bean>
+  
+    <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="applicationContextSchedulerContextKey" value="applicationContext"/>
+        <property name="triggers">
+            <list>  
+                <bean class="org.springframework.scheduling.quartz.CronTriggerBean">
+                    <property name="jobDetail" ref="batch_job1"/>
+                    <property name="cronExpression" value="${com.dcomet.health.batchjob.DashBoardJob}" />
+                </bean> 
+                <bean class="org.springframework.scheduling.quartz.CronTriggerBean">
+                    <property name="jobDetail" ref="batch_job2"/>
+                    <property name="cronExpression" value="${com.dcomet.health.batchjob.ReportScheduleJob}" />
+                </bean> 
+                <bean class="org.springframework.scheduling.quartz.CronTriggerBean">
+                    <property name="jobDetail" ref="batch_job3"/>
+                    <property name="cronExpression" value="${com.dcomet.health.batchjob.DailyReportScheduleJob}" />
+                </bean> 
+                <bean class="org.springframework.scheduling.quartz.CronTriggerBean">
+                    <property name="jobDetail" ref="batch_job4"/>
+                    <property name="cronExpression" value="${com.dcomet.health.batchjob.MailScheduleJob}" />
+                </bean>                    
+            </list>
+        </property>
+    </bean>
+    <context:component-scan base-package="com.dcomet.health.batch.job" />    
+	
+</beans>

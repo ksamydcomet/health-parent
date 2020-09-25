@@ -1,0 +1,78 @@
+img{
+    max-width: 100%;
+}
+.landing .banner-area{
+    padding: 120px 0;
+    background-color: #2196f3;
+    color: #ffffff;
+}
+.landing .banner-area .vertical-center {
+    margin-top: 0;
+}
+.land-logo {
+    margin-bottom: 30px;
+}
+.landing .banner-area .vertical-center h1{
+    margin-bottom: 30px;
+    margin-top: 0;
+}
+.landing .banner-area .vertical-center h1 span{
+    display: block;
+}
+.landing.blue.particle .particle-bg {
+    background-position: center top;
+    background-repeat: repeat-y;
+}
+.demo-group {
+    padding-bottom: 60px;
+}
+.demo-heading {
+    background-color: #f7f7f7;
+    padding: 40px 0;
+    text-transform: uppercase;
+}
+.demo-wrap {
+    padding: 60px 0;
+}
+.demos {
+    float: left;
+    width: 100%;
+    margin-bottom: -30px;
+}
+.demo {
+    background-color: #052035;
+    display: block;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+.demo-name {
+    text-align: center;
+    display: block;
+    font-size: 2rem;
+    text-transform: uppercase;
+    line-height: 2;
+    font-weight: 700;
+}
+footer{
+    background-color: #2196f3;
+}
+footer .btn{
+    margin-top: 30px;
+}
+.widget-area{
+    padding-top: 0;
+}
+.widget-area .container{
+    padding-top: 118px;
+    border-top: 1px solid #dddddd;
+}
+.lower-footer{
+    background-color: rgba(0, 0, 0, 0.2);
+    margin-top: 60px;
+    padding: 20px 0;
+}
+.copyright{
+    text-align: center;
+    margin-bottom: 0;
+}
